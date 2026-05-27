@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-local-pv
+  labels:
+    type: local
+    app: immich
+spec:
+  storageClassName: immich-local
+  capacity:
+    storage: 30Ti
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/immich
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values: ["lama"]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-local-pvc
+  namespace: immich
+  labels:
+    app: immich
+spec:
+  storageClassName: immich-local
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Ti
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: immich-local
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain

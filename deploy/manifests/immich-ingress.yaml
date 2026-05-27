@@ -1,0 +1,35 @@
+# 選用：以 ingress-nginx + cert-manager 終止 TLS。
+# 若 60_apps/caddy 已將 immich.3q.fi 指到本 LoadBalancer VIP（:156），請勿重複套用同 host 的 Ingress，
+# 或將 DNS 改指 ingress-nginx LoadBalancer（見 60_apps/networking/METALLB-LB-IP-SOT.md）。
+#
+# ExternalDNS：若叢集已安裝 external-dns，可保留下列 hostname 註解；否則以 Route53 手動維護 A 記錄。
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: immich-ingress
+  namespace: immich
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    external-dns.alpha.kubernetes.io/hostname: immich.3q.fi
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - immich.3q.fi
+      secretName: immich-web-tls
+  rules:
+    - host: immich.3q.fi
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: immich-server
+                port:
+                  number: 2283

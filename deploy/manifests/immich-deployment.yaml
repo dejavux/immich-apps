@@ -1,0 +1,311 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-server
+  namespace: immich
+  labels:
+    app: immich-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich-server
+  template:
+    metadata:
+      labels:
+        app: immich-server
+    spec:
+      # hostPath PV immich-local-pv 僅在 lama 的 /mnt/immich，ReadWriteOnce 必須與該節點一致
+      nodeSelector:
+        kubernetes.io/hostname: lama
+      containers:
+        - name: immich-server
+          image: ghcr.io/immich-app/immich-server:release
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: REDIS_HOSTNAME
+              value: immich-redis
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_DBINDEX
+              value: "0"
+            - name: REDIS_PASSWORD
+              value: ""
+            - name: DB_HOSTNAME
+              value: immich-postgres
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: immich-postgresql-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: immich-postgresql-credentials
+                  key: password
+            - name: DB_DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: immich-postgresql-credentials
+                  key: database
+            - name: UPLOAD_LOCATION
+              value: /data
+            - name: IMMICH_WEB_URL
+              value: https://immich.3q.fi
+            - name: IMMICH_SERVER_URL
+              value: https://immich.3q.fi
+            - name: DISABLE_REVERSE_GEOCODING
+              value: "false"
+            - name: REVERSE_GEOCODING_PRECISION
+              value: "3"
+            - name: ENABLE_AUTO_SCAN
+              value: "true"
+            - name: SCAN_WATCHER_ENABLED
+              value: "true"
+            - name: IMMICH_LOG_LEVEL
+              value: "log"
+            - name: IMMICH_DISABLE_CLUSTERING
+              value: "false"
+            - name: MACHINE_LEARNING_URL
+              value: "http://immich-machine-learning:3003"
+            - name: MACHINE_LEARNING_ENABLED
+              value: "true"
+          volumeMounts:
+            - name: immich-data
+              mountPath: /data
+            - name: immich-external-library
+              mountPath: /external-library
+          ports:
+            - containerPort: 2283
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "1000m"
+      volumes:
+        - name: immich-data
+          persistentVolumeClaim:
+            claimName: immich-local-pvc
+        - name: immich-external-library
+          hostPath:
+            path: /mnt/immich/external-library
+            type: Directory
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-machine-learning
+  namespace: immich
+  labels:
+    app: immich-machine-learning
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich-machine-learning
+  template:
+    metadata:
+      labels:
+        app: immich-machine-learning
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: worker3
+        nvidia.com/gpu: "true"
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: immich-machine-learning
+          image: ghcr.io/immich-app/immich-machine-learning:release
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: REDIS_HOSTNAME
+              value: immich-redis
+            - name: DB_HOSTNAME
+              value: immich-postgres
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: immich-postgresql-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: immich-postgresql-credentials
+                  key: password
+            - name: DB_DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: immich-postgresql-credentials
+                  key: database
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "1000m"
+              nvidia.com/gpu: "1"
+            limits:
+              memory: "8Gi"
+              cpu: "2000m"
+              nvidia.com/gpu: "1"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-redis
+  namespace: immich
+  labels:
+    app: immich-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich-redis
+  template:
+    metadata:
+      labels:
+        app: immich-redis
+    spec:
+      # Redis 不需掛載 Immich PVC；避免排到僅跑 ML 的 worker3，其餘節點皆可
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      - worker3
+      containers:
+        - name: immich-redis
+          image: docker.io/valkey/valkey:8-bookworm
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "200m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-postgres
+  namespace: immich
+  labels:
+    app: immich-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich-postgres
+  template:
+    metadata:
+      labels:
+        app: immich-postgres
+    spec:
+      # 與 immich-server 相同：postgres 資料在 immich-local-pvc（hostPath 綁 lama）
+      nodeSelector:
+        kubernetes.io/hostname: lama
+      containers:
+        - name: immich-postgres
+          image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: immich-postgresql-credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: immich-postgresql-credentials
+                  key: password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: immich-postgresql-credentials
+                  key: database
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+              subPath: postgres-data
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: immich-local-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-server
+  namespace: immich
+  labels:
+    app: immich-server
+spec:
+  selector:
+    app: immich-server
+  ports:
+    - port: 2283
+      targetPort: 2283
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-machine-learning
+  namespace: immich
+  labels:
+    app: immich-machine-learning
+spec:
+  selector:
+    app: immich-machine-learning
+  ports:
+    - port: 3003
+      targetPort: 3003
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-redis
+  namespace: immich
+  labels:
+    app: immich-redis
+spec:
+  selector:
+    app: immich-redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-postgres
+  namespace: immich
+  labels:
+    app: immich-postgres
+spec:
+  selector:
+    app: immich-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP

@@ -1,0 +1,116 @@
+---
+# Immich：manifest 皆在 playbook 同目錄；請勿引用不存在的 nfs／nginx 分檔。
+# immich_root：由 60_apps/deploy_all.yml 注入；單獨執行本檔時於首任務預設為 playbook_dir。
+- name: Deploy Immich Photo Management System
+  hosts: ctrlplane
+  become: false
+  gather_facts: false
+
+  vars:
+    k8s_namespace: "immich"
+
+  tasks:
+    - name: 設定 immich_root（單獨執行本 playbook 時）
+      ansible.builtin.set_fact:
+        immich_root: "{{ immich_root | default(playbook_dir) }}"
+
+    - name: Create immich namespace
+      kubernetes.core.k8s:
+        name: "{{ k8s_namespace }}"
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: Apply MetalLB IP pool for Immich (192.168.50.156/32)
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ immich_root }}/metallb-immich-pool.yaml"
+
+    - name: Apply 1Password Item (sync PostgreSQL secret for Immich)
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ immich_root }}/1password-items.yaml"
+
+    - name: Apply immich local PV / PVC
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ immich_root }}/immich-local-pv.yaml"
+
+    - name: Apply immich configmap (nginx proxy template；可選與 proxy 併用)
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ immich_root }}/immich-configmap.yaml"
+
+    - name: Apply immich deployments and ClusterIP services
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ immich_root }}/immich-deployment.yaml"
+
+    - name: Apply immich MetalLB LoadBalancer
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ immich_root }}/immich-loadbalancer.yaml"
+
+    - name: Apply immich Ingress (cert-manager；與 wg Caddy 同 host 二擇一，見 ingress 檔首註解)
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ immich_root }}/immich-ingress.yaml"
+
+    - name: Wait for immich-server Deployment available
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        name: immich-server
+        namespace: "{{ k8s_namespace }}"
+        wait: true
+        wait_condition:
+          type: Available
+          status: "True"
+        wait_timeout: 600
+
+    - name: Wait for immich-postgres Deployment available
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        name: immich-postgres
+        namespace: "{{ k8s_namespace }}"
+        wait: true
+        wait_condition:
+          type: Available
+          status: "True"
+        wait_timeout: 600
+
+    - name: Wait for immich-redis Deployment available
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        name: immich-redis
+        namespace: "{{ k8s_namespace }}"
+        wait: true
+        wait_condition:
+          type: Available
+          status: "True"
+        wait_timeout: 300
+
+    - name: Wait for immich-machine-learning Deployment available
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        name: immich-machine-learning
+        namespace: "{{ k8s_namespace }}"
+        wait: true
+        wait_condition:
+          type: Available
+          status: "True"
+        wait_timeout: 600
+
+    - name: Display immich service status
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Service
+        namespace: "{{ k8s_namespace }}"
+      register: immich_services
+
+    - name: Show immich services
+      ansible.builtin.debug:
+        msg: "Immich services: {{ immich_services.resources | map(attribute='metadata.name') | list }}"

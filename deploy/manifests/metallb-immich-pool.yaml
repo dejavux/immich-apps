@@ -1,0 +1,23 @@
+---
+# MetalLB：為 Immich 保留 192.168.50.156（與 Caddy reverse_proxy 一致）
+# registry-pool 為 192.168.50.180-199，不包含 156，故 LoadBalancer 會一直 pending → Caddy 502
+#
+# 套用：kubectl apply -f 60_apps/immich/metallb-immich-pool.yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: immich-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.50.156/32
+  autoAssign: true
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: immich-pool-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - immich-pool
