@@ -3,62 +3,74 @@
 
 .PHONY: help build test deploy clean logs status \
 	deploy-all deploy-server deploy-line-bot deploy-sync \
-	build-line-bot release-line-bot \
-	lint lint-all lint-mechanical lint-eslint \
+	build-line-bot release-line-bot helm-lint \
+	lint lint-all lint-mechanical lint-changed-files lint-eslint lint-fix \
 	cursor-lint cursor-lint-changed cursor-lint-all \
-	commit pull_request pf dev-line-bot
+	git-commit auto-commit auto-commit-brief commit pull_request \
+	release release-build pf dev-line-bot
 
-# 默認目標
 .DEFAULT_GOAL := help
 
-# 配置
-NAMESPACE ?= immich
-IMAGE_TAG ?= latest
-REGISTRY ?= registry.3q.fi
+# ── 配置 ──────────────────────────────────────────────────────────────────────
 
-# 顏色
+NAMESPACE ?= immich
+IMAGE_TAG ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo latest)
+REGISTRY ?= registry-internal.3q.fi
+TEKTON_TENANT_NS ?= ci-tenant-immich-apps
+export PR_BASE_BRANCH ?= master
+
 RED := \033[0;31m
 GREEN := \033[0;32m
 YELLOW := \033[1;33m
 BLUE := \033[0;34m
-NC := \033[0m # No Color
+NC := \033[0m
 
-# Cursor lint-fix-agent (TODO: 設定後啟用)
-# LINT_TARGET_PREFIX := cursor-
-# HOME_CURSOR_LINT_AGENT_SH := $(HOME)/workspace/cursor-lint-fix-agent/share/lint_fix_agent.sh
-# LOCAL_CURSOR_LINT_AGENT_SH := $(abspath scripts/cursor-lint-fix-agent-bridge/share/lint_fix_agent.sh)
-# ifeq ($(wildcard $(HOME_CURSOR_LINT_AGENT_SH)),)
-# export LINT_FIX_AGENT_SH := $(LOCAL_CURSOR_LINT_AGENT_SH)
-# else
-# export LINT_FIX_AGENT_SH := $(HOME_CURSOR_LINT_AGENT_SH)
-# endif
-# include $(abspath scripts/cursor-lint-fix-agent-bridge/share/Makefile.lint.mk)
+# ── Cursor lint-fix-agent ─────────────────────────────────────────────────────
+# 見 docs/CURSOR_LINT_FIX_AGENT.md
+
+CURSOR_LINT_FIX_AGENT_DIR ?= $(HOME)/workspace/cursor-lint-fix-agent
+LINT_TARGET_PREFIX := cursor-
+LINT_CHANGED_CMD = bash ./scripts/lint-changed-files.sh --fix
+LINT_ALL_CMD = bash ./scripts/lint-all.sh
+
+ifneq ($(wildcard $(CURSOR_LINT_FIX_AGENT_DIR)/share/Makefile.lint.mk),)
+include $(CURSOR_LINT_FIX_AGENT_DIR)/share/Makefile.lint.mk
+else
+.PHONY: cursor-lint cursor-lint-changed cursor-lint-all cursor-lint-changed-run cursor-lint-all-run
+cursor-lint cursor-lint-changed cursor-lint-all cursor-lint-changed-run cursor-lint-all-run:
+	$(error cursor-lint-fix-agent not found at $(CURSOR_LINT_FIX_AGENT_DIR). \
+	Clone: gh repo clone dejavux/cursor-lint-fix-agent $(CURSOR_LINT_FIX_AGENT_DIR) && cd $(CURSOR_LINT_FIX_AGENT_DIR) && npm install. \
+	Offline: make lint-mechanical)
+endif
+
+ifneq ($(wildcard $(CURSOR_LINT_FIX_AGENT_DIR)/share/Makefile.commit.mk),)
+include $(CURSOR_LINT_FIX_AGENT_DIR)/share/Makefile.commit.mk
+else
+commit auto-commit pull_request:
+	$(error cursor-lint-fix-agent not found — 無法使用 make commit / pull_request)
+endif
 
 help: ## 顯示幫助信息
 	@echo "$(BLUE)Immich Apps - 可用命令:$(NC)"
 	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-20s$(NC) %s\n", $$1, $$2}'
-	@echo ""
-	@echo "$(YELLOW)部署:$(NC)"
-	@echo "  make deploy-all        # 部署所有組件（server + LINE Bot + sync）"
-	@echo "  make deploy-server     # 部署 Immich server"
-	@echo "  make deploy-line-bot   # 部署 LINE Bot"
-	@echo "  make deploy-sync       # 部署 Photo Sync"
-	@echo ""
-	@echo "$(YELLOW)Build & Release:$(NC)"
-	@echo "  make build-line-bot    # Docker build LINE Bot"
-	@echo "  make release-line-bot  # Build + Deploy LINE Bot"
-	@echo ""
-	@echo "$(YELLOW)本機開發:$(NC)"
-	@echo "  make pf                # Port-forward (30430-30439)"
-	@echo "  make dev-line-bot      # 本機開發 LINE Bot"
-	@echo "  make logs              # 查看 k8s logs"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-22s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$(YELLOW)Lint & Git:$(NC)"
-	@echo "  make lint              # 變更檔 lint"
-	@echo "  make lint-all          # 全庫 lint"
-	@echo "  make commit            # Lint + AI commit"
-	@echo "  make pull_request      # Lint → commit → PR → merge"
+	@echo "  make lint              # 變更檔 + Cursor lint-fix-agent"
+	@echo "  make lint-mechanical   # 變更檔僅腳本（無 SDK；CI / 離線）"
+	@echo "  make lint-all          # 全庫 + agent"
+	@echo "  make commit            # lint + Cursor SDK commit"
+	@echo "  make pull_request      # lint → commit → PR → merge $(PR_BASE_BRANCH)"
+	@echo "  PR_SKIP_MERGE=1 make pull_request"
+	@echo "  AUTO_COMMIT_LINT_TARGET=lint-mechanical make commit"
+	@echo ""
+	@echo "$(YELLOW)Release:$(NC)"
+	@echo "  make release           # Tekton BuildKit（或 fallback docker build）+ helm deploy"
+	@echo "  make release-build     # 僅 build 映像"
+	@echo ""
+	@echo "$(YELLOW)本機開發:$(NC)"
+	@echo "  make pf                # Port-forward 30450"
+	@echo "  make dev-line-bot      # npm run dev"
 
 # ═══════════════════════════════════════════════════════════════
 # 部署
@@ -83,16 +95,26 @@ deploy-server: ## 部署 Immich server
 	fi
 	@echo "$(GREEN)✓ Immich Server 部署完成$(NC)"
 
-deploy-line-bot: ## 部署 LINE Bot
-	@echo "$(BLUE)部署 LINE Bot...$(NC)"
-	@if [ ! -d "deploy/helm/immich-line-bot/templates" ] || [ -z "$$(ls -A deploy/helm/immich-line-bot/templates)" ]; then \
-		echo "$(YELLOW)⚠ LINE Bot Helm chart 尚未建立$(NC)"; \
-	else \
-		helm upgrade --install immich-line-bot ./deploy/helm/immich-line-bot \
-			--namespace $(NAMESPACE) \
-			--values ./deploy/helm/immich-line-bot/values.yaml; \
-		echo "$(GREEN)✓ LINE Bot 部署完成$(NC)"; \
-	fi
+deploy-line-bot: ## 部署 LINE Bot (Helm)
+	@echo "$(BLUE)部署 LINE Bot (Helm)...$(NC)"
+	helm upgrade --install immich-line-bot ./deploy/helm/immich-line-bot \
+		--namespace $(NAMESPACE) \
+		--create-namespace \
+		-f ./deploy/helm/immich-line-bot/values.yaml \
+		-f ./deploy/helm/immich-line-bot/values-prod.yaml \
+		--set image.tag=$(IMAGE_TAG)
+	@echo "$(GREEN)✓ LINE Bot Helm 部署完成$(NC)"
+
+helm-lint: ## Helm chart lint
+	helm lint ./deploy/helm/immich-line-bot
+
+release: ## Tekton BuildKit build + helm deploy
+	@echo "$(BLUE)Release: $(IMAGE_TAG)$(NC)"
+	@bash scripts/release-tekton-build.sh line-bot
+	@$(MAKE) deploy-line-bot IMAGE_TAG=$(IMAGE_TAG)
+
+release-build: ## 僅 build 映像（不 deploy）
+	@IMMICH_RELEASE_SKIP_DEPLOY=1 bash scripts/release-tekton-build.sh line-bot
 
 deploy-sync: ## 部署 Photo Sync (CronJob)
 	@echo "$(BLUE)部署 Photo Sync...$(NC)"
@@ -100,32 +122,31 @@ deploy-sync: ## 部署 Photo Sync (CronJob)
 	@echo "  請參考: docs/PHASE3_PHOTO_SYNC.md"
 
 # ═══════════════════════════════════════════════════════════════
-# Build & Release
+# Build（本機 fallback）
 # ═══════════════════════════════════════════════════════════════
 
-build-line-bot: ## Build LINE Bot Docker image
+build-line-bot: ## 本機 Docker build + push LINE Bot
 	@echo "$(BLUE)Building LINE Bot Docker image...$(NC)"
 	docker build -f Dockerfile.line-bot -t $(REGISTRY)/immich-line-bot:$(IMAGE_TAG) .
 	docker push $(REGISTRY)/immich-line-bot:$(IMAGE_TAG)
 	@echo "$(GREEN)✓ LINE Bot image built and pushed$(NC)"
 
-release-line-bot: build-line-bot deploy-line-bot ## Build + Deploy LINE Bot
+release-line-bot: build-line-bot deploy-line-bot ## 本機 build + Helm deploy
 
 # ═══════════════════════════════════════════════════════════════
 # 本機開發
 # ═══════════════════════════════════════════════════════════════
 
-pf: ## Port-forward (30430-30439)
+pf: ## Port-forward LINE Bot (30450)
 	@if [ -f "scripts/dev/pf.sh" ]; then \
 		./scripts/dev/pf.sh; \
 	else \
 		echo "$(RED)✗ scripts/dev/pf.sh 尚未建立$(NC)"; \
-		echo "  建立後可執行: make pf"; \
 	fi
 
 dev-line-bot: ## 本機開發 LINE Bot
 	@echo "$(BLUE)啟動 LINE Bot 開發模式...$(NC)"
-	cd src/line-bot && npm run dev
+	npm run dev
 
 logs: ## 查看 k8s logs
 	@echo "$(BLUE)=== Immich Server ===$(NC)"
@@ -141,44 +162,38 @@ status: ## 檢查所有組件狀態
 	@kubectl get svc -n $(NAMESPACE)
 
 # ═══════════════════════════════════════════════════════════════
-# Lint & Git
+# Lint（Cursor lint-fix-agent 由 Makefile.lint.mk 提供 cursor-lint*）
 # ═══════════════════════════════════════════════════════════════
 
-lint: ## 變更檔 lint
-	@echo "$(BLUE)Linting changed files...$(NC)"
-	@if [ -f "package.json" ]; then \
-		npm run lint; \
-	else \
-		echo "$(YELLOW)⚠ package.json not found, skipping lint$(NC)"; \
-	fi
+lint: ## 變更檔：Cursor lint-fix-agent + lint-changed-files --fix
+	@$(MAKE) cursor-lint-changed
 
-lint-all: ## 全庫 lint
-	@echo "$(BLUE)Linting all files...$(NC)"
-	@if [ -f "package.json" ]; then \
-		npm run lint; \
-	else \
-		echo "$(YELLOW)⚠ package.json not found, skipping lint$(NC)"; \
-	fi
+lint-all: ## 全庫：Cursor lint-fix-agent + lint-all.sh
+	@$(MAKE) cursor-lint-all
 
-lint-mechanical: lint ## 變更檔 lint（無 Cursor SDK）
+lint-mechanical: ## 變更檔僅腳本（無 Cursor SDK）
+	@echo "$(BLUE)🔍 變更檔 lint（lint-changed-files.sh --fix，無 agent）…$(NC)"
+	@bash ./scripts/lint-changed-files.sh --fix
 
-lint-eslint: ## ESLint (src/)
-	@if [ -d "src/line-bot" ]; then \
-		cd src/line-bot && npm run lint; \
-	else \
-		echo "$(YELLOW)⚠ src/line-bot not found$(NC)"; \
-	fi
+lint-changed-files: ## 變更檔 lint（例: make lint-changed-files ARGS='--fix'）
+	@bash ./scripts/lint-changed-files.sh $(ARGS)
 
-commit: ## Lint + AI commit
-	@echo "$(BLUE)Lint + Git commit...$(NC)"
+lint-eslint: ## 全 src ESLint
+	@npm run lint
+
+lint-fix: ## 全庫 ESLint --fix + Prettier
+	@npm run lint:fix
+	@npm run format
+
+git-commit: ## lint + git add + 手動輸入 commit message
 	@$(MAKE) lint
-	@git add .
-	@echo "$(YELLOW)請手動輸入 commit message（未來將整合 AI commit）$(NC)"
-	@git status
+	@git add -A
+	@echo "$(YELLOW)✍️  請輸入 commit message：$(NC)"
+	@read -p "" commit_msg; \
+	if [ -z "$$commit_msg" ]; then exit 1; fi; \
+	git commit -m "$$commit_msg"
 
-pull_request: commit ## Lint → commit → PR → merge
-	@echo "$(BLUE)Creating pull request...$(NC)"
-	@echo "$(YELLOW)TODO: 整合 scripts/create-pull-request.sh$(NC)"
+# commit / pull_request 由 Makefile.commit.mk 提供
 
 # ═══════════════════════════════════════════════════════════════
 # 測試
@@ -186,15 +201,7 @@ pull_request: commit ## Lint → commit → PR → merge
 
 test: ## 執行測試
 	@echo "$(BLUE)Running tests...$(NC)"
-	@if [ -f "package.json" ]; then \
-		npm test; \
-	else \
-		echo "$(YELLOW)⚠ Tests not configured$(NC)"; \
-	fi
-
-# ═══════════════════════════════════════════════════════════════
-# 清理
-# ═══════════════════════════════════════════════════════════════
+	@npm test
 
 clean: ## 清理臨時文件
 	@echo "$(BLUE)Cleaning...$(NC)"

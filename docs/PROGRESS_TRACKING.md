@@ -2,11 +2,11 @@
 
 **單一真相來源（Single Source of Truth）**：Immich 增強專案所有任務的集中管理。
 
-> 🏗️ **Repo**: https://github.com/dejavux/immich-apps（整合 server + LINE Bot + photo sync）  
+> 🏗️ **Repo**: <https://github.com/dejavux/immich-apps（整合> server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
 **最後更新**: 2026-06-10  
-**專案狀態**: 🚧 Phase 2 — MVP 源碼完成，待 ngrok / K8s 部署  
+**專案狀態**: 🚧 Phase 2 — MVP + Helm 骨架完成，待 Tekton release + HTTPS 部署  
 **負責人**: Infrastructure Team + App Dev Team
 
 ---
@@ -18,8 +18,8 @@
 | 🔴 高優先級任務 | 7 | Phase 2 LINE Bot (P0) — repo 已建，剩開發/部署 |
 | 🟡 中優先級任務 | 5 | Phase 3 Photo Sync (P1) |
 | 🟢 低優先級任務 | 8 | Phase 4-5 優化項目 (P2) |
-| ✅ 本週完成 | 4 | Repo 建立、文檔遷移、port 規劃、infra 清理 |
-| 📈 整體進度 | **40%** | Phase 0: 100%, Phase 1: 50%, Phase 2: 35% |
+| ✅ 本週完成 | 8 | Repo、MVP 源碼、1P 憑證、Helm 骨架、K8s 部署規劃 |
+| 📈 整體進度 | **45%** | Phase 0: 100%, Phase 1: 50%, Phase 2: 45% |
 
 ---
 
@@ -29,7 +29,7 @@
 |-------|------|--------|------|------|----------|
 | **Phase 0** | Repo 整合 | ✅ 完成 | 100% | ██████████ 100% | 2026-05-27 |
 | **Phase 1** | 基礎設施 | ✅ 已部署 | 50% 完成 | █████░░░░░ 50% | 2025-10-06 |
-| **Phase 2** | LINE Bot | 🔴 P0 最高 | 🚧 MVP 完成 | ████░░░░░░ 35% | 2026-06-21 |
+| **Phase 2** | LINE Bot | 🔴 P0 最高 | 🚧 Helm + CI 規劃 | █████░░░░░ 45% | 2026-06-21 |
 | **Phase 3** | Photo Sync | 🟡 P1 次優先 | 📋 規劃完成 | ░░░░░░░░░░ 0% | 2026-06-28 |
 | **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-05 |
 | **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-12 |
@@ -42,7 +42,7 @@
 **預估**: 3-5 天（開發）+ 1 天（部署驗收）  
 **截止**: 2026-06-21
 
-> 🏗️ **Repo**: `immich-apps` — https://github.com/dejavux/immich-apps  
+> 🏗️ **Repo**: `immich-apps` — <https://github.com/dejavux/immich-apps>  
 > **Port Range**: **30450-30479**（LINE Bot 預設 30450）  
 > **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
@@ -61,11 +61,11 @@
 - [x] 遷移 manifests 與文檔（自 infra-bootstrap）
 - [x] infra-bootstrap 清理（僅保留指向 README）
 - [x] Port range 規劃 → 30450-30479
-- [ ] 設定 pf.sh (port 30450) — **下一步**
+- [x] 設定 `scripts/dev/pf.sh`（port 30450）
 - [ ] 建立 `.github/workflows/` (ci.yml, release.yml)
-- [ ] `npm install` + 本機可跑
+- [x] `npm install` + `npm run build` / `type-check` 通過
 
-**驗收**: ✅ Repo 建立完成；⏳ pf.sh / CI 待補
+**驗收**: ✅ Repo + pf.sh 就緒；⏳ CI / Tekton release 待補
 
 ---
 
@@ -101,7 +101,7 @@
 - [x] **Item: Immich-API-Key** — api-key
   - 腳本: `scripts/create-immich-api-key-op-item.sh`
 - [ ] **Item: OpenAI-API-Key** — MVP 可略過
-- [ ] K8s `OnePasswordItem` + Operator 同步
+- [ ] K8s `OnePasswordItem` + Operator 同步（Helm chart 已含 template，待 deploy）
 
 **驗收**: ✅ LINE + Immich 憑證已存 1Password；K8s 同步待 Helm 部署
 
@@ -120,7 +120,7 @@
 - [x] 成功/失敗回覆用戶
 - [x] `scripts/dev/load-env-from-op.sh` — 從 1Password 載入憑證
 - [ ] 本機 ngrok 測試
-- [ ] Helm deploy + 生產 Webhook
+- [ ] Helm deploy + 生產 Webhook（見 [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md)）
 
 **本機開發**:
 
@@ -152,48 +152,48 @@ npm run dev
 
 ---
 
-### 2.5 Kubernetes 部署
+### 2.5 Kubernetes 部署（Helm + Tekton + BuildKit + HTTPS）
 
-**狀態**: ⏳ 待執行  
-**負責**: DevOps Team  
-**預估**: 1 小時
+**狀態**: 🚧 規劃 + Helm 骨架完成  
+**文檔**: [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md) ⭐
+
+**目標架構**:
+
+- **Build**: Tekton `ci-tenant-immich-apps` + BuildKit → `registry-internal.3q.fi/immich-line-bot`
+- **Deploy**: `helm upgrade immich-line-bot` → namespace `immich`
+- **HTTPS**: `https://immich-bot.3q.fi/webhook/line`（Caddy + Route53 + cert-manager）
 
 **任務**:
 
-- [ ] 建立 Docker Image
-  ```bash
-  docker build -t registry.3q.fi/immich-line-bot:v0.1.0 .
-  docker push registry.3q.fi/immich-line-bot:v0.1.0
-  ```
+- [x] Helm chart 骨架 `deploy/helm/immich-line-bot/`
+- [x] `scripts/dev/pf.sh`（port 30450）
+- [x] 部署規劃文檔 PHASE2_K8S_DEPLOYMENT.md
+- [ ] Tekton release pipeline `ci/tekton/release/`
+- [ ] infra-bootstrap: `ci-tenant-immich-apps` bootstrap
+- [ ] Caddy + Route53: `immich-bot.3q.fi`
+- [ ] `make release` → Tekton PipelineRun
+- [ ] 首次 `helm upgrade` + LINE Webhook Verify
+- [ ] E2E：傳照片 → Immich 可見
 
-- [ ] 部署 1Password Items
-  ```bash
-  cd 60_apps/immich/line-bot
-  kubectl apply -f 1password-items.yaml
-  ```
+**暫時手動部署**（Tekton 完成前）:
 
-- [ ] 等待 Secrets 同步（~60 秒）
-  ```bash
-  kubectl get secret -n immich | grep -E "line-bot|immich-api|openai"
-  ```
+```bash
+make build-line-bot IMAGE_TAG=v0.1.0
+make deploy-line-bot IMAGE_TAG=v0.1.0
+make pf   # 30450
+```
 
-- [ ] 部署 Deployment + Service
-  ```bash
-  kubectl apply -f deployment.yaml
-  ```
-
-- [ ] 部署 Ingress
-  ```bash
-  kubectl apply -f ingress.yaml
-  ```
+**驗收**: HTTPS health OK + LINE Webhook Verify + 照片上傳成功
 
 - [ ] 檢查 Pod 狀態
+
   ```bash
   kubectl get pods -n immich -l app=immich-line-bot
   kubectl logs -n immich -l app=immich-line-bot --tail=50
   ```
 
 - [ ] 驗證 Ingress TLS
+
   ```bash
   curl -I https://immich-bot.3q.fi/health
   ```
@@ -243,6 +243,7 @@ npm run dev
 **任務**:
 
 - [ ] 驗證 Prometheus 指標
+
   ```bash
   kubectl port-forward -n immich svc/immich-line-bot 3000:80
   curl http://localhost:3000/metrics
@@ -308,12 +309,14 @@ npm run dev
 **任務**:
 
 - [ ] 安裝 Immich CLI
+
   ```bash
   npm install -g @immich/cli
   immich --version
   ```
 
 - [ ] 安裝 fswatch
+
   ```bash
   brew install fswatch
   fswatch --version
@@ -332,6 +335,7 @@ npm run dev
 **任務**:
 
 - [ ] 建立腳本目錄
+
   ```bash
   mkdir -p ~/scripts ~/Library/Logs
   ```
@@ -339,12 +343,14 @@ npm run dev
 - [ ] 建立 `~/scripts/immich-sync.sh`（參考 PHASE3_PHOTO_SYNC.md）
 - [ ] 建立 `~/scripts/immich-watch.sh`
 - [ ] 設定執行權限
+
   ```bash
   chmod +x ~/scripts/immich-sync.sh
   chmod +x ~/scripts/immich-watch.sh
   ```
 
 - [ ] 設定環境變數
+
   ```bash
   # ~/.zshrc
   export IMMICH_INSTANCE_URL=https://immich.3q.fi
@@ -364,11 +370,13 @@ npm run dev
 **任務**:
 
 - [ ] 執行初次同步
+
   ```bash
   ~/scripts/immich-sync.sh
   ```
 
 - [ ] 監控日誌
+
   ```bash
   tail -f ~/Library/Logs/immich-sync.log
   ```
@@ -393,11 +401,13 @@ npm run dev
 - [ ] 建立 `~/Library/LaunchAgents/com.user.immich-watch.plist`
 - [ ] 修改 plist 中的 USERNAME 和 API_KEY
 - [ ] 載入服務
+
   ```bash
   launchctl load ~/Library/LaunchAgents/com.user.immich-watch.plist
   ```
 
 - [ ] 檢查服務狀態
+
   ```bash
   launchctl list | grep immich
   ```
@@ -417,9 +427,11 @@ npm run dev
 - [ ] 在 Mac Photos 加入新照片
 - [ ] 等待 1-5 分鐘
 - [ ] 檢查日誌
+
   ```bash
   tail -f ~/Library/Logs/immich-sync.log
   ```
+
 - [ ] 登入 Immich Web UI 確認新照片出現
 
 **驗收**: 新照片在 5 分鐘內同步到 Immich
@@ -494,6 +506,7 @@ npm run dev
 **目標**: 完成 Phase 2 LINE Bot
 
 **已完成**:
+
 - [x] 2026-05-27: 專案規劃文檔建立
 - [x] 2026-05-27: 文檔模組化重構
 - [x] 2026-05-27: GPU 配置澄清
@@ -502,11 +515,13 @@ npm run dev
 - [x] 2026-05-27: PHASE2_LINE_BOT.md 完整實作文檔
 
 **進行中**:
+
 - [ ] LINE Bot Channel 設定
 - [ ] 1Password 憑證準備
 - [ ] 開發環境設定
 
 **計畫下週**:
+
 - [ ] 本地功能測試
 - [ ] Kubernetes 部署
 - [ ] 生產環境測試
@@ -518,6 +533,7 @@ npm run dev
 **目標**: 完成 Phase 3 Photo Sync + 開始 Phase 4
 
 **計畫**:
+
 - [ ] Mac Photos Library 同步設定
 - [ ] 初次全量同步
 - [ ] Launchd 自動啟動
@@ -569,27 +585,30 @@ _目前無開放問題_
 
 ### 本週重點（Week 1: 6/10-6/14）
 
-**可並行 — Ops 軌 + Dev 軌**:
+**已完成** ✅:
 
-1. **Ops**（約 1 小時）:
-   - [ ] LINE Bot Channel 設定
-   - [ ] 1Password 憑證（Immich-LINE-Bot, Immich-API-Key, OpenAI-API-Key）
-   - [ ] 確認 `immich-bot.3q.fi` DNS / Ingress
+- [x] LINE Bot Channel + 1Password 憑證
+- [x] LINE Bot MVP 源碼（webhook → Immich upload）
+- [x] Helm chart 骨架 `deploy/helm/immich-line-bot/`
+- [x] K8s 部署規劃 [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md)
+- [x] `scripts/dev/pf.sh`（30450）
 
-2. **Dev**（2-3 天）:
-   - [ ] `npm install`
-   - [ ] `src/line-bot/index.ts` — Express + /health + webhook
-   - [ ] `scripts/dev/pf.sh`（port 30450）
-   - [ ] Immich upload client（`src/shared/immich-client.ts`）
+**進行中** 🚧:
 
-3. **Deploy**（Week 2）:
-   - [ ] Helm chart `deploy/helm/immich-line-bot/`
-   - [ ] `make build-line-bot` + `make deploy-line-bot`
+1. **Infra**（Week 2 優先）:
+   - [ ] Tekton release pipeline `ci/tekton/release/`
+   - [ ] infra-bootstrap: `ci-tenant-immich-apps` bootstrap
+   - [ ] Caddy + Route53: `immich-bot.3q.fi` HTTPS
+   - [ ] `make release` → BuildKit build + Helm deploy
+
+2. **驗收**:
+   - [ ] LINE Webhook Verify Success
    - [ ] E2E：LINE 轉發照片 → Immich 可見
 
 ### 下週（Week 2: 6/15-6/21）
 
-- [ ] 生產驗收 + Prometheus metrics
+- [ ] 首次 `helm upgrade immich-line-bot` + 生產 Webhook
+- [ ] Prometheus metrics（V1.1）
 - [ ] Phase 2 結案
 
 ### Week 3+
@@ -603,10 +622,11 @@ _目前無開放問題_
 ### Phase 2 完成條件
 
 - [x] **Repo 建立完成**（immich-apps）⭐
-- [ ] LINE Bot Channel 建立並設定 Webhook
-- [ ] 1Password 憑證同步正常（3 個 Secrets）
-- [ ] Kubernetes Deployment 健康（2/2 Pods Running）
-- [ ] Ingress TLS 證書正常（https://immich-bot.3q.fi）
+- [x] LINE Bot Channel 建立（Webhook URL 待部署後 Verify）
+- [x] 1Password 憑證（Immich-LINE-Bot + Immich-API-Key）
+- [ ] 1Password Operator → K8s Secrets 同步
+- [ ] Kubernetes Deployment 健康（Pod Running + probes pass）
+- [ ] Ingress TLS 證書正常（<https://immich-bot.3q.fi）>
 - [ ] 從 LINE 轉發照片可成功上傳（< 5 秒回覆）
 - [ ] Immich Web UI 可見新照片
 - [ ] AI 描述自動產生（CLIP + GPT-4V）
@@ -625,8 +645,8 @@ _目前無開放問題_
 
 ---
 
-**專案狀態**: 🚧 Phase 2 開發中（Week 1）  
-**當前重點**: Ops 憑證 + LINE Bot MVP 源碼  
+**專案狀態**: 🚧 Phase 2 — Tekton + HTTPS 部署階段  
+**當前重點**: Tekton release pipeline + `immich-bot.3q.fi` HTTPS + Helm 首次部署  
 **下一里程碑**: Phase 2 E2E 完成（2026-06-21）
 
 **最後更新**: 2026-06-10  

@@ -2,10 +2,10 @@
 
 **完整的 Immich 生態系統**：Immich server + LINE Bot + Photo Sync
 
-> 🚀 **Status**: Phase 2 開發中（Repo 就緒，LINE Bot 待實作）  
+> 🚀 **Status**: Phase 2 — MVP + Helm 骨架完成，待 Tekton release + HTTPS 部署  
 > 📊 **Progress**: [PROGRESS_TRACKING.md](./docs/PROGRESS_TRACKING.md)  
 > 📋 **如何進行**: [HOW_TO_PROCEED.md](./docs/HOW_TO_PROCEED.md)  
-> 🏗️ **Architecture**: [REPO_CONSOLIDATION_PLAN.md](./docs/REPO_CONSOLIDATION_PLAN.md)
+> 🏗️ **K8s 部署**: [PHASE2_K8S_DEPLOYMENT.md](./docs/PHASE2_K8S_DEPLOYMENT.md)
 
 ---
 
@@ -94,14 +94,14 @@ make logs
 
 - **Namespace**: `immich`
 - **Components**: server, machine-learning, redis, postgres
-- **Web UI**: https://immich.3q.fi
+- **Web UI**: <https://immich.3q.fi>
 - **Storage**: lama hostPath (HDD) → 規劃遷移到 SSD
 
 ### 2. LINE Bot
 
 - **Namespace**: `immich`
 - **Port**: 30450 (port-forward)
-- **Webhook**: https://immich-bot.3q.fi/webhook/line
+- **Webhook**: <https://immich-bot.3q.fi/webhook/line>
 - **Features**:
   - 從 LINE 接收照片
   - 自動上傳到 Immich
@@ -132,8 +132,11 @@ make deploy-server     # 部署 Immich server
 make deploy-line-bot   # 部署 LINE Bot
 
 # Build & Release
-make build-line-bot    # Docker build LINE Bot
-make release-line-bot  # Build + Deploy
+make build-line-bot    # Docker build LINE Bot（本機）
+make deploy-line-bot   # Helm deploy
+make helm-lint         # Helm chart lint
+make release           # Tekton BuildKit + deploy（TODO）
+make release-line-bot  # Build + Deploy（本機暫用）
 
 # 本機
 make pf                # Port-forward (30450)
@@ -160,6 +163,8 @@ make logs              # 查看 k8s logs
 
 ### Phase 實作
 
+- **[CURSOR_LINT_FIX_AGENT.md](./docs/CURSOR_LINT_FIX_AGENT.md)** - make lint / commit / PR ⭐
+- **[PHASE2_K8S_DEPLOYMENT.md](./docs/PHASE2_K8S_DEPLOYMENT.md)** - K8s / Tekton / Helm / HTTPS
 - **[PHASE2_LINE_BOT.md](./docs/PHASE2_LINE_BOT.md)** - LINE Bot 實作（P0）
 - **[PHASE3_PHOTO_SYNC.md](./docs/PHASE3_PHOTO_SYNC.md)** - Photo Sync 實作（P1）
 
@@ -214,7 +219,7 @@ graph TB
 
 ### Grafana Dashboard
 
-- **Immich**: https://grafana.3q.fi/d/immich
+- **Immich**: <https://grafana.3q.fi/d/immich>
 - **Metrics**: `/metrics` 端點（LINE Bot, server）
 
 ### Health Checks
@@ -269,12 +274,12 @@ MIT
 
 ## 🔗 相關連結
 
-- **Immich Official**: https://immich.app/
-- **LINE Messaging API**: https://developers.line.biz/
-- **OpenAI Vision API**: https://platform.openai.com/docs/guides/vision
+- **Immich Official**: <https://immich.app/>
+- **LINE Messaging API**: <https://developers.line.biz/>
+- **OpenAI Vision API**: <https://platform.openai.com/docs/guides/vision>
 
 ---
 
-**最後更新**: 2026-05-27  
+**最後更新**: 2026-06-10  
 **維護者**: Infrastructure Team + App Dev Team  
-**Repo**: https://github.com/dejavux/immich-apps
+**Repo**: <https://github.com/dejavux/immich-apps>

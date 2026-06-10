@@ -8,9 +8,13 @@
     "build": "tsc",
     "start": "node dist/line-bot/index.js",
     "test": "jest",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
-    "type-check": "tsc --noEmit"
+    "lint": "eslint src scripts eslint.config.mjs",
+    "lint:fix": "eslint src scripts eslint.config.mjs --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write \"**/*.{ts,json,yaml,yml,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,json,yaml,yml,md}\"",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"!node_modules/**\"",
+    "lint:md:check": "markdownlint-cli2 \"**/*.md\" \"!node_modules/**\""
   },
   "keywords": [
     "immich",
@@ -35,6 +39,9 @@
     "@typescript-eslint/eslint-plugin": "^8.19.1",
     "@typescript-eslint/parser": "^8.19.1",
     "eslint": "^9.18.0",
+    "typescript-eslint": "^8.19.1",
+    "prettier": "^3.4.2",
+    "markdownlint-cli2": "^0.17.1",
     "typescript": "^5.7.3",
     "ts-node": "^10.9.2",
     "nodemon": "^3.1.9",

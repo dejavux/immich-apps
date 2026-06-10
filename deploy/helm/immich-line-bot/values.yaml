@@ -1,0 +1,62 @@
+replicaCount: 1
+
+image:
+  repository: registry-internal.3q.fi/immich-line-bot
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: registry-secret
+
+nameOverride: ""
+fullnameOverride: immich-line-bot
+
+serviceAccount:
+  create: false
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  host: immich-bot.3q.fi
+  path: /
+  pathType: Prefix
+  tls:
+    enabled: true
+    secretName: immich-bot-3q-fi-tls
+
+env:
+  nodeEnv: production
+  logLevel: info
+  # Cluster-internal Immich API (same namespace)
+  immichBaseUrl: http://immich-server:2283
+  immichWebUrl: https://immich.3q.fi
+
+onepassword:
+  enabled: true
+  lineBotItemPath: vaults/Infra-Apps/items/Immich-LINE-Bot
+  immichApiItemPath: vaults/Infra-Apps/items/Immich-API-Key
+
+secretKeys:
+  lineChannelSecret: channel-secret
+  lineAccessToken: access-token
+  immichApiKey: api-key
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

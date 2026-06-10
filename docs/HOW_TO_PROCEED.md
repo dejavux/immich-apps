@@ -1,7 +1,7 @@
 # 如何進行 — Immich Apps 執行指南
 
 **日期**: 2026-06-10  
-**Repo**: https://github.com/dejavux/immich-apps  
+**Repo**: <https://github.com/dejavux/immich-apps>  
 **進度 SSOT**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)
 
 ---
@@ -13,29 +13,32 @@
 | Repo `immich-apps` | ✅ 已建立 |
 | Manifests 遷移 | ✅ `deploy/manifests/` |
 | 文檔遷移 | ✅ `docs/` |
-| Makefile / package.json / Dockerfile | ✅ 骨架就緒 |
+| Makefile / package.json / Dockerfile | ✅ 就緒 |
 | infra-bootstrap 清理 | ✅ 僅保留指向 README |
 | Port range | ✅ **30450-30479** |
-| LINE Bot 源碼 | ⏳ 未開始 |
-| Helm charts | ⏳ 目錄空殼 |
-| pf.sh | ⏳ 未建立 |
-| CI/CD | ⏳ 未建立 |
-| LINE Channel / 1Password | ⏳ 未設定 |
+| LINE Bot 源碼 | ✅ MVP（webhook → Immich upload） |
+| LINE Channel / 1Password | ✅ `@189oipta` + Infra-Apps vault |
+| Helm chart | ✅ `deploy/helm/immich-line-bot/` 骨架 |
+| pf.sh | ✅ `scripts/dev/pf.sh`（30450） |
+| K8s 部署規劃 | ✅ [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md) |
+| Cursor lint / commit / PR | ✅ [CURSOR_LINT_FIX_AGENT.md](./CURSOR_LINT_FIX_AGENT.md) |
+| Tekton + BuildKit release | ⏳ 待實作（`make release` 已接腳本） |
+| HTTPS webhook | ⏳ `immich-bot.3q.fi` 待 Caddy/Route53 + deploy |
 
-**整體進度**: ~25%（Phase 0 完成，Phase 2 待開發）
+**整體進度**: ~45%（Phase 0 完成，Phase 2 MVP + Helm 骨架完成，待 CI/CD 部署）
 
 ---
 
 ## 🗺️ 建議執行順序
 
-分三軌並行：**Ops 軌**（憑證、DNS）、**Dev 軌**（LINE Bot）、**Infra 軌**（Helm、部署）。  
-Ops 與 Dev 可同時進行；K8s 部署需等 Helm + 憑證就緒。
+分三軌並行：**Ops 軌**（憑證 ✅）、**Dev 軌**（MVP ✅）、**Infra 軌**（Helm + Tekton + HTTPS）。  
+生產部署一律 **K8s Deployment + Helm + HTTPS**；ngrok 僅本機 dev。
 
 ```mermaid
 graph LR
-    A[Phase 0<br/>Repo 就緒 ✅] --> B[Phase 2a<br/>Ops: LINE + 1P]
-    A --> C[Phase 2b<br/>Dev: LINE Bot 源碼]
-    B --> D[Phase 2c<br/>Helm + Deploy]
+    A[Phase 0<br/>Repo 就緒 ✅] --> B[Phase 2a<br/>Ops: LINE + 1P ✅]
+    A --> C[Phase 2b<br/>Dev: MVP ✅]
+    B --> D[Phase 2c<br/>Tekton + Helm + HTTPS]
     C --> D
     D --> E[Phase 2d<br/>E2E 測試]
     E --> F[Phase 3<br/>Photo Sync]
@@ -52,15 +55,17 @@ graph LR
 
 1. 建立 Messaging API Channel（名稱：`Immich Photo Bot`）
 2. Webhook URL（先記下，部署後啟用）:
+
    ```
    https://immich-bot.3q.fi/webhook/line
    ```
+
 3. 關閉 Auto-reply / Greeting messages
 4. 取得 **Channel Secret**、**Channel Access Token**
 
 ### Step 2: Immich API Key
 
-1. 登入 https://immich.3q.fi
+1. 登入 <https://immich.3q.fi>
 2. Settings → API Keys → Create
 3. Name: `LINE Bot`，權限：upload
 
@@ -109,6 +114,7 @@ npm run dev   # 或 make dev-line-bot
 ```
 
 **MVP 功能**:
+
 - [ ] `GET /health` → 200
 - [ ] `POST /webhook/line` → LINE signature 驗證
 - [ ] 收到 image message → log + 回覆「收到照片」
@@ -127,53 +133,71 @@ npm run dev   # 或 make dev-line-bot
 ### 本機測試（ngrok 或 pf）
 
 **方案 A — ngrok（Webhook 開發）**:
+
 ```bash
 ngrok http 3000
 # 將 ngrok URL 設到 LINE Console Webhook（暫時）
 ```
 
 **方案 B — pf + 叢集內測（部署後）**:
+
 ```bash
 make pf   # 30450 → immich-line-bot
 ```
 
 ---
 
-## Phase 2c：Helm + 部署（1 天）
+## Phase 2c：K8s 部署 — Tekton + BuildKit + Helm + HTTPS
 
-### 待建立
+**完整規劃 SSOT**: [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md) ⭐
+
+### 架構摘要
+
+| 層 | 方案 |
+|----|------|
+| 映像建置 | Tekton `ci-tenant-immich-apps` + BuildKit |
+| 部署 | `helm upgrade immich-line-bot` → namespace `immich` |
+| Webhook | `https://immich-bot.3q.fi/webhook/line` |
+| 憑證 | 1Password Operator → K8s Secret |
+
+### Helm chart（已建立骨架）
 
 ```
 deploy/helm/immich-line-bot/
-├── Chart.yaml
-├── values.yaml
-├── values-dev.yaml
+├── Chart.yaml, values.yaml, values-prod.yaml
 └── templates/
-    ├── deployment.yaml
-    ├── service.yaml
-    ├── ingress.yaml
-    └── onepassworditem.yaml   # 1P Operator
+    ├── deployment.yaml, service.yaml, ingress.yaml
+    └── onepassworditems.yaml
 ```
 
 ### 部署流程
 
+**正式（Tekton 完成後）**:
+
 ```bash
-# 1. Build image
-make build-line-bot
-
-# 2. Deploy
-make deploy-line-bot
-
-# 3. 確認
-kubectl get pods -n immich -l app=immich-line-bot
-make logs
+make release TAG=v0.1.0   # Tekton BuildKit build + helm deploy
 ```
+
+**暫時手動（Tekton 完成前）**:
+
+```bash
+make build-line-bot IMAGE_TAG=v0.1.0
+make deploy-line-bot IMAGE_TAG=v0.1.0
+make helm-lint
+kubectl get pods -n immich -l app=immich-line-bot
+make pf   # 30450 → immich-line-bot:3000
+```
+
+### infra-bootstrap 待辦
+
+- `ci-tenant-immich-apps` namespace + RBAC
+- Caddyfile 加 `immich-bot.3q.fi`
+- Route53 A 記錄 + cert-manager Certificate
 
 ### pf.sh（Port 30450）
 
 ```bash
-# scripts/dev/pf.sh — 參考 fuqi-asset-manager/scripts/dev/pf.sh
-# 預設: 30450 → immich-line-bot:3000
+./scripts/dev/pf.sh   # 或 make pf
 ```
 
 Port 分配見 [PORT_RANGE_PLAN.md](./PORT_RANGE_PLAN.md)。
@@ -223,14 +247,19 @@ brew install immich-cli fswatch
 ```bash
 cd /Users/light0/DEV/immich-apps
 
-# 加入 workspace（Cursor）
-# File → Add Folder to Workspace → immich-apps
+make lint              # 變更檔 + Cursor lint-fix-agent
+make commit            # lint + AI commit
+make pull_request      # lint → commit → PR → merge master
+make release           # Tekton build + helm deploy
+```
 
+詳見 [CURSOR_LINT_FIX_AGENT.md](./CURSOR_LINT_FIX_AGENT.md)。
+
+```bash
 make help
-make lint          # 變更後
-make commit        # lint + commit（待接 cursor-lint-fix-agent）
+make pf                # port-forward 30450
+npm run dev            # 本機 LINE Bot
 make deploy-line-bot
-make pf
 make logs
 ```
 
@@ -251,7 +280,8 @@ make logs
 | 議題 | 建議 |
 |------|------|
 | GPT-4V 成本 | MVP 先不做，靠 Immich ML |
-| Webhook 本機測試 | ngrok 或 staging ingress |
+| Webhook 本機測試 | ngrok 或 `make pf`（部署後） |
+| 生產部署 | K8s + Helm + HTTPS（見 PHASE2_K8S_DEPLOYMENT.md） |
 | Immich server Helm vs kubectl | 短期沿用 `deploy/manifests/`；中期包成 Helm wrapper |
 | master vs main branch | 目前 repo 用 `master`，可選擇 rename → `main` |
 
@@ -261,8 +291,8 @@ make logs
 
 | 週 | 目標 |
 |----|------|
-| **Week 1** (6/10-6/14) | Ops 憑證 + LINE Bot MVP + pf.sh |
-| **Week 2** (6/15-6/21) | Helm deploy + E2E + 生產驗收 |
+| **Week 1** (6/10-6/14) | MVP + Helm 骨架 + 1P ✅ |
+| **Week 2** (6/15-6/21) | Tekton release + HTTPS + E2E |
 | **Week 3** (6/22-6/28) | Photo Sync |
 | **Week 4+** | Storage / Backup |
 
@@ -270,6 +300,7 @@ make logs
 
 ## 🔗 相關文檔
 
+- [CURSOR_LINT_FIX_AGENT.md](./CURSOR_LINT_FIX_AGENT.md) — make lint / commit / PR / release
 - [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md) — SSOT，每日更新
 - [PHASE2_LINE_BOT.md](./PHASE2_LINE_BOT.md) — 實作細節
 - [PORT_RANGE_PLAN.md](./PORT_RANGE_PLAN.md) — Port 30450-30479
@@ -278,4 +309,4 @@ make logs
 ---
 
 **最後更新**: 2026-06-10  
-**下一步**: Phase 2a Ops（LINE + 1Password）與 Phase 2b Day 1 源碼骨架可並行開始
+**下一步**: Tekton release pipeline + `immich-bot.3q.fi` HTTPS → 首次 Helm deploy → LINE Webhook Verify
