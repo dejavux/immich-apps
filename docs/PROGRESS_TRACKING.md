@@ -6,7 +6,7 @@
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
 **最後更新**: 2026-06-10  
-**專案狀態**: 🚧 Phase 2 開發中 — Repo 就緒，LINE Bot 待實作  
+**專案狀態**: 🚧 Phase 2 開發中 — LINE 憑證就緒，待源碼 + Webhook  
 **負責人**: Infrastructure Team + App Dev Team
 
 ---
@@ -71,62 +71,38 @@
 
 ### 2.1 LINE Bot Channel 設定
 
-**狀態**: ⏳ 待執行  
-**負責**: Ops Team  
-**預估**: 30 分鐘
+**狀態**: ✅ 完成  
+**完成日期**: 2026-06-10
 
 **任務**:
 
-- [ ] 前往 [LINE Developers Console](https://developers.line.biz/)
-- [ ] Create Provider (如果還沒有)
-- [ ] Create Channel → Messaging API
-  - [ ] Channel name: `Immich Photo Bot`
-  - [ ] Channel description: `自動上傳照片到 Immich`
-  - [ ] Category: Utilities
-- [ ] 設定 Webhook URL: `https://immich-bot.3q.fi/webhook/line`
-- [ ] 啟用 "Use webhook"
-- [ ] 關閉 "Auto-reply messages"
-- [ ] 關閉 "Greeting messages"
-- [ ] 記錄 Channel Secret（Basic settings）
-- [ ] 產生並記錄 Channel Access Token（Messaging API → Issue）
+- [x] 前往 [LINE Developers Console](https://developers.line.biz/)
+- [x] Create Provider + LINE Official Account（分享照片 @189oipta）
+- [x] 啟用 Messaging API（Channel ID: 2010362663）
+- [x] Issue Channel Access Token
+- [x] 關閉自動回應訊息
+- [ ] 設定 Webhook URL: `https://immich-bot.3q.fi/webhook/line`（待 server 部署）
+- [ ] 啟用 Webhook（部署後）
 
-**驗收**: Channel 建立完成，Webhook URL 已設定
+**驗收**: ✅ Channel + Token 就緒；⏳ Webhook 待部署
 
 ---
 
 ### 2.2 1Password 憑證設定
 
-**狀態**: ⏳ 待執行  
-**負責**: Ops Team  
-**預估**: 15 分鐘
+**狀態**: 🟡 部分完成（LINE Bot ✅）  
+**完成日期**: 2026-06-10
 
 **任務**:
 
-- [ ] 在 1Password `Infra-Apps` vault 建立 3 個 items:
-  
-  **Item 1: Immich-LINE-Bot**
-  - [ ] Title: `Immich-LINE-Bot`
-  - [ ] Fields:
-    - [ ] `channel-secret`: <從 LINE Console 複製>
-    - [ ] `access-token`: <從 LINE Console 複製>
-  
-  **Item 2: Immich-API-Key**
-  - [ ] Title: `Immich-API-Key`
-  - [ ] 登入 Immich Web UI: `https://immich.3q.fi`
-  - [ ] Settings → API Keys → Create API Key
-  - [ ] Name: `LINE Bot`
-  - [ ] Fields:
-    - [ ] `api-key`: <從 Immich 複製>
-  
-  **Item 3: OpenAI-API-Key**
-  - [ ] Title: `OpenAI-API-Key`
-  - [ ] 登入 [OpenAI Platform](https://platform.openai.com/)
-  - [ ] API keys → Create new secret key
-  - [ ] Name: `Immich LINE Bot`
-  - [ ] Fields:
-    - [ ] `api-key`: <從 OpenAI 複製>
+- [x] 建立 vault `Infra-Apps`（若不存在）
+- [x] **Item: Immich-LINE-Bot** — channel-id, channel-secret, access-token, bot-id
+  - 腳本: `scripts/create-line-bot-op-item.sh`
+- [ ] **Item: Immich-API-Key** — 從 Immich Web UI 建立 API Key
+- [ ] **Item: OpenAI-API-Key** — MVP 可略過
+- [ ] K8s `OnePasswordItem` + Operator 同步
 
-**驗收**: 3 個 1Password items 建立完成，可在 Desktop App 看到
+**驗收**: LINE Bot 憑證已存 1Password；Immich API Key 待建
 
 ---
 
