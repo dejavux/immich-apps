@@ -2,12 +2,12 @@
 
 **單一真相來源（Single Source of Truth）**：Immich 增強專案所有任務的集中管理。
 
-> ⚠️ **重要架構決策**: [REPO_ARCHITECTURE_RECOMMENDATION.md](./REPO_ARCHITECTURE_RECOMMENDATION.md)  
-> **結論**: LINE Bot 應建立**獨立 repo `immich-line-bot`**（參考 fuqi-asset-manager 結構）
+> 🏗️ **Repo**: https://github.com/dejavux/immich-apps（整合 server + LINE Bot + photo sync）  
+> 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-05-27  
-**專案狀態**: 🚧 Phase 2 準備中 - 需建立獨立 repo  
-**負責人**: Infrastructure Team
+**最後更新**: 2026-06-10  
+**專案狀態**: 🚧 Phase 2 開發中 — Repo 就緒，LINE Bot 待實作  
+**負責人**: Infrastructure Team + App Dev Team
 
 ---
 
@@ -15,11 +15,11 @@
 
 | 指標 | 數值 | 說明 |
 |------|------|------|
-| 🔴 高優先級任務 | 9 | Phase 2 LINE Bot (P0) - 新增 repo 建立 |
+| 🔴 高優先級任務 | 7 | Phase 2 LINE Bot (P0) — repo 已建，剩開發/部署 |
 | 🟡 中優先級任務 | 5 | Phase 3 Photo Sync (P1) |
 | 🟢 低優先級任務 | 8 | Phase 4-5 優化項目 (P2) |
-| ✅ 本週完成 | 7 | 專案規劃 + 文檔重構 + 架構決策 |
-| 📈 整體進度 | 15% | Phase 1: 50%, Phase 2: 0% |
+| ✅ 本週完成 | 4 | Repo 建立、文檔遷移、port 規劃、infra 清理 |
+| 📈 整體進度 | **25%** | Phase 0: 100%, Phase 1: 50%, Phase 2: 10% |
 
 ---
 
@@ -27,41 +27,45 @@
 
 | Phase | 名稱 | 優先級 | 狀態 | 進度 | 預估完成 |
 |-------|------|--------|------|------|----------|
-| **Phase 1** | 基礎設施 | ✅ 已部署 | 50% 完成 | ████████░░ 50% | 2025-10-06 |
-| **Phase 2** | LINE Bot | 🔴 P0 最高 | 📋 規劃完成 | ░░░░░░░░░░ 0% | 2026-06-02 |
-| **Phase 3** | Photo Sync | 🟡 P1 次優先 | 📋 規劃完成 | ░░░░░░░░░░ 0% | 2026-06-04 |
-| **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-06-09 |
-| **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-06-15 |
+| **Phase 0** | Repo 整合 | ✅ 完成 | 100% | ██████████ 100% | 2026-05-27 |
+| **Phase 1** | 基礎設施 | ✅ 已部署 | 50% 完成 | █████░░░░░ 50% | 2025-10-06 |
+| **Phase 2** | LINE Bot | 🔴 P0 最高 | 🚧 開發中 | ██░░░░░░░░ 10% | 2026-06-21 |
+| **Phase 3** | Photo Sync | 🟡 P1 次優先 | 📋 規劃完成 | ░░░░░░░░░░ 0% | 2026-06-28 |
+| **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-05 |
+| **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-12 |
 
 ---
 
 ## 🔴 P0：高優先級（Phase 2 - LINE Bot）
 
 **目標**: 從 LINE 轉發照片 → 自動上傳 Immich + AI 標註  
-**預估**: 3-5 天  
-**截止**: 2026-06-02
+**預估**: 3-5 天（開發）+ 1 天（部署驗收）  
+**截止**: 2026-06-21
 
-> 🏗️ **架構決策**: 獨立 repo `immich-line-bot`  
-> **Port Range**: 30430-30439  
-> **參考**: [REPO_ARCHITECTURE_RECOMMENDATION.md](./REPO_ARCHITECTURE_RECOMMENDATION.md)
+> 🏗️ **Repo**: `immich-apps` — https://github.com/dejavux/immich-apps  
+> **Port Range**: **30450-30479**（LINE Bot 預設 30450）  
+> **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
 ### 2.0 Repo 建立與初始化
 
-**狀態**: ⏳ 待執行  
-**負責**: Dev Team  
-**預估**: 1 小時
+**狀態**: ✅ 完成  
+**完成日期**: 2026-05-27
 
 **任務**:
 
-- [ ] 建立 GitHub repo: `immich-line-bot`
-- [ ] 初始化 Node.js + TypeScript 專案
-- [ ] 建立目錄結構（src/, deploy/helm/, scripts/dev/）
-- [ ] 設定 pf.sh (port 30430)
-- [ ] 複製 Makefile 範本（參考 fuqi-asset-manager）
+- [x] 建立 GitHub repo: `immich-apps`（整合 server + LINE Bot + photo sync）
+- [x] 初始化 Node.js + TypeScript 專案（package.json, tsconfig.json）
+- [x] 建立目錄結構（src/, deploy/helm/, deploy/manifests/, scripts/, docs/）
+- [x] 複製 Makefile 骨架
+- [x] Dockerfile.line-bot
+- [x] 遷移 manifests 與文檔（自 infra-bootstrap）
+- [x] infra-bootstrap 清理（僅保留指向 README）
+- [x] Port range 規劃 → 30450-30479
+- [ ] 設定 pf.sh (port 30450) — **下一步**
 - [ ] 建立 `.github/workflows/` (ci.yml, release.yml)
-- [ ] 建立 `docs/PROGRESS_TRACKING.md`（獨立追蹤）
+- [ ] `npm install` + 本機可跑
 
-**驗收**: Repo 建立完成，基礎結構就緒
+**驗收**: ✅ Repo 建立完成；⏳ pf.sh / CI 待補
 
 ---
 
@@ -598,8 +602,8 @@ _目前無開放問題_
 
 ### 專案文檔
 
+- [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md) - **執行指南**（如何進行）⭐
 - [README.md](./README.md) - 專案總覽
-- [REPO_ARCHITECTURE_RECOMMENDATION.md](./REPO_ARCHITECTURE_RECOMMENDATION.md) - **Repo 管理建議**（新）⭐
 - [PHASE2_LINE_BOT.md](./PHASE2_LINE_BOT.md) - LINE Bot 完整實作（P0）
 - [PHASE3_PHOTO_SYNC.md](./PHASE3_PHOTO_SYNC.md) - 照片同步實作（P1）
 - [GPU_CONFIGURATION.md](./GPU_CONFIGURATION.md) - GPU 配置詳解
@@ -616,24 +620,36 @@ _目前無開放問題_
 
 ## 🎯 下一步行動
 
-### 本週重點（Week 1）
+> 詳細步驟見 [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-1. **立即執行**（今天）:
-   - [ ] **建立 GitHub repo `immich-line-bot`**（1 小時）⭐
-   - [ ] 初始化專案結構（src/, deploy/helm/, scripts/）
-   - [ ] 設定 pf.sh (port 30430) 
-   - [ ] LINE Bot Channel 設定（30 分鐘）
-   - [ ] 1Password 憑證準備（15 分鐘）
+### 本週重點（Week 1: 6/10-6/14）
 
-2. **本週內**（Week 1）:
-   - [ ] TypeScript 核心功能開發（2 天）
-   - [ ] Helm Chart 建立（1 小時）
-   - [ ] 本地功能測試（2 小時）
-   - [ ] Kubernetes 部署（1 小時）
-   - [ ] 生產環境測試（1 小時）
+**可並行 — Ops 軌 + Dev 軌**:
 
-3. **下週**（Week 2）:
-   - [ ] Photo Sync 實作（Mac 端）
+1. **Ops**（約 1 小時）:
+   - [ ] LINE Bot Channel 設定
+   - [ ] 1Password 憑證（Immich-LINE-Bot, Immich-API-Key, OpenAI-API-Key）
+   - [ ] 確認 `immich-bot.3q.fi` DNS / Ingress
+
+2. **Dev**（2-3 天）:
+   - [ ] `npm install`
+   - [ ] `src/line-bot/index.ts` — Express + /health + webhook
+   - [ ] `scripts/dev/pf.sh`（port 30450）
+   - [ ] Immich upload client（`src/shared/immich-client.ts`）
+
+3. **Deploy**（Week 2）:
+   - [ ] Helm chart `deploy/helm/immich-line-bot/`
+   - [ ] `make build-line-bot` + `make deploy-line-bot`
+   - [ ] E2E：LINE 轉發照片 → Immich 可見
+
+### 下週（Week 2: 6/15-6/21）
+
+- [ ] 生產驗收 + Prometheus metrics
+- [ ] Phase 2 結案
+
+### Week 3+
+
+- [ ] Phase 3: Photo Sync（Mac launchd）
 
 ---
 
@@ -641,7 +657,7 @@ _目前無開放問題_
 
 ### Phase 2 完成條件
 
-- [ ] **Repo 建立完成**（immich-line-bot）⭐
+- [x] **Repo 建立完成**（immich-apps）⭐
 - [ ] LINE Bot Channel 建立並設定 Webhook
 - [ ] 1Password 憑證同步正常（3 個 Secrets）
 - [ ] Kubernetes Deployment 健康（2/2 Pods Running）
@@ -664,10 +680,10 @@ _目前無開放問題_
 
 ---
 
-**專案狀態**: 🚧 Phase 2 準備中（Week 1）  
-**當前重點**: LINE Bot Channel 設定 + 1Password 憑證  
-**下一里程碑**: Phase 2 完成（2026-06-02）
+**專案狀態**: 🚧 Phase 2 開發中（Week 1）  
+**當前重點**: Ops 憑證 + LINE Bot MVP 源碼  
+**下一里程碑**: Phase 2 E2E 完成（2026-06-21）
 
-**最後更新**: 2026-05-27  
-**維護者**: Infrastructure Team  
-**更新頻率**: 每日（Phase 2-3 期間），每週（Phase 4-5 期間）
+**最後更新**: 2026-06-10  
+**維護者**: Infrastructure Team + App Dev Team  
+**更新頻率**: 每週（或 Phase 里程碑完成時）

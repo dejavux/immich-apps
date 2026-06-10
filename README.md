@@ -2,8 +2,9 @@
 
 **完整的 Immich 生態系統**：Immich server + LINE Bot + Photo Sync
 
-> 🚀 **Status**: 開發中  
+> 🚀 **Status**: Phase 2 開發中（Repo 就緒，LINE Bot 待實作）  
 > 📊 **Progress**: [PROGRESS_TRACKING.md](./docs/PROGRESS_TRACKING.md)  
+> 📋 **如何進行**: [HOW_TO_PROCEED.md](./docs/HOW_TO_PROCEED.md)  
 > 🏗️ **Architecture**: [REPO_CONSOLIDATION_PLAN.md](./docs/REPO_CONSOLIDATION_PLAN.md)
 
 ---
@@ -33,7 +34,7 @@ immich-apps/
 │   ├── photo-sync/                # Photo Sync scripts
 │   └── shared/                    # 共用程式碼
 ├── scripts/
-│   ├── dev/pf.sh                  # Port-forward (30430-30439)
+│   ├── dev/pf.sh                  # Port-forward (30450-30479)
 │   └── deploy-all.sh              # 部署所有組件
 ├── docs/                          # 完整文檔
 │   ├── PROGRESS_TRACKING.md       # SSOT
@@ -99,7 +100,7 @@ make logs
 ### 2. LINE Bot
 
 - **Namespace**: `immich`
-- **Port**: 30430 (port-forward)
+- **Port**: 30450 (port-forward)
 - **Webhook**: https://immich-bot.3q.fi/webhook/line
 - **Features**:
   - 從 LINE 接收照片
@@ -135,7 +136,7 @@ make build-line-bot    # Docker build LINE Bot
 make release-line-bot  # Build + Deploy
 
 # 本機
-make pf                # Port-forward (30430)
+make pf                # Port-forward (30450)
 make dev-line-bot      # 本機開發 LINE Bot
 make logs              # 查看 k8s logs
 ```
@@ -144,7 +145,7 @@ make logs              # 查看 k8s logs
 
 | Service | Port | 用途 |
 |---------|------|------|
-| LINE Bot | 30430 | Webhook server |
+| LINE Bot | 30450 | Webhook server |
 | (預留) | 30431-30439 | 未來服務 |
 
 ---
@@ -245,7 +246,7 @@ make logs
 
 # Port-forward 測試
 make pf
-curl http://127.0.0.1:30430/health
+curl http://127.0.0.1:30450/health
 ```
 
 ---
