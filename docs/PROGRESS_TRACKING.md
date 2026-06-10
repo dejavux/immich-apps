@@ -90,7 +90,7 @@
 
 ### 2.2 1Password 憑證設定
 
-**狀態**: 🟡 部分完成（LINE Bot ✅）  
+**狀態**: ✅ LINE Bot + Immich API Key 完成  
 **完成日期**: 2026-06-10
 
 **任務**:
@@ -98,11 +98,12 @@
 - [x] 建立 vault `Infra-Apps`（若不存在）
 - [x] **Item: Immich-LINE-Bot** — channel-id, channel-secret, access-token, bot-id
   - 腳本: `scripts/create-line-bot-op-item.sh`
-- [ ] **Item: Immich-API-Key** — 從 Immich Web UI 建立 API Key
+- [x] **Item: Immich-API-Key** — api-key
+  - 腳本: `scripts/create-immich-api-key-op-item.sh`
 - [ ] **Item: OpenAI-API-Key** — MVP 可略過
 - [ ] K8s `OnePasswordItem` + Operator 同步
 
-**驗收**: LINE Bot 憑證已存 1Password；Immich API Key 待建
+**驗收**: ✅ LINE + Immich 憑證已存 1Password；K8s 同步待 Helm 部署
 
 ---
 
