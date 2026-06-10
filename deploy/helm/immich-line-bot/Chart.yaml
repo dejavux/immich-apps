@@ -1,0 +1,6 @@
+apiVersion: v2
+name: immich-line-bot
+description: LINE Bot for Immich photo auto-upload
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

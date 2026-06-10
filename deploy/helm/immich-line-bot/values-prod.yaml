@@ -1,0 +1,7 @@
+# Production overrides for immich-line-bot
+
+image:
+  pullPolicy: Always
+
+env:
+  logLevel: info
