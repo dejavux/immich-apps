@@ -107,45 +107,32 @@
 
 ---
 
-### 2.3 開發環境設定
+### 2.3 LINE Bot MVP 源碼
 
-**狀態**: ⏳ 待執行  
-**負責**: Dev Team  
-**預估**: 1 小時
+**狀態**: ✅ MVP 完成  
+**完成日期**: 2026-06-10
 
 **任務**:
 
-- [ ] 建立專案目錄結構
-  ```bash
-  mkdir -p immich-line-bot/src/{handlers,config,utils,types}
-  cd immich-line-bot
-  ```
+- [x] `src/line-bot/index.ts` — Express + `/health` + `/webhook/line`
+- [x] LINE signature 驗證（`@line/bot-sdk` middleware）
+- [x] 下載 LINE 圖片 → 上傳 Immich
+- [x] 成功/失敗回覆用戶
+- [x] `scripts/dev/load-env-from-op.sh` — 從 1Password 載入憑證
+- [ ] 本機 ngrok 測試
+- [ ] Helm deploy + 生產 Webhook
 
-- [ ] 初始化 Node.js 專案
-  ```bash
-  npm init -y
-  npm install express @line/bot-sdk axios form-data pino prom-client
-  npm install -D typescript @types/node @types/express ts-node nodemon
-  ```
+**本機開發**:
 
-- [ ] 設定 TypeScript
-  - [ ] 建立 `tsconfig.json`
-  - [ ] 設定 `"target": "ES2022"`, `"module": "commonjs"`
+```bash
+cd immich-apps
+npm install && npm run build
+eval "$(./scripts/dev/load-env-from-op.sh)"
+npm run dev
+# ngrok http 3000 → 設 LINE Webhook
+```
 
-- [ ] 建立核心檔案（參考 PHASE2_LINE_BOT.md）:
-  - [ ] `src/index.ts` (Express server)
-  - [ ] `src/config/environment.ts`
-  - [ ] `src/handlers/line-webhook.ts`
-  - [ ] `src/handlers/immich-upload.ts`
-  - [ ] `src/handlers/ai-annotation.ts`
-  - [ ] `src/utils/logger.ts`
-  - [ ] `src/utils/metrics.ts`
-  - [ ] `src/utils/retry.ts`
-
-- [ ] 建立 Dockerfile
-- [ ] 設定本地環境變數（.env.local）
-
-**驗收**: 本地 `npm run dev` 可啟動，`/health` 端點正常
+**驗收**: `npm run build` + `npm run type-check` 通過；`/health` 可本機驗證
 
 ---
 
@@ -153,34 +140,15 @@
 
 **狀態**: ⏳ 待執行  
 **負責**: Dev Team  
-**預估**: 2 小時
+**預估**: 1 小時
 
 **任務**:
 
-- [ ] LINE Webhook 驗證
-  - [ ] 使用 ngrok 暴露本地端口
-  - [ ] LINE Console 設定 ngrok URL
-  - [ ] 發送測試訊息，檢查 webhook 接收
+- [ ] ngrok + LINE Webhook 驗證
+- [ ] 手機傳照片 → Bot 回覆 Immich 連結
+- [ ] Immich Web UI 確認新照片
 
-- [ ] Immich API 上傳測試
-  - [ ] 測試 `/api/asset/upload` 端點
-  - [ ] 驗證圖片成功上傳
-  - [ ] 檢查 Asset ID 回傳
-
-- [ ] ML 處理等待測試
-  - [ ] 輪詢 Asset status
-  - [ ] 驗證 CLIP 處理完成
-
-- [ ] GPT-4V 標註測試
-  - [ ] 測試 OpenAI Vision API
-  - [ ] 驗證繁體中文描述生成
-  - [ ] 檢查 token 消耗
-
-- [ ] Metadata 更新測試
-  - [ ] 測試 PUT `/api/asset/:id`
-  - [ ] 驗證描述和標籤更新
-
-**驗收**: 完整流程從 LINE 發送照片 → Immich 可見 + 有 AI 描述
+**驗收**: LINE 轉發照片 → Immich 可見（MVP 不含 GPT-4V）
 
 ---
 
