@@ -1,7 +1,7 @@
 # Phase 3: 照片同步與上傳
 
-**狀態**: 🚧 **local-archive 全量上傳中**（2026-06-11）  
-**預估時間**: 2-3 天（多 library 同步）+ Phase 3.5 分層  
+**狀態**: 🚧 **local-archive ✅** · **icloud-primary ~22%**（3511 new / 1 dup）  
+**預估時間**: local 收尾 + icloud 增量；Phase 3.5 分層另計  
 **優先級**: **P1 — 當前主軌**（原檔 + EXIF SSOT）  
 **負責人**: Infrastructure Team
 
@@ -314,11 +314,17 @@ Immich 磁碟 ~112 GB **≠** DB 內兩份 library。詳見 **[PHASE3_STORAGE_AU
 
 ## 🔄 續傳
 
-中斷後重跑同一指令；CLI 依 hash skip 已完成檔：
+中斷後重跑同一指令；CLI 依 hash skip 已完成檔。`immich-sync.sh` 會：
+
+- 失敗路徑自動 `-c 1` 重試
+- 502/503 transient 整批重跑（`max_retries`）
+- 統計寫入 `~/Library/Logs/immich-photo-sync/stats/*.json`
 
 ```bash
 ./scripts/photo-sync/immich-sync.sh --library local-archive
 ```
+
+**進度列**：腳本以 pseudo-TTY 轉發 CLI；若 terminal 長時間停在 `Found N new files` 後無動態列，用 `tail -f stats/*-run-*.log` 確認（舊版 pipe 會緩衝 `\r` 進度列至換行）。
 
 ---
 
@@ -439,24 +445,23 @@ tail -f ~/Library/Logs/immich-watch.stdout.log
 
 | 檔案 | 用途 |
 |------|------|
-| `~/Library/Logs/immich-sync.log` | 同步操作日誌 |
+| `~/Library/Logs/immich-photo-sync/sync.log` | 腳本時間戳記（START/STATS/DONE） |
+| `~/Library/Logs/immich-photo-sync/stats/*.json` | 結構化統計（new_files / failed_assets） |
+| `~/Library/Logs/immich-photo-sync/stats/*-run-*.log` | 完整 immich CLI 輸出（含 Uploading 進度列） |
+| `~/Library/Logs/immich-photo-sync/stats/*-failed-*.txt` | 失敗檔案路徑清單 |
 | `~/Library/Logs/immich-watch.stdout.log` | fswatch 標準輸出 |
-| `~/Library/Logs/immich-watch.stderr.log` | fswatch 錯誤輸出 |
 
 ### 查看日誌
 
 ```bash
-# 即時查看同步日誌
-tail -f ~/Library/Logs/immich-sync.log
+# 最新統計摘要
+ls -t ~/Library/Logs/immich-photo-sync/stats/local-archive-*.json | head -1 | xargs cat
 
-# 查看最近 50 行
-tail -n 50 ~/Library/Logs/immich-sync.log
+# 即時 immich CLI 輸出（Uploading assets 進度列）
+tail -f ~/Library/Logs/immich-photo-sync/stats/local-archive-run-*.log
 
-# 搜尋錯誤
-grep ERROR ~/Library/Logs/immich-sync.log
-
-# 統計上傳數量
-grep "Uploaded" ~/Library/Logs/immich-sync.log | wc -l
+# 腳本事件
+tail -f ~/Library/Logs/immich-photo-sync/sync.log
 ```
 
 ### 日誌輪轉

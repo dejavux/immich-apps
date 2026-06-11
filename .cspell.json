@@ -67,7 +67,13 @@
     "pipelinerun",
     "shellcheck",
     "SSOT",
-    "tekton",
+    "crictl",
+    "extname",
+    "pgvecto",
+    "pgvectors",
+    "valkey",
+    "vectorchord",
+    "vchord",
     "tsconfig",
     "yamllint"
   ]
