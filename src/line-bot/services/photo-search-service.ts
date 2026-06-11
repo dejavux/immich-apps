@@ -22,6 +22,7 @@ import {
 } from "./photo-search-prompt";
 import { QwenClient } from "./qwen-client";
 import { SearchSessionStore } from "./search-session-store";
+import { resolvePersonSearchName } from "./person-aliases";
 
 export interface PhotoSearchServiceOptions {
   immichClient: ImmichClient;
@@ -30,6 +31,7 @@ export interface PhotoSearchServiceOptions {
   qwenClient?: QwenClient;
   maxResults: number;
   ageWindowDays: number;
+  personAliases: Map<string, string>;
 }
 
 export class PhotoSearchService {
@@ -208,14 +210,22 @@ export class PhotoSearchService {
     }
 
     if (personName) {
+      const immichName = resolvePersonSearchName(
+        personName,
+        this.options.personAliases,
+      );
       const people =
-        await this.options.immichClient.searchPersonByName(personName);
+        await this.options.immichClient.searchPersonByName(immichName);
       if (people.length === 0) {
         this.options.sessionStore.save(userId, { plan });
+        const aliasHint =
+          immichName !== personName
+            ? `\n（已對照 Immich 名稱「${immichName}」仍找不到）`
+            : "";
         return {
           kind: "clarify",
           message:
-            `Immich 找不到「${personName}」。\n` +
+            `Immich 找不到「${personName}」。${aliasHint}\n` +
             "請確認 Immich 人物命名，或改用日期搜尋。",
         };
       }
@@ -257,24 +267,37 @@ export class PhotoSearchService {
     return this.finishAssetSearch(userId, undefined, label, plan, {});
   }
 
+  private personDisplayName(
+    plan: Partial<PhotoSearchPlan>,
+    person: ImmichPersonSummary,
+  ): string {
+    return plan.personNames?.[0]?.trim() || person.name;
+  }
+
   private async searchWithPerson(
     userId: string,
     plan: Partial<PhotoSearchPlan>,
     person: ImmichPersonSummary,
   ): Promise<PhotoSearchResult> {
+    const displayName = this.personDisplayName(plan, person);
     const hasScene = this.hasSceneQuery(plan);
     const range = resolveTakenRange(plan, person, this.options.ageWindowDays);
 
     if (!range.ok) {
       if (!hasScene) {
         this.options.sessionStore.save(userId, {
-          plan: { ...plan, personNames: [person.name] },
+          plan: {
+            ...plan,
+            personNames: plan.personNames?.length
+              ? plan.personNames
+              : [person.name],
+          },
         });
         return { kind: "clarify", message: range.question };
       }
 
-      const label = `${person.name} · ${this.sceneLabel(plan)}`;
-      return this.finishAssetSearch(userId, person.name, label, plan, {
+      const label = `${displayName} · ${this.sceneLabel(plan)}`;
+      return this.finishAssetSearch(userId, displayName, label, plan, {
         personIds: [person.id],
       });
     }
@@ -283,7 +306,7 @@ export class PhotoSearchService {
       ? `${range.label} · ${this.sceneLabel(plan)}`
       : range.label;
 
-    return this.finishAssetSearch(userId, person.name, criteriaLabel, plan, {
+    return this.finishAssetSearch(userId, displayName, criteriaLabel, plan, {
       personIds: [person.id],
       takenAfter: range.takenAfter,
       takenBefore: range.takenBefore,

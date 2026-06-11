@@ -5,6 +5,7 @@
 # Usage:
 #   bash scripts/line-bot/smoke-photo-search-e2e.sh
 #   bash scripts/line-bot/smoke-photo-search-e2e.sh --person 小蕊
+#   bash scripts/line-bot/smoke-photo-search-e2e.sh --person rayna
 #   bash scripts/line-bot/smoke-photo-search-e2e.sh --scene "beach ocean"
 #
 set -euo pipefail
@@ -14,13 +15,14 @@ BOT_HOST="${BOT_HOST:-https://immich-bot.3q.fi}"
 IMMICH_BASE="${IMMICH_BASE:-https://immich.3q.fi}"
 PERSON_NAME=""
 SCENE_QUERY="beach ocean"
+SEARCH_PERSON_ALIASES="${SEARCH_PERSON_ALIASES:-小蕊:rayna}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --person) PERSON_NAME="$2"; shift 2 ;;
     --scene) SCENE_QUERY="$2"; shift 2 ;;
     -h|--help)
-      sed -n '2,8p' "$0"
+      sed -n '2,9p' "$0"
       exit 0
       ;;
     *) echo "Unknown arg: $1" >&2; exit 1 ;;
@@ -37,16 +39,31 @@ if [[ -z "${IMMICH_API_KEY:-}" ]]; then
 fi
 
 if [[ -z "${IMMICH_API_KEY:-}" ]]; then
-  echo "❌ 請設定 IMMICH_API_KEY 或建立 .env（可 source scripts/dev/load-env-from-op.sh）" >&2
+  echo "❌ 請設定 IMMICH_API_KEY 或建立 .env（可 eval \"\$(./scripts/dev/load-env-from-op.sh)\"）" >&2
   exit 1
 fi
 
 auth=(-H "x-api-key: ${IMMICH_API_KEY}")
 
+resolve_person_alias() {
+  local name="$1"
+  local part alias immich
+  IFS=',' read -ra parts <<< "$SEARCH_PERSON_ALIASES"
+  for part in "${parts[@]}"; do
+    alias="${part%%:*}"
+    immich="${part#*:}"
+    if [[ "$alias" == "$name" && -n "$immich" ]]; then
+      echo "$immich"
+      return
+    fi
+  done
+  echo "$name"
+}
+
 echo "== 1) Bot pod 映像與搜尋 env =="
 kubectl get deploy immich-line-bot -n "$NAMESPACE" \
   -o jsonpath='image={.spec.template.spec.containers[0].image}{"\n"}' 2>/dev/null || true
-for key in PHOTO_SEARCH_ENABLED QWEN_BASE_URL LINE_BOT_PUBLIC_URL SEARCH_MAX_RESULTS; do
+for key in PHOTO_SEARCH_ENABLED QWEN_BASE_URL LINE_BOT_PUBLIC_URL SEARCH_MAX_RESULTS SEARCH_PERSON_ALIASES; do
   val="$(kubectl get deploy immich-line-bot -n "$NAMESPACE" \
     -o "jsonpath={.spec.template.spec.containers[0].env[?(@.name==\"${key}\")].value}" 2>/dev/null || true)"
   echo "  ${key}=${val:-<unset>}"
@@ -57,12 +74,19 @@ echo "== 2) Bot health =="
 curl -fsS "${BOT_HOST}/health" | python3 -m json.tool
 
 if [[ -n "$PERSON_NAME" ]]; then
+  immich_name="$(resolve_person_alias "$PERSON_NAME")"
   echo ""
   echo "== 3) Immich GET /search/person?name=${PERSON_NAME} =="
-  encoded="$(python3 -c "import urllib.parse; print(urllib.parse.quote('${PERSON_NAME}'))")"
-  curl -fsS "${auth[@]}" \
-    "${IMMICH_BASE}/api/search/person?name=${encoded}&withHidden=false" \
-    | python3 -c "import json,sys; d=json.load(sys.stdin); print('count', len(d)); [print(' -', p.get('name'), p.get('id')) for p in d[:5]]"
+  if [[ "$immich_name" != "$PERSON_NAME" ]]; then
+    echo "  alias: ${PERSON_NAME} → ${immich_name}"
+  fi
+  encoded="$(python3 -c "import urllib.parse; print(urllib.parse.quote('${immich_name}'))")"
+  person_json="$(curl -fsS "${auth[@]}" \
+    "${IMMICH_BASE}/api/search/person?name=${encoded}&withHidden=false")"
+  python3 -c "import json,sys; d=json.load(sys.stdin); print('count', len(d)); [print(' -', p.get('name'), p.get('id'), 'birthDate=', p.get('birthDate')) for p in d[:5]]" <<<"$person_json"
+  if [[ "$(python3 -c "import json,sys; print(len(json.load(sys.stdin)))" <<<"$person_json")" == "0" ]]; then
+    echo "  ⚠ 找不到人物。Immich People 頁面的名稱必須與 alias 右側一致（例：rayna）"
+  fi
 fi
 
 echo ""
@@ -86,18 +110,17 @@ if [[ -n "$asset_id" ]]; then
 fi
 
 echo ""
-echo "== 6) Qwen（叢集內，可選） =="
-if kubectl get deploy -n local-llm qwen-coder &>/dev/null; then
-  kubectl run qwen-smoke-$RANDOM --rm -i --restart=Never -n "$NAMESPACE" \
-    --image=curlimages/curl:8.5.0 --command -- \
-    curl -fsS -m 15 \
-      -H "Content-Type: application/json" \
-      -d '{"model":"default","messages":[{"role":"user","content":"reply ok"}],"max_tokens":8}' \
-      "http://qwen-coder.local-llm.svc.cluster.local:8001/v1/chat/completions" \
-    | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['choices'][0]['message']['content'][:80])" \
-    || echo "  ⚠ Qwen 連線失敗（Bot 會 fallback 規則解析）"
+echo "== 6) Qwen（從 Bot pod 連線） =="
+if kubectl get deploy -n "$NAMESPACE" immich-line-bot &>/dev/null; then
+  if kubectl exec -n "$NAMESPACE" deploy/immich-line-bot -- \
+    wget -qO- --timeout=10 "http://qwen-coder.local-llm.svc.cluster.local:8001/v1/models" 2>/dev/null \
+    | python3 -c "import json,sys; d=json.load(sys.stdin); print('models', [m['id'] for m in d.get('data',[])[:2]])" 2>/dev/null; then
+    echo "  ✅ Qwen reachable from Bot pod"
+  else
+    echo "  ⚠ Qwen 連線失敗（Bot 會 fallback 規則解析）"
+  fi
 else
-  echo "  skip（local-llm/qwen-coder 不在此 cluster）"
+  echo "  skip（immich-line-bot deploy 不存在）"
 fi
 
 cat <<'EOF'
@@ -108,16 +131,16 @@ cat <<'EOF'
      → 找在海邊的照片
      預期：文字摘要 + 橫向滑動縮圖；點縮圖開 Immich
 
-  B. 人名 + 年齡（V1 metadata + Flex）
+  B. 人名 + 年齡（V1 metadata + Flex；暱稱 小蕊 → Immich rayna）
      → 幫我找小蕊一歲半的照片
-     預期：若 Immich 有「小蕊」且設生日 → carousel；否則追問生日
+     預期：若 rayna 有生日 → carousel；否則追問生日
 
   C. 追問流程
      → 生日 2019-03-15
      預期：依生日推算 1.5 歲區間並回傳結果
 
   D. 驗 log
-     kubectl logs -n immich -l app=immich-line-bot --tail=80 | rg "Photo search"
+     kubectl logs -n immich deploy/immich-line-bot --tail=80 | rg "Photo search"
 
 EOF
 

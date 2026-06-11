@@ -85,6 +85,8 @@ spec:
               value: {{ .Values.env.searchAgeWindowDays | quote }}
             - name: SEARCH_SESSION_TTL_MS
               value: {{ .Values.env.searchSessionTtlMs | quote }}
+            - name: SEARCH_PERSON_ALIASES
+              value: {{ .Values.env.searchPersonAliases | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:

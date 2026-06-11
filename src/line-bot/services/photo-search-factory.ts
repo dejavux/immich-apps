@@ -1,5 +1,6 @@
 import { env } from "../config/env";
 import { ImmichClient } from "../../shared/immich-client";
+import { parsePersonAliases } from "./person-aliases";
 import { PhotoSearchService } from "./photo-search-service";
 import { QwenClient } from "./qwen-client";
 import { SearchSessionStore } from "./search-session-store";
@@ -24,6 +25,7 @@ export const photoSearchService = new PhotoSearchService({
   qwenClient,
   maxResults: env.searchMaxResults,
   ageWindowDays: env.searchAgeWindowDays,
+  personAliases: parsePersonAliases(env.searchPersonAliases),
 });
 
 /** @internal test helper */

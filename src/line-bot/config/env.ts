@@ -57,6 +57,8 @@ export const env = {
     optional("SEARCH_SESSION_TTL_MS", "1800000"),
     10,
   ),
+  /** Comma-separated nickname:ImmichName pairs, e.g. 小蕊:rayna */
+  searchPersonAliases: optional("SEARCH_PERSON_ALIASES", "小蕊:rayna"),
   /** Public HTTPS base URL for LINE-accessible media (thumbnail proxy). */
   lineBotPublicUrl: optional(
     "LINE_BOT_PUBLIC_URL",
