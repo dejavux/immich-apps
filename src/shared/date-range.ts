@@ -89,3 +89,90 @@ export function explicitDateRange(
     takenBefore: toIsoDateTimeEnd(to),
   };
 }
+
+function formatUtcDateOnly(date: Date): string {
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(date.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export type RelativeDateKind =
+  | "this_year"
+  | "last_year"
+  | "this_month"
+  | "last_month";
+
+export function relativeDateRange(
+  kind: RelativeDateKind,
+  now: Date = new Date(),
+): { dateFrom: string; dateTo: string; label: string } {
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const today = formatUtcDateOnly(now);
+
+  switch (kind) {
+    case "this_year":
+      return {
+        dateFrom: `${year}-01-01`,
+        dateTo: today,
+        label: "今年",
+      };
+    case "last_year":
+      return {
+        dateFrom: `${year - 1}-01-01`,
+        dateTo: `${year - 1}-12-31`,
+        label: "去年",
+      };
+    case "this_month": {
+      const start = new Date(Date.UTC(year, month, 1));
+      return {
+        dateFrom: formatUtcDateOnly(start),
+        dateTo: today,
+        label: "本月",
+      };
+    }
+    case "last_month": {
+      const start = new Date(Date.UTC(year, month - 1, 1));
+      const end = new Date(Date.UTC(year, month, 0));
+      return {
+        dateFrom: formatUtcDateOnly(start),
+        dateTo: formatUtcDateOnly(end),
+        label: "上個月",
+      };
+    }
+    default: {
+      const _exhaustive: never = kind;
+      return _exhaustive;
+    }
+  }
+}
+
+const RELATIVE_DATE_PATTERNS: Array<{
+  pattern: RegExp;
+  kind: RelativeDateKind;
+}> = [
+  { pattern: /今年/, kind: "this_year" },
+  { pattern: /去年/, kind: "last_year" },
+  { pattern: /(?:這個月|本月)/, kind: "this_month" },
+  { pattern: /上(?:個|一)月/, kind: "last_month" },
+];
+
+export function detectRelativeDateInText(
+  text: string,
+  now: Date = new Date(),
+): { dateFrom: string; dateTo: string; label: string } | undefined {
+  for (const { pattern, kind } of RELATIVE_DATE_PATTERNS) {
+    if (pattern.test(text)) {
+      return relativeDateRange(kind, now);
+    }
+  }
+  return undefined;
+}
+
+export function stripRelativeDateTokens(text: string): string {
+  return text
+    .replace(/今年|去年|(?:這個月|本月)|上(?:個|一)月/g, "")
+    .replace(/\s+/g, "")
+    .trim();
+}

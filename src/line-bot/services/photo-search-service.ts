@@ -13,10 +13,11 @@ import type {
 } from "../../shared/types/photo-search";
 import {
   buildSearchUserPrompt,
+  buildPhotoSearchSystemPrompt,
+  ensureRelativeDatesFromText,
   ensureSceneQueryEn,
   parseLlmSearchResponse,
   parseSearchPlanFallback,
-  PHOTO_SEARCH_SYSTEM_PROMPT,
   summarizeSessionForPrompt,
   type RawLlmSearchResponse,
 } from "./photo-search-prompt";
@@ -81,13 +82,13 @@ export class PhotoSearchService {
           : undefined;
         const raw =
           await this.options.qwenClient.chatJson<RawLlmSearchResponse>([
-            { role: "system", content: PHOTO_SEARCH_SYSTEM_PROMPT },
+            { role: "system", content: buildPhotoSearchSystemPrompt() },
             {
               role: "user",
               content: buildSearchUserPrompt({ message, sessionSummary }),
             },
           ]);
-        return parseLlmSearchResponse(raw);
+        return this.normalizeSearchPlan(parseLlmSearchResponse(raw), message);
       } catch (error) {
         logger.warn(
           { error },
@@ -95,7 +96,14 @@ export class PhotoSearchService {
         );
       }
     }
-    return ensureSceneQueryEn(parseSearchPlanFallback(message));
+    return this.normalizeSearchPlan(parseSearchPlanFallback(message), message);
+  }
+
+  private normalizeSearchPlan(
+    plan: PhotoSearchPlan,
+    message: string,
+  ): PhotoSearchPlan {
+    return ensureRelativeDatesFromText(ensureSceneQueryEn(plan), message);
   }
 
   private hasSceneQuery(plan: Partial<PhotoSearchPlan>): boolean {
@@ -263,8 +271,40 @@ export class PhotoSearchService {
       };
     }
 
-    const label = this.sceneLabel(plan);
-    return this.finishAssetSearch(userId, undefined, label, plan, {});
+    const scene = this.sceneLabel(plan);
+    const { label: dateLabel, ...dateRange } = this.planDateFilters(plan);
+    const labelText = dateLabel ? `${dateLabel} · ${scene}` : scene;
+    return this.finishAssetSearch(
+      userId,
+      undefined,
+      labelText,
+      plan,
+      dateRange,
+    );
+  }
+
+  private planDateFilters(plan: Partial<PhotoSearchPlan>): {
+    takenAfter?: string;
+    takenBefore?: string;
+    label?: string;
+  } {
+    if (!plan.dateFrom) {
+      return {};
+    }
+    const range = explicitDateRange(plan.dateFrom, plan.dateTo);
+    if (!range) {
+      return {};
+    }
+    const label =
+      plan.dateRangeLabel ??
+      (plan.dateTo && plan.dateTo !== plan.dateFrom
+        ? `${plan.dateFrom}～${plan.dateTo}`
+        : plan.dateFrom);
+    return {
+      takenAfter: range.takenAfter,
+      takenBefore: range.takenBefore,
+      label,
+    };
   }
 
   private personDisplayName(
@@ -296,10 +336,21 @@ export class PhotoSearchService {
         return { kind: "clarify", message: range.question };
       }
 
-      const label = `${displayName} · ${this.sceneLabel(plan)}`;
-      return this.finishAssetSearch(userId, displayName, label, plan, {
-        personIds: [person.id],
-      });
+      const dateFilters = this.planDateFilters(plan);
+      const { label: dateLabel, ...dateRange } = dateFilters;
+      const labelParts = [displayName, dateLabel, this.sceneLabel(plan)].filter(
+        Boolean,
+      );
+      return this.finishAssetSearch(
+        userId,
+        displayName,
+        labelParts.join(" · "),
+        plan,
+        {
+          personIds: [person.id],
+          ...dateRange,
+        },
+      );
     }
 
     const criteriaLabel = hasScene
@@ -359,6 +410,9 @@ export function mergePlans(
   if (!incoming.dateTo && base?.dateTo) {
     merged.dateTo = base.dateTo;
   }
+  if (!incoming.dateRangeLabel && base?.dateRangeLabel) {
+    merged.dateRangeLabel = base.dateRangeLabel;
+  }
   if (!incoming.sceneQuery && base?.sceneQuery) {
     merged.sceneQuery = base.sceneQuery;
   }
@@ -386,7 +440,11 @@ export function resolveTakenRange(
       ok: true,
       takenAfter: range.takenAfter,
       takenBefore: range.takenBefore,
-      label: plan.dateTo ? `${plan.dateFrom}～${plan.dateTo}` : plan.dateFrom,
+      label:
+        plan.dateRangeLabel ??
+        (plan.dateTo && plan.dateTo !== plan.dateFrom
+          ? `${plan.dateFrom}～${plan.dateTo}`
+          : (plan.dateFrom ?? "")),
     };
   }
 

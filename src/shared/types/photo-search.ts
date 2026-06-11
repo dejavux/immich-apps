@@ -22,6 +22,8 @@ export interface PhotoSearchPlan {
   sceneQuery?: string;
   /** CLIP English query from LLM, e.g. beach ocean */
   sceneQueryEn?: string;
+  /** Display label for relative dates, e.g. 今年、去年 */
+  dateRangeLabel?: string;
 }
 
 export interface ImmichPersonSummary {

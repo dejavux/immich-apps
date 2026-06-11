@@ -27,6 +27,18 @@ describe("parseSearchPlanFallback", () => {
     expect(plan.sceneQuery).toBe("海邊");
     expect(plan.sceneQueryEn).toContain("beach");
   });
+
+  it("parses person scene and 今年", () => {
+    const plan = parseSearchPlanFallback(
+      "找找小蕊今年在學校的照片",
+      new Date("2026-06-11T12:00:00.000Z"),
+    );
+    expect(plan.personNames).toEqual(["小蕊"]);
+    expect(plan.sceneQuery).toBe("學校");
+    expect(plan.dateRangeLabel).toBe("今年");
+    expect(plan.dateFrom).toBe("2026-01-01");
+    expect(plan.dateTo).toBe("2026-06-11");
+  });
 });
 
 describe("translateSceneQueryFallback", () => {
@@ -48,6 +60,22 @@ describe("mergePlans", () => {
 });
 
 describe("resolveTakenRange", () => {
+  it("uses dateRangeLabel for relative dates", () => {
+    const result = resolveTakenRange(
+      {
+        dateFrom: "2026-01-01",
+        dateTo: "2026-06-11",
+        dateRangeLabel: "今年",
+      },
+      { id: "p1", name: "rayna", birthDate: null },
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.label).toBe("今年");
+      expect(result.takenAfter).toContain("2026-01-01");
+    }
+  });
+
   it("asks for birth date when missing", () => {
     const result = resolveTakenRange(
       { ageYears: 1.5 },

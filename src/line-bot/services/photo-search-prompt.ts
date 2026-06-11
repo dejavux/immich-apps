@@ -1,7 +1,21 @@
 import type { PhotoSearchPlan } from "../../shared/types/photo-search";
+import {
+  detectRelativeDateInText,
+  stripRelativeDateTokens,
+} from "../../shared/date-range";
 
-export const PHOTO_SEARCH_SYSTEM_PROMPT = `你是 Immich 照片庫 LINE Bot 的搜尋助手。使用者用繁體中文描述想找的照片。
+export function buildPhotoSearchSystemPrompt(now = new Date()): string {
+  const today = now.toISOString().slice(0, 10);
+  const year = now.getUTCFullYear();
+  return `你是 Immich 照片庫 LINE Bot 的搜尋助手。使用者用繁體中文描述想找的照片。
 你只輸出 JSON，不要 markdown，不要解釋。
+
+今天日期：${today}
+相對日期請轉成 dateFrom/dateTo（YYYY-MM-DD）：
+- 今年 → ${year}-01-01 ～ ${today}
+- 去年 → ${year - 1}-01-01 ～ ${year - 1}-12-31
+- 本月/這個月 → 當月 1 日 ～ ${today}
+- 上個月 → 上個完整曆月
 
 intent 取值：
 - search_photos：找照片（含補充生日、選擇人物編號）
@@ -30,11 +44,18 @@ intent 取值：
 使用者「小蕊在海邊一歲半的照片」→
 {"intent":"search_photos","personNames":["小蕊"],"ageYears":1.5,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"在海邊","sceneQueryEn":"beach ocean"}
 
+使用者「找找小蕊今年在學校的照片」→
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":"${year}-01-01","dateTo":"${today}","birthDate":null,"personChoice":null,"sceneQuery":"學校","sceneQueryEn":"school classroom campus"}
+
 使用者「生日 2019-03-15」（前文在找小蕊）→
 {"intent":"search_photos","personNames":["小蕊"],"ageYears":1.5,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":"2019-03-15","personChoice":null}
 
 使用者「2」且前文在選人物 →
 {"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":2}`;
+}
+
+/** @deprecated use buildPhotoSearchSystemPrompt() */
+export const PHOTO_SEARCH_SYSTEM_PROMPT = buildPhotoSearchSystemPrompt();
 
 export function buildSearchUserPrompt(params: {
   message: string;
@@ -69,6 +90,9 @@ export function summarizeSessionForPrompt(session: {
   }
   if (plan.dateTo) {
     parts.push(`日期迄：${plan.dateTo}`);
+  }
+  if (plan.dateRangeLabel) {
+    parts.push(`相對日期：${plan.dateRangeLabel}`);
   }
   if (plan.sceneQuery) {
     parts.push(`場景：${plan.sceneQuery}`);
@@ -117,6 +141,38 @@ export function parseLlmSearchResponse(
   return ensureSceneQueryEn(plan);
 }
 
+export function ensureRelativeDatesFromText(
+  plan: PhotoSearchPlan,
+  message: string,
+  now: Date = new Date(),
+): PhotoSearchPlan {
+  if (plan.dateFrom) {
+    if (!plan.dateRangeLabel) {
+      const rel = detectRelativeDateInText(message, now);
+      if (rel && rel.dateFrom === plan.dateFrom) {
+        return { ...plan, dateRangeLabel: rel.label };
+      }
+    }
+    return plan;
+  }
+  const rel = detectRelativeDateInText(message, now);
+  if (!rel) {
+    return plan;
+  }
+  return {
+    ...plan,
+    dateFrom: rel.dateFrom,
+    dateTo: rel.dateTo,
+    dateRangeLabel: rel.label,
+  };
+}
+
+function cleanScenePhrase(value: string): string {
+  return stripRelativeDateTokens(value)
+    .replace(/^在|於/, "")
+    .trim();
+}
+
 function normalizeIntent(value: string | undefined): PhotoSearchPlan["intent"] {
   if (
     value === "search_photos" ||
@@ -142,6 +198,7 @@ const SCENE_TRANSLATIONS: Array<[RegExp, string]> = [
   [/狗|汪/, "dog pet"],
   [/花|櫻/, "flowers blossom"],
   [/夕陽|日落/, "sunset golden hour"],
+  [/學校|校園|教室|補習/, "school classroom campus"],
 ];
 
 export function translateSceneQueryFallback(sceneQuery: string): string {
@@ -158,17 +215,24 @@ export function ensureSceneQueryEn(plan: PhotoSearchPlan): PhotoSearchPlan {
   if (!plan.sceneQuery?.trim()) {
     return plan;
   }
-  if (plan.sceneQueryEn?.trim()) {
-    return plan;
+  const cleaned = cleanScenePhrase(plan.sceneQuery);
+  const withCleanScene =
+    cleaned !== plan.sceneQuery ? { ...plan, sceneQuery: cleaned } : plan;
+  if (withCleanScene.sceneQueryEn?.trim()) {
+    return withCleanScene;
   }
+  const scene = withCleanScene.sceneQuery ?? "";
   return {
-    ...plan,
-    sceneQueryEn: translateSceneQueryFallback(plan.sceneQuery),
+    ...withCleanScene,
+    sceneQueryEn: translateSceneQueryFallback(scene),
   };
 }
 
 /** Rule-based fallback when LLM is unavailable. */
-export function parseSearchPlanFallback(text: string): PhotoSearchPlan {
+export function parseSearchPlanFallback(
+  text: string,
+  now: Date = new Date(),
+): PhotoSearchPlan {
   const trimmed = text.trim();
   if (/^(取消|算了|不用了)/.test(trimmed)) {
     return { intent: "cancel", personNames: [] };
@@ -177,7 +241,29 @@ export function parseSearchPlanFallback(text: string): PhotoSearchPlan {
     return { intent: "upload_help", personNames: [] };
   }
 
-  const personAgeMatch = trimmed.match(
+  const rel = detectRelativeDateInText(trimmed, now);
+  const working = rel ? stripRelativeDateTokens(trimmed) : trimmed;
+
+  const personSceneMatch = working.match(
+    /(?:找|搜|查)+(?:找)?(?:我)?(.{1,10}?)在(.+?)(?:的)?(?:照片|相片|圖)/,
+  );
+  if (personSceneMatch) {
+    const person = personSceneMatch[1].replace(/的$/, "").trim();
+    const scene = cleanScenePhrase(personSceneMatch[2]);
+    const plan: PhotoSearchPlan = {
+      intent: "search_photos",
+      personNames: person ? [person] : [],
+      sceneQuery: scene,
+    };
+    if (rel) {
+      plan.dateFrom = rel.dateFrom;
+      plan.dateTo = rel.dateTo;
+      plan.dateRangeLabel = rel.label;
+    }
+    return ensureSceneQueryEn(plan);
+  }
+
+  const personAgeMatch = working.match(
     /(?:找|搜|查).*?([^\d\s，,、的]{1,8}?)(?:的)?(?:大約|約)?(\d+(?:\.\d+)?)\s*歲/,
   );
   if (personAgeMatch) {
@@ -198,15 +284,21 @@ export function parseSearchPlanFallback(text: string): PhotoSearchPlan {
     });
   }
 
-  const sceneMatch = trimmed.match(
+  const sceneMatch = working.match(
     /(?:找|搜|查).*?(?:在|有|是)(.+?)(?:的)?(?:照片|相片|圖)/,
   );
   if (sceneMatch) {
-    return ensureSceneQueryEn({
+    const plan: PhotoSearchPlan = {
       intent: "search_photos",
       personNames: [],
-      sceneQuery: sceneMatch[1].trim(),
-    });
+      sceneQuery: cleanScenePhrase(sceneMatch[1]),
+    };
+    if (rel) {
+      plan.dateFrom = rel.dateFrom;
+      plan.dateTo = rel.dateTo;
+      plan.dateRangeLabel = rel.label;
+    }
+    return ensureSceneQueryEn(plan);
   }
 
   const birthMatch = trimmed.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
@@ -221,14 +313,20 @@ export function parseSearchPlanFallback(text: string): PhotoSearchPlan {
     };
   }
 
-  if (/找|搜|查/.test(trimmed) && /照片|相片|圖/.test(trimmed)) {
-    const nameMatch = trimmed.match(
-      /(?:找|搜|查).*?([^\s，,、]{1,8}?)的?(?:照片|相片)/,
+  if (/找|搜|查/.test(working) && /照片|相片|圖/.test(working)) {
+    const nameMatch = working.match(
+      /(?:找|搜|查)+(?:找)?(?:我)?(.{1,10}?)(?:的)?(?:照片|相片|圖)/,
     );
-    return {
+    const plan: PhotoSearchPlan = {
       intent: "search_photos",
-      personNames: nameMatch ? [nameMatch[1].trim()] : [],
+      personNames: nameMatch ? [nameMatch[1].replace(/的$/, "").trim()] : [],
     };
+    if (rel) {
+      plan.dateFrom = rel.dateFrom;
+      plan.dateTo = rel.dateTo;
+      plan.dateRangeLabel = rel.label;
+    }
+    return plan;
   }
 
   return { intent: "unknown", personNames: [] };

@@ -1,8 +1,10 @@
 import {
   addMonthsUtc,
   ageToTakenRange,
+  detectRelativeDateInText,
   explicitDateRange,
   parseIsoDateOnly,
+  relativeDateRange,
 } from "./date-range";
 
 describe("parseIsoDateOnly", () => {
@@ -35,6 +37,31 @@ describe("explicitDateRange", () => {
     const range = explicitDateRange("2024-06-01");
     expect(range?.takenAfter).toBe("2024-06-01T00:00:00.000Z");
     expect(range?.takenBefore).toContain("2024-06-01");
+  });
+});
+
+describe("relativeDateRange", () => {
+  const now = new Date("2026-06-11T12:00:00.000Z");
+
+  it("maps 今年 to Jan 1 through today", () => {
+    const range = relativeDateRange("this_year", now);
+    expect(range).toEqual({
+      dateFrom: "2026-01-01",
+      dateTo: "2026-06-11",
+      label: "今年",
+    });
+  });
+
+  it("maps 去年 to full prior calendar year", () => {
+    const range = relativeDateRange("last_year", now);
+    expect(range.dateFrom).toBe("2025-01-01");
+    expect(range.dateTo).toBe("2025-12-31");
+  });
+
+  it("detects 今年 in user text", () => {
+    const range = detectRelativeDateInText("小蕊今年在學校", now);
+    expect(range?.label).toBe("今年");
+    expect(range?.dateFrom).toBe("2026-01-01");
   });
 });
 
