@@ -1,28 +1,74 @@
 # Phase 3: 照片同步與上傳
 
-**狀態**: 📋 規劃中
-**預估時間**: 2-3 天
-**優先級**: **P1 - 次優先（在 LINE Bot 之後）**
+**狀態**: 🚧 **進行中**（2026-06-11）  
+**預估時間**: 2-3 天（多 library 同步）+ Phase 3.5 分層  
+**優先級**: **P1 — 當前主軌**（原檔 + EXIF SSOT）  
 **負責人**: Infrastructure Team
 
-**前置條件**: ✅ Phase 2 LINE Bot 完成
+**前置條件**: ✅ Phase 2 LINE Bot 核心 MVP 上線（2026-06-11）
+
+> **與 LINE Bot 分工**（見 [PROGRESS_TRACKING §2.3.1](./PROGRESS_TRACKING.md)）：  
+> LINE = 隨手分享（無完整 EXIF）；Photo Sync = Mac/iPhone 原檔備份主路徑。
 
 ---
 
 ## 🎯 目標
 
-實現 Mac Photos Library 自動同步到 Immich，讓 Apple Photos 的照片自動備份到自建服務器。
+Mac 上**多個** `.photoslibrary` 自動同步到 Immich，保留原檔 + EXIF；Immich 為 union 備份（hash dedupe）。
 
 ### 核心功能
 
-1. **Mac Photos Library 監控**: 即時偵測新增照片
-2. **自動上傳**: 使用 Immich CLI 上傳
-3. **增量同步**: 只上傳新增/修改的照片
-4. **背景服務**: Launchd 自動啟動，不影響使用
+1. **多 Library 支援**: iCloud primary + Local archive（可擴充）
+2. **自動上傳**: Immich CLI（v2.2+，hash dedupe 內建）
+3. **增量同步**: `--recursive` 掃描 originals/
+4. **背景服務**: fswatch + Launchd
+5. **分層策略（Phase 3.5）**: iCloud 超量→Local（config 已預留，自動化待 osxphotos）
+6. **備份（Phase 5）**: Immich server + B2 異地 3-2-1
+
+### SSOT 分工
+
+| 層 | 角色 |
+|----|------|
+| Mac `.photoslibrary` | 來源 SSOT（含 iCloud sync 狀態） |
+| Immich | 集中備份 + 搜尋 + ML；刪 Immich **不**回寫 Mac |
+| `/tmp` | 僅 CLI 暫用，**非**照片 SSOT |
 
 ---
 
-## 🏗️ 架構設計
+## 🏗️ 多 Library 架構
+
+```yaml
+┌─────────────────────────────────────────────────────────┐
+│  Mac ~/Pictures/                                        │
+├──────────────────────────┬──────────────────────────────┤
+│ Photos Library           │ LOCAL PHOTO LIBRARY          │
+│ .photoslibrary           │ .photoslibrary               │
+│ (iCloud ↔ iPhone)        │ (離線 archive)               │
+└────────────┬─────────────┴──────────────┬───────────────┘
+             │ originals/                  │ originals/
+             └──────────────┬──────────────┘
+                            ↓
+              scripts/photo-sync/immich-sync.sh
+              （photo-sync.config.yaml）
+                            ↓
+              Immich CLI → https://immich.3q.fi
+              （hash dedupe → union 完整 library）
+                            ↓
+              Phase 5: B2 異地備份
+```
+
+**設定檔**: `scripts/photo-sync/photo-sync.config.yaml.example`  
+**文件**: `scripts/photo-sync/README.md`
+
+### iCloud 分層（Phase 3.5 — 規劃中）
+
+Apple 不提供「把 iCloud 照片批次移到另一個 library」的 CLI。自動化需 **osxphotos** 或 Photos AppleScript。
+
+`tier_policy` 已寫入 config（`max_size_gb` / `cutoff_date`），**目前請手動**在 Photos App 搬移；兩 library 的 sync 腳本會各自上傳到 Immich，dedupe 後即為完整集合。
+
+---
+
+## 🏗️ 架構設計（單 Library 參考）
 
 ### 方案 A: Immich CLI + fswatch（推薦）
 
@@ -258,9 +304,43 @@ done
 
 ---
 
-## 🚀 部署步驟
+## 🚀 部署步驟（Phase 3 — 當前）
 
-### Step 1: 準備腳本
+### Step 0: CLI 煙霧測試 ✅
+
+```bash
+cd immich-apps
+eval "$(./scripts/dev/load-env-from-op.sh)"
+export IMMICH_INSTANCE_URL=https://immich.3q.fi
+./scripts/photo-sync/test-upload.sh
+```
+
+### Step 1: 設定檔 + 腳本
+
+```bash
+mkdir -p ~/.config/immich-apps
+cp scripts/photo-sync/photo-sync.config.yaml.example ~/.config/immich-apps/photo-sync.config.yaml
+chmod +x scripts/photo-sync/*.sh
+brew install fswatch
+```
+
+### Step 2: Dry-run 各 library
+
+```bash
+./scripts/photo-sync/immich-sync.sh --library icloud-primary --dry-run
+./scripts/photo-sync/immich-sync.sh --library local-archive --dry-run
+```
+
+### Step 3: 首次全量（建議夜間）
+
+```bash
+./scripts/photo-sync/immich-sync.sh --library local-archive   # 較小可先跑
+./scripts/photo-sync/immich-sync.sh --library icloud-primary  # ~32GB
+```
+
+---
+
+## 🚀 部署步驟（Legacy 單 library 參考）
 
 ```bash
 # 1. 建立腳本目錄
@@ -397,7 +477,7 @@ echo $IMMICH_API_KEY
 # 2. "Connection refused" → 檢查網絡連通性
 curl -I https://immich.3q.fi
 
-# 3. "Duplicate file" → 使用 --skip-duplicates 選項（已包含在腳本中）
+# 3. "Duplicate file" → Immich CLI v2 依 hash 自動 dedupe
 ```
 
 ### Photos Library 路徑錯誤
@@ -430,14 +510,17 @@ ls -la ~/Pictures/Photos\ Library.photoslibrary/originals/
 
 ## ✅ 驗收標準
 
-- [ ] Immich CLI 安裝並配置正確
-- [ ] 環境變數設定正確（IMMICH_INSTANCE_URL, IMMICH_API_KEY）
-- [ ] 同步腳本測試通過（手動執行）
-- [ ] Launchd 服務自動啟動
-- [ ] Mac Photos 新增照片後 5 分鐘內同步到 Immich
-- [ ] 日誌記錄正常，可追蹤同步狀態
-- [ ] 初次全量同步完成（數千張照片）
-- [ ] 增量同步測試通過（只上傳新照片）
+- [x] Immich CLI 煙霧測試（單張 HEIC 上傳成功）
+- [x] 多 library config + sync 腳本
+- [x] dry-run 通過（icloud-primary）
+- [ ] fswatch 安裝 + Launchd
+- [ ] local-archive 首次全量
+- [ ] icloud-primary 首次全量（~32 GB）
+- [ ] 新增照片 5 分鐘內同步
+
+---
+
+**最後更新**: 2026-06-11
 
 ---
 
@@ -447,7 +530,7 @@ ls -la ~/Pictures/Photos\ Library.photoslibrary/originals/
 |------|------|----------|
 | **同步延遲** | < 5 min | 手動測試 |
 | **上傳成功率** | > 98% | 日誌統計 |
-| **重複檔案** | 0 | `--skip-duplicates` |
+| **重複檔案** | 0 新增 | CLI hash dedupe |
 | **服務穩定性** | 24/7 運行 | launchctl 監控 |
 
 ---
@@ -462,8 +545,5 @@ ls -la ~/Pictures/Photos\ Library.photoslibrary/originals/
 
 ---
 
-**優先級**: **P1 - 次優先（在 LINE Bot 之後）**
-**預估完成**: 2026-06-04
+**優先級**: **P1 — 當前主軌**  
 **負責人**: Infrastructure Team
-
-**最後更新**: 2026-05-27

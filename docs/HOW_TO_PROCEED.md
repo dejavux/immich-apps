@@ -1,31 +1,60 @@
 # 如何進行 — Immich Apps 執行指南
 
-**日期**: 2026-06-10  
+**日期**: 2026-06-11  
 **Repo**: <https://github.com/dejavux/immich-apps>  
 **進度 SSOT**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)
 
 ---
 
-## 📍 當前狀態（2026-06-10）
+## 📍 當前狀態（2026-06-11）
 
 | 項目 | 狀態 |
 |------|------|
-| Repo `immich-apps` | ✅ 已建立 |
-| Manifests 遷移 | ✅ `deploy/manifests/` |
-| 文檔遷移 | ✅ `docs/` |
-| Makefile / package.json / Dockerfile | ✅ 就緒 |
-| infra-bootstrap 清理 | ✅ 僅保留指向 README |
-| Port range | ✅ **30450-30479** |
-| LINE Bot 源碼 | ✅ MVP（webhook → Immich upload） |
-| LINE Channel / 1Password | ✅ `@189oipta` + Infra-Apps vault |
-| Helm chart | ✅ `deploy/helm/immich-line-bot/` 骨架 |
-| pf.sh | ✅ `scripts/dev/pf.sh`（30450） |
-| K8s 部署規劃 | ✅ [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md) |
-| Cursor lint / commit / PR | ✅ [CURSOR_LINT_FIX_AGENT.md](./CURSOR_LINT_FIX_AGENT.md) |
-| Tekton + BuildKit release | ⏳ 待實作（`make release` 已接腳本） |
-| HTTPS webhook | ⏳ `immich-bot.3q.fi` 待 Caddy/Route53 + deploy |
+| Repo `immich-apps` / 預設分支 **`main`** | ✅ |
+| LINE Bot MVP + 生產部署 | ✅ `immich-line-bot:3abfca8` |
+| HTTPS Webhook + E2E | ✅ `https://immich-bot.3q.fi/webhook/line` |
+| Tekton `make release`（git short SHA tag） | ✅ |
+| 1Password → K8s（Infra-Platform） | ✅ |
+| Cursor lint / commit / PR | ✅ `.envrc` + lint-fix-agent |
+| file 訊息原檔實驗 | ✅ 已實作；iPhone 相簿無法直接選「檔案」 |
+| Immich ML（人臉 / CLIP） | ✅ 上傳後自動；Bot 不寫 GPT |
+| Phase 3 Photo Sync | 🚧 進行中（CLI ✅、多 library 腳本就緒） |
 
-**整體進度**: ~45%（Phase 0 完成，Phase 2 MVP + Helm 骨架完成，待 CI/CD 部署）
+**整體進度**: ~**72%**（Phase 2 核心 **85%** 完成）
+
+---
+
+## 🎯 下一步建議（優先順序）
+
+### 軌 A — LINE Bot 強化（1–2 天，可選）
+
+| 優先 | 項目 | 說明 |
+|------|------|------|
+| **P1** | `imageSet` 批次 summary | 多張相簿只回一則「已上傳 N 張」 |
+| **P2** | Immich tag | upload 後 `line-import`、`line-user-{id}` |
+| **P3** | Qwen vision 描述 | V1.1；叢集 `local-llm/qwen-coder`（OpenAI 相容 API） |
+| — | 監控 | Prometheus metrics + Grafana（§2.7） |
+
+### 軌 B — Phase 3 Photo Sync（**當前主軌**，原檔 + EXIF）
+
+多 library：`Photos Library`（iCloud）+ `LOCAL PHOTO LIBRARY`（archive）→ Immich union。
+
+```bash
+eval "$(./scripts/dev/load-env-from-op.sh)"
+./scripts/photo-sync/test-upload.sh          # Step 0 ✅
+./scripts/photo-sync/immich-sync.sh --dry-run
+```
+
+→ 詳見 [PHASE3_PHOTO_SYNC.md](./PHASE3_PHOTO_SYNC.md) · [scripts/photo-sync/README.md](../scripts/photo-sync/README.md)
+
+### 軌 C — Ops 收尾
+
+- [ ] infra-bootstrap **Caddyfile** commit + PR（`immich-bot.3q.fi` 已 deploy）
+- [ ] Tekton **PR CI**（L0 lint pipeline，可复用 ibkr 模式）
+
+---
+
+## 📍 歷史狀態（2026-06-10）
 
 ---
 
@@ -38,10 +67,11 @@
 graph LR
     A[Phase 0<br/>Repo 就緒 ✅] --> B[Phase 2a<br/>Ops: LINE + 1P ✅]
     A --> C[Phase 2b<br/>Dev: MVP ✅]
-    B --> D[Phase 2c<br/>Tekton + Helm + HTTPS]
+    B --> D[Phase 2c<br/>Tekton + Helm + HTTPS ✅]
     C --> D
-    D --> E[Phase 2d<br/>E2E 測試]
-    E --> F[Phase 3<br/>Photo Sync]
+    D --> E[Phase 2d<br/>E2E 測試 ✅]
+    E --> F[Phase 3<br/>Photo Sync ⏳]
+    E --> G[Phase 2+<br/>批次/tag 可選]
 ```
 
 ---

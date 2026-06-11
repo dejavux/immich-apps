@@ -59,7 +59,7 @@ help: ## 顯示幫助信息
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-22s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$(YELLOW)Lint & Git:$(NC)"
-	@echo "  make lint              # 變更檔 + Cursor lint-fix-agent"
+	@echo "  make lint              # 變更檔 + Cursor lint-fix-agent（含 cspell / markdownlint / make）"
 	@echo "  make lint-mechanical   # 變更檔僅腳本（無 SDK；CI / 離線）"
 	@echo "  make lint-all          # 全庫 + agent"
 	@echo "  make commit            # lint + Cursor SDK commit"

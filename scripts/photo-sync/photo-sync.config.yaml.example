@@ -1,0 +1,57 @@
+# Mac Photo Sync → Immich
+# 複製到 ~/.config/immich-apps/photo-sync.config.yaml 後依本機路徑修改
+#
+# SSOT：Mac 上的 .photoslibrary（不在 Immich 刪除後回寫 Mac）
+# Immich：兩個 library 的 union + dedupe（CLI 依 hash）
+
+immich:
+  instance_url: https://immich.3q.fi
+  # api_key 建議用環境變數 IMMICH_API_KEY（1Password load-env-from-op.sh）
+
+# 暫存目錄（可選；預設 /tmp/immich-photo-sync）
+# staging_dir: /tmp/immich-photo-sync
+
+libraries:
+  - id: icloud-primary
+    name: Photos Library
+    path: ~/Pictures/Photos Library.photoslibrary/originals
+    album: Mac Photos (iCloud)
+    tags:
+      - mac-sync
+      - icloud-library
+    enabled: true
+
+  - id: local-archive
+    name: LOCAL PHOTO LIBRARY
+    path: ~/Pictures/LOCAL PHOTO LIBRARY.photoslibrary/originals
+    album: Mac Photos (Local Archive)
+    tags:
+      - mac-sync
+      - local-library
+    enabled: true
+
+# iCloud library 容量分層（Phase 3.5 — 需 osxphotos / Photos API，尚未自動化）
+# 目的：iCloud 空間有限時，舊照片移到 local-archive library，兩邊仍同步到 Immich
+tier_policy:
+  enabled: false
+  source_library_id: icloud-primary
+  target_library_id: local-archive
+  # 二擇一或同時（超出任一條件即 eligible）
+  max_size_gb: 50
+  # cutoff_date: "2023-01-01"   # 此日期之前移出 iCloud library
+  # dry_run: true
+
+sync:
+  recursive: true
+  upload_concurrency: 4
+  debounce_seconds: 30
+  log_dir: ~/Library/Logs/immich-photo-sync
+
+# Immich 備份（Phase 5 — server 端；見 docs/PHASE5_BACKUP_MONITORING.md）
+backup_policy:
+  # 3-2-1：Immich 為第 1 份；B2 為異地第 2 份；Mac .photoslibrary 為來源 SSOT
+  immich_server_path: lama:/mnt/immich
+  b2:
+    enabled: false
+    schedule: "0 3 * * *"
+    retention_days: 90

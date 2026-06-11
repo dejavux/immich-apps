@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 只對 git 變更檔跑 ESLint / Prettier / tsc / Markdown / shellcheck / helm lint / make 語法。
+# 只對 git 變更檔跑 ESLint / Prettier / tsc / Markdown / cspell / shellcheck / helm lint / make 語法。
 #
 #   ./scripts/lint-changed-files.sh
 #   ./scripts/lint-changed-files.sh --staged
@@ -70,6 +70,16 @@ should_eslint() {
   return 1
 }
 
+should_cspell() {
+  local f="$1"
+  case "$f" in
+    *.ts|*.tsx|*.mts|*.cts|*.js|*.jsx|*.mjs|*.cjs|*.md|Makefile|*.mk) ;;
+    *) return 1 ;;
+  esac
+  [[ "$f" == dist/* || "$f" == node_modules/* ]] && return 1
+  return 0
+}
+
 should_prettier() {
   local f="$1"
   case "$f" in
@@ -87,6 +97,7 @@ ESLINT_FILES=()
 PRETTIER_FILES=()
 MD_FILES=()
 SH_FILES=()
+SPELL_FILES=()
 HELM_CHARTS=()
 RUN_TYPECHECK=false
 NEED_MAKE_PARSE=false
@@ -94,6 +105,7 @@ NEED_MAKE_PARSE=false
 for f in "${FILES[@]}"; do
   if should_eslint "$f"; then ESLINT_FILES+=("$f"); fi
   if should_prettier "$f"; then PRETTIER_FILES+=("$f"); fi
+  if should_cspell "$f"; then SPELL_FILES+=("$f"); fi
   case "$f" in
     *.ts|*.tsx|*.mts|*.cts) RUN_TYPECHECK=true ;;
     *.md) MD_FILES+=("$f") ;;
@@ -113,7 +125,7 @@ fi
 
 MAKE_N=0; [[ "$NEED_MAKE_PARSE" == true ]] && MAKE_N=1
 echo -e "${BLUE}變更統計:${NC} 共 ${#FILES[@]} 個檔案"
-echo "   ESLint: ${#ESLINT_FILES[@]} | Prettier: ${#PRETTIER_FILES[@]} | Markdown: ${#MD_FILES[@]} | shellcheck: ${#SH_FILES[@]} | helm: ${#HELM_CHARTS[@]} | make: ${MAKE_N}"
+echo "   ESLint: ${#ESLINT_FILES[@]} | Prettier: ${#PRETTIER_FILES[@]} | CSpell: ${#SPELL_FILES[@]} | Markdown: ${#MD_FILES[@]} | shellcheck: ${#SH_FILES[@]} | helm: ${#HELM_CHARTS[@]} | make: ${MAKE_N}"
 echo ""
 
 HAS_ERROR=false
@@ -213,6 +225,19 @@ if [[ "$NEED_MAKE_PARSE" == true ]]; then
     echo -e "${GREEN}   ${_make_bin} -n help 通過${NC}"
   else
     echo -e "${RED}   ${_make_bin} -n help 失敗${NC}"; HAS_ERROR=true
+  fi
+  echo ""
+fi
+
+if [[ "${SKIP_CSPELL:-}" == "1" ]]; then
+  echo -e "${YELLOW}SKIP_CSPELL=1，略過 cspell${NC}"
+  echo ""
+elif [[ ${#SPELL_FILES[@]} -gt 0 ]]; then
+  echo -e "${BLUE}cspell${NC}"
+  if npx --yes cspell --no-progress --no-summary "${SPELL_FILES[@]}" 2>&1; then
+    echo -e "${GREEN}   cspell 通過（${#SPELL_FILES[@]} 個檔案）${NC}"
+  else
+    echo -e "${RED}   cspell 失敗${NC}"; HAS_ERROR=true
   fi
   echo ""
 fi

@@ -294,22 +294,27 @@ curl -sS https://immich-bot.3q.fi/health
 | M1 | Helm chart 完整化 + `helm template` lint | immich-apps | ✅ 骨架 | 0.5d |
 | M2 | Tekton release pipeline + Task | immich-apps + infra-bootstrap | ✅ | 1d |
 | M3 | `ci-tenant-immich-apps` bootstrap | infra-bootstrap | ✅ | 0.5d |
-| M4 | Caddy + Route53 + Ingress TLS | infra-bootstrap | ⏳ | 0.5d |
-| M5 | `make release` 首次成功 push | immich-apps | ⏳ | 0.5d |
-| M6 | LINE Webhook Verify + E2E 傳照片 | Ops | ⏳ | 0.5d |
+| M4 | Caddy + Route53 + Ingress TLS | infra-bootstrap | ✅ 2026-06-11 | 0.5d |
+| M5 | `make release` 首次成功 push | immich-apps | ✅ tag=git SHA | 0.5d |
+| M6 | LINE Webhook Verify + E2E 傳照片 | Ops | ✅ 2026-06-11 | 0.5d |
+| M7 | file 訊息 + P0 中繼資料 | immich-apps | ✅ PR #6 | 0.5d |
 
-**目標完成**: 2026-06-21（與 Phase 2 截止對齊）
+**Phase 2 核心完成**: 2026-06-11
 
 ---
 
 ## 6. 驗收標準
 
-- [ ] `make release` 透過 Tekton + BuildKit 建置並 push 映像
-- [ ] `helm upgrade immich-line-bot` Pod Running 2/2 probes pass
-- [ ] `https://immich-bot.3q.fi/health` 回 200
-- [ ] LINE Developers Console Webhook **Verify Success**
-- [ ] 手機傳照片 → Bot 回覆 → Immich Web UI 可見
-- [ ] Secrets 來自 1Password Operator（非 Helm 明文）
+- [x] `make release` 透過 Tekton + BuildKit 建置並 push 映像（tag = git short SHA）
+- [x] `helm upgrade immich-line-bot` Pod Running，probes pass
+- [x] `https://immich-bot.3q.fi/health` 回 200
+- [x] LINE Developers Console Webhook **Verify Success**
+- [x] 手機傳照片 → Bot 回覆 → Immich Web UI 可見
+- [x] Secrets 來自 1Password Operator（Infra-Platform vault）
+
+### 6.1 原檔 / EXIF 期望（2026-06-11 實測）
+
+LINE「照片」通道**不是**原檔 archive；Immich 內常無相機 EXIF。原檔路徑見 Phase 3 Photo Sync 或 Immich iOS App。
 
 ---
 
