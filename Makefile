@@ -20,7 +20,7 @@ IMAGE_TAG ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo latest)
 RELEASE_TAG := $(shell git rev-parse --short HEAD 2>/dev/null || echo latest)
 REGISTRY ?= registry-internal.3q.fi
 TEKTON_TENANT_NS ?= ci-tenant-immich-apps
-export PR_BASE_BRANCH ?= master
+export PR_BASE_BRANCH ?= main
 
 RED := \033[0;31m
 GREEN := \033[0;32m
