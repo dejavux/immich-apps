@@ -1,0 +1,192 @@
+import { imageSetBatchesTotal } from "../metrics";
+
+/** LINE imageSet metadata (multi-photo upload batch). */
+export type LineImageSet = {
+  id?: string;
+  total?: number;
+};
+
+export type UploadSummaryItem = {
+  filename: string;
+  assetUrl?: string;
+  bytes: number;
+  modeLabel: string;
+  success: boolean;
+};
+
+type BatchState = {
+  userId: string;
+  replyToken: string;
+  total?: number;
+  items: UploadSummaryItem[];
+  flushTimer?: ReturnType<typeof setTimeout>;
+};
+
+const FLUSH_DELAY_MS = 2_000;
+const batches = new Map<string, BatchState>();
+const batchLocks = new Map<string, Promise<void>>();
+
+function batchKey(userId: string, setId: string): string {
+  return `${userId}:${setId}`;
+}
+
+function isBatchComplete(state: BatchState): boolean {
+  if (state.total !== undefined && state.total > 0) {
+    return state.items.length >= state.total;
+  }
+  return false;
+}
+
+export function buildBatchSummaryText(items: UploadSummaryItem[]): string {
+  const ok = items.filter((i) => i.success);
+  const failed = items.filter((i) => !i.success);
+  const lines: string[] = [];
+
+  if (failed.length === 0) {
+    lines.push(`✅ 已上傳 ${ok.length} 張到 Immich`);
+  } else {
+    lines.push(
+      `✅ 已上傳 ${ok.length} 張` +
+        (failed.length > 0 ? ` · ❌ 失敗 ${failed.length} 張` : ""),
+    );
+  }
+
+  const preview = ok.slice(0, 3);
+  for (const item of preview) {
+    lines.push(
+      `📄 ${item.filename} (${formatBytes(item.bytes)}) — ${item.modeLabel}`,
+    );
+    if (item.assetUrl) {
+      lines.push(`🔗 ${item.assetUrl}`);
+    }
+  }
+
+  if (ok.length > preview.length) {
+    lines.push(`… 另有 ${ok.length - preview.length} 張`);
+  }
+
+  return lines.join("\n");
+}
+
+export function buildSingleUploadText(item: UploadSummaryItem): string {
+  if (!item.success) {
+    return "❌ 照片上傳失敗，請稍後再試";
+  }
+  return (
+    `✅ 照片已上傳到 Immich（${item.modeLabel}）\n` +
+    `📄 ${item.filename} (${formatBytes(item.bytes)})\n\n` +
+    `🔗 ${item.assetUrl ?? ""}`
+  );
+}
+
+export async function coordinateImageSetReply(params: {
+  userId: string;
+  replyToken: string;
+  imageSet?: LineImageSet;
+  item: UploadSummaryItem;
+  sendReply: (replyToken: string, text: string) => Promise<void>;
+}): Promise<void> {
+  const { imageSet } = params;
+
+  if (!imageSet?.id) {
+    await params.sendReply(
+      params.replyToken,
+      buildSingleUploadText(params.item),
+    );
+    return;
+  }
+
+  const key = batchKey(params.userId, imageSet.id);
+
+  await withBatchLock(key, async () => {
+    let state = batches.get(key);
+    if (!state) {
+      state = {
+        userId: params.userId,
+        replyToken: params.replyToken,
+        total: imageSet.total,
+        items: [],
+      };
+      batches.set(key, state);
+    }
+
+    state.replyToken = params.replyToken;
+    if (imageSet.total !== undefined) {
+      state.total = imageSet.total;
+    }
+    state.items.push(params.item);
+
+    if (state.flushTimer) {
+      clearTimeout(state.flushTimer);
+      state.flushTimer = undefined;
+    }
+
+    if (isBatchComplete(state)) {
+      await flushBatch(key, params.sendReply);
+      return;
+    }
+
+    if (state.total === undefined) {
+      state.flushTimer = setTimeout(() => {
+        void withBatchLock(key, async () => {
+          await flushBatch(key, params.sendReply);
+        });
+      }, FLUSH_DELAY_MS);
+    }
+  });
+}
+
+async function flushBatch(
+  key: string,
+  sendReply: (replyToken: string, text: string) => Promise<void>,
+): Promise<void> {
+  const state = batches.get(key);
+  if (!state || state.items.length === 0) {
+    batches.delete(key);
+    return;
+  }
+
+  const text =
+    state.items.length === 1
+      ? buildSingleUploadText(state.items[0])
+      : buildBatchSummaryText(state.items);
+
+  await sendReply(state.replyToken, text);
+  if (state.items.length > 1) {
+    imageSetBatchesTotal.inc();
+  }
+  batches.delete(key);
+}
+
+async function withBatchLock(
+  key: string,
+  fn: () => Promise<void>,
+): Promise<void> {
+  const previous = batchLocks.get(key) ?? Promise.resolve();
+  const run = previous.then(fn, fn);
+  batchLocks.set(
+    key,
+    run.finally(() => {
+      if (batchLocks.get(key) === run) {
+        batchLocks.delete(key);
+      }
+    }),
+  );
+  await run;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+/** @internal test helper */
+export function resetImageSetBatchesForTest(): void {
+  batches.clear();
+  batchLocks.clear();
+}

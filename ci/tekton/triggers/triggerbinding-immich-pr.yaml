@@ -1,0 +1,21 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: immich-pr-binding
+  namespace: ci-triggers
+  labels:
+    app.kubernetes.io/part-of: immich-apps
+spec:
+  params:
+    - name: git-repo-url
+      value: $(body.pull_request.head.repo.clone_url)
+    - name: git-revision
+      value: $(body.pull_request.head.sha)
+    - name: pr-number
+      value: $(body.number)
+    - name: pr-base-ref
+      value: $(body.pull_request.base.ref)
+    - name: pr-base-sha
+      value: $(body.pull_request.base.sha)
+    - name: github-repo
+      value: $(body.repository.full_name)

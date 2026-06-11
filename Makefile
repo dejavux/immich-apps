@@ -136,6 +136,13 @@ ci-apply-release: ## 套用 release Pipeline + Tasks
 	kubectl apply -k ci/tekton/release/
 	@echo "$(GREEN)✓ Release 設定已套用到 $(TEKTON_TENANT_NS)$(NC)"
 
+ci-apply-pr: ## 套用 PR L0 Pipeline + GitHub triggers
+	kubectl apply -k ci/tekton/
+	@echo "$(GREEN)✓ PR L0 + triggers 已套用$(NC)"
+	@echo "$(YELLOW)首次需 infra EventListener triggerRef immich-pr（infra-bootstrap Tekton base）$(NC)"
+
+ci-apply-ci: ci-apply-release ci-apply-pr ## 套用 release + PR CI
+
 ci-release: ## Tekton BuildKit release build（line-bot）
 	@bash scripts/release-tekton-build.sh line-bot
 

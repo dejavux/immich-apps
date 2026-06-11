@@ -1,0 +1,252 @@
+# PR CI L0 — typecheck + eslint + helm lint
+# Namespace: ci-tenant-immich-apps
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: immich-git-clone
+  namespace: ci-tenant-immich-apps
+  labels:
+    app.kubernetes.io/part-of: immich-apps
+    tekton.dev/pipeline: immich-l0
+spec:
+  description: Clone private repo at PR head SHA.
+  params:
+    - name: url
+      type: string
+    - name: revision
+      type: string
+    - name: depth
+      type: string
+      default: "50"
+    - name: pr-base-ref
+      type: string
+      default: main
+  workspaces:
+    - name: output
+    - name: basic-auth
+  steps:
+    - name: clone
+      image: alpine/git:2.45.2
+      env:
+        - name: HOME
+          value: /tekton/home
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        export HOME=/tekton/home
+        mkdir -p "${HOME}"
+        if [ -f "$(workspaces.basic-auth.path)/password" ]; then
+          USER="$(cat "$(workspaces.basic-auth.path)/username" 2>/dev/null || echo git)"
+          PASS="$(cat "$(workspaces.basic-auth.path)/password")"
+          HOST="$(echo "$(params.url)" | sed -E 's#https?://([^/]+)/.*#\1#')"
+          printf 'https://%s:%s@%s\n' "${USER}" "${PASS}" "${HOST}" > "${HOME}/.git-credentials"
+          chmod 600 "${HOME}/.git-credentials"
+          git config --global credential.helper store
+        fi
+        git clone --depth="$(params.depth)" "$(params.url)" "$(workspaces.output.path)/src"
+        cd "$(workspaces.output.path)/src"
+        git fetch --depth="$(params.depth)" origin "$(params.pr-base-ref)"
+        git fetch --depth="$(params.depth)" origin "$(params.revision)"
+        git checkout "$(params.revision)"
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: immich-npm-l0
+  namespace: ci-tenant-immich-apps
+  labels:
+    app.kubernetes.io/part-of: immich-apps
+    tekton.dev/pipeline: immich-l0
+spec:
+  description: npm ci + typecheck + eslint.
+  workspaces:
+    - name: source
+  steps:
+    - name: install
+      image: node:22-alpine
+      workingDir: $(workspaces.source.path)/src
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        npm ci
+      computeResources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        limits:
+          cpu: 2000m
+          memory: 3Gi
+    - name: typecheck
+      image: node:22-alpine
+      workingDir: $(workspaces.source.path)/src
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        npm run type-check
+    - name: eslint
+      image: node:22-alpine
+      workingDir: $(workspaces.source.path)/src
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        npm run lint
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: immich-helm-lint
+  namespace: ci-tenant-immich-apps
+  labels:
+    app.kubernetes.io/part-of: immich-apps
+    tekton.dev/pipeline: immich-l0
+spec:
+  description: helm lint deploy/helm/immich-line-bot
+  workspaces:
+    - name: source
+  steps:
+    - name: lint
+      image: alpine/helm:3.17.3
+      workingDir: $(workspaces.source.path)/src
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        helm lint deploy/helm/immich-line-bot
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: immich-github-status
+  namespace: ci-tenant-immich-apps
+  labels:
+    app.kubernetes.io/part-of: immich-apps
+    tekton.dev/pipeline: immich-l0
+spec:
+  description: Post GitHub commit status (success/failure).
+  params:
+    - name: state
+      type: string
+      description: "success | failure | pending"
+    - name: description
+      type: string
+      default: ""
+    - name: context
+      type: string
+      default: "ci/k8s/immich"
+    - name: sha
+      type: string
+    - name: github-repo
+      type: string
+      default: "dejavux/immich-apps"
+  steps:
+    - name: post-status
+      image: curlimages/curl:8.11.1
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-commit-status-token
+              key: token
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        curl -fsS -X POST \
+          -H "Authorization: token ${GITHUB_TOKEN}" \
+          -H "Content-Type: application/json" \
+          -d "{\"state\":\"$(params.state)\",\"description\":\"$(params.description)\",\"context\":\"$(params.context)\"}" \
+          "https://api.github.com/repos/$(params.github-repo)/statuses/$(params.sha)"
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: immich-l0
+  namespace: ci-tenant-immich-apps
+  labels:
+    app.kubernetes.io/part-of: immich-apps
+    tekton.dev/phase: pr-ci
+spec:
+  params:
+    - name: repo-url
+      type: string
+      default: https://github.com/dejavux/immich-apps.git
+    - name: revision
+      type: string
+    - name: pr-base-ref
+      type: string
+      default: main
+    - name: pr-base-sha
+      type: string
+      default: ""
+    - name: pr-number
+      type: string
+      default: ""
+    - name: github-repo
+      type: string
+      default: dejavux/immich-apps
+  workspaces:
+    - name: source
+    - name: git-credentials
+  tasks:
+    - name: set-pending
+      taskRef:
+        name: immich-github-status
+      params:
+        - name: state
+          value: pending
+        - name: description
+          value: "L0 CI running..."
+        - name: context
+          value: ci/k8s/immich
+        - name: sha
+          value: $(params.revision)
+        - name: github-repo
+          value: $(params.github-repo)
+
+    - name: fetch-source
+      runAfter: [set-pending]
+      taskRef:
+        name: immich-git-clone
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.revision)
+        - name: pr-base-ref
+          value: $(params.pr-base-ref)
+      workspaces:
+        - name: output
+          workspace: source
+        - name: basic-auth
+          workspace: git-credentials
+
+    - name: npm-l0
+      runAfter: [fetch-source]
+      taskRef:
+        name: immich-npm-l0
+      workspaces:
+        - name: source
+          workspace: source
+
+    - name: helm-lint
+      runAfter: [fetch-source]
+      taskRef:
+        name: immich-helm-lint
+      workspaces:
+        - name: source
+          workspace: source
+
+  finally:
+    - name: github-status
+      taskRef:
+        name: immich-github-status
+      params:
+        - name: state
+          value: "$(tasks.npm-l0.status == 'Succeeded' && tasks.helm-lint.status == 'Succeeded' ? 'success' : 'failure')"
+        - name: description
+          value: "typecheck + eslint + helm lint"
+        - name: context
+          value: ci/k8s/immich
+        - name: sha
+          value: $(params.revision)
+        - name: github-repo
+          value: $(params.github-repo)
