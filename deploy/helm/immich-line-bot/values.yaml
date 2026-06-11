@@ -25,6 +25,8 @@ ingress:
   className: nginx
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Caddy 終止對外 HTTPS；Caddy→ingress 為 HTTP。勿 308 challenge 到 HTTPS。
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
   host: immich-bot.3q.fi
   path: /
   pathType: Prefix

@@ -33,3 +33,14 @@ curl -sS https://immich-bot.3q.fi/health
 ```
 https://immich-bot.3q.fi/webhook/line
 ```
+
+### 原檔測試（file 訊息）
+
+在 LINE 用 **「檔案」** 傳圖（勿用相簿「照片」）。Bot 以 `line-file` 模式上傳並保留檔名。
+
+```bash
+kubectl logs -n immich deployment/immich-line-bot -f \
+  | grep -E 'Processing LINE media|Downloaded LINE content|Uploaded to Immich'
+```
+
+比對同一張圖：`source=line-file` 的 `bytes` 通常大於 `line-image`；Immich 時間軸用 webhook `event.timestamp`。
