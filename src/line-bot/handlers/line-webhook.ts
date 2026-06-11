@@ -25,6 +25,8 @@ import {
 import {
   uploadDurationSeconds,
   uploadsTotal,
+  assetMetadataReadyTotal,
+  assetMetadataWaitSeconds,
   webhookEventsTotal,
 } from "../metrics";
 
@@ -191,6 +193,26 @@ async function uploadLineMedia(
       );
     }
 
+    if (env.immichLineAlbumName) {
+      const albumId = await immichClient.findOrCreateAlbum(
+        env.immichLineAlbumName,
+      );
+      await immichClient.addAssetsToAlbum(albumId, [asset.id]);
+    }
+
+    let metadataNote: string | undefined;
+    if (env.assetMetadataWaitMs > 0) {
+      const metaStarted = Date.now();
+      const snapshot = await immichClient.waitForAssetMetadata(asset.id, {
+        timeoutMs: env.assetMetadataWaitMs,
+      });
+      assetMetadataWaitSeconds.observe((Date.now() - metaStarted) / 1000);
+      assetMetadataReadyTotal.inc({
+        ready: snapshot?.hasMetadata ? "true" : "false",
+      });
+      metadataNote = immichClient.buildMetadataReplyNote(snapshot);
+    }
+
     const assetUrl = immichClient.assetPageUrl(asset.id, env.immichWebUrl);
 
     logger.info(
@@ -216,6 +238,7 @@ async function uploadLineMedia(
       bytes: buffer.length,
       modeLabel,
       success: true,
+      metadataNote,
     };
   } catch (error) {
     logger.error(

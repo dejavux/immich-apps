@@ -20,3 +20,23 @@ export interface UploadAssetOptions extends UploadDeviceInfo {
   fileModifiedAt?: string;
   source: "line-image" | "line-file";
 }
+
+export interface AssetMetadataSnapshot {
+  hasMetadata: boolean;
+  localDateTime?: string;
+  exifMake?: string;
+  exifModel?: string;
+  peopleCount: number;
+  tagCount: number;
+}
+
+export interface WaitForAssetMetadataOptions {
+  timeoutMs: number;
+  pollIntervalMs?: number;
+}
+
+/** Immich v2 album create/list (open-api/immich-openapi-specs.json). */
+export interface ImmichAlbumSummary {
+  id: string;
+  albumName: string;
+}

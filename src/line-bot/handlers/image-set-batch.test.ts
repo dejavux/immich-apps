@@ -63,6 +63,19 @@ describe("buildSingleUploadText", () => {
     expect(text).toContain("512 B");
   });
 
+  it("formats success with metadata note", () => {
+    const text = buildSingleUploadText({
+      filename: "x.png",
+      assetUrl: "https://immich.3q.fi/photos/x",
+      bytes: 512,
+      modeLabel: "原檔（file）",
+      success: true,
+      metadataNote: "📅 拍攝 2024/03/15\n👤 偵測 1 人",
+    });
+    expect(text).toContain("📅 拍攝");
+    expect(text).toContain("👤 偵測 1 人");
+  });
+
   it("formats failure", () => {
     const text = buildSingleUploadText({
       filename: "x.png",

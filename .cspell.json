@@ -5,6 +5,7 @@
     "node_modules/**",
     "dist/**",
     "coverage/**",
+    "src/shared/generated/**",
     ".git/**",
     "package-lock.json",
     "*.lock"

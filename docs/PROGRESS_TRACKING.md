@@ -225,10 +225,18 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 
 **待強化（Phase 2.5+）**:
 
-- [x] P1: `imageSet` 批次 summary（單則 reply）— `image-set-batch.ts`（PR 待 merge + release）
+- [x] P0: EXIF 優先 + `line-forwarded` 標記（PR #10；`upload-timestamps.ts` / `exifr`）
+- [x] P1: `imageSet` 批次 summary（單則 reply）— `image-set-batch.ts`
 - [x] P1: upload 後 `line-import` / `line-user-{id}` tag — `immich-client.tagAsset`
-- [ ] P3: Qwen vision 繁中 description（V1.1；叢集 `local-llm/qwen-coder`）
-- [ ] Immich CLIP smart tags 觀察（上傳後數分鐘，無 Bot 改動）
+- [x] P1: LINE 上傳加入 `LINE Inbox` 相簿 — `findOrCreateAlbum` / `addAssetsToAlbum`
+- [x] P1: photo-sync CLI `--json-output` 統計 — `immich-sync.sh` → `log_dir/stats/*.json`
+- [x] P2: 上傳後 poll `hasMetadata`（Bot 回覆拍攝時間 / 人臉）— `waitForAssetMetadata`
+- [x] P2: OpenAPI v2.0.1 types — `open-api/` + `npm run openapi:sync`
+- [x] P2: Immich server Prometheus（`IMMICH_TELEMETRY_INCLUDE=all`；infra-bootstrap）
+- [x] P3: CLIP / metadata 觀察腳本 — `scripts/photo-sync/observe-asset-intelligence.sh`
+- [x] P3: XMP sidecar 說明 — `photo-sync.config.yaml.example`
+- [ ] P3: Qwen vision 繁中 description（V1.1；叢集 `local-llm/qwen-coder`；Immich CLIP 觀察後再決定）
+- [ ] Immich CLIP smart tags 觀察（上傳後數分鐘，用 observe 腳本）
 
 **驗收**: 核心 E2E ✅；進階案例與強化功能待下一迭代
 
