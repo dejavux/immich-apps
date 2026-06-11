@@ -64,4 +64,75 @@ export class ImmichClient {
   assetPageUrl(assetId: string, webBaseUrl: string): string {
     return `${webBaseUrl}/photos/${assetId}`;
   }
+
+  /** Attach tags to an asset (creates tags if missing). */
+  async tagAsset(assetId: string, tagNames: string[]): Promise<void> {
+    const unique = [...new Set(tagNames.map((t) => t.trim()).filter(Boolean))];
+    if (unique.length === 0) {
+      return;
+    }
+
+    for (const name of unique) {
+      const tagId = await this.findOrCreateTag(name);
+      await axios.put(
+        `${this.baseUrl}/api/tags/${tagId}/assets`,
+        { ids: [assetId] },
+        {
+          headers: {
+            "x-api-key": this.apiKey,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          timeout: 30_000,
+        },
+      );
+    }
+  }
+
+  private async findOrCreateTag(name: string): Promise<string> {
+    const list = await axios.get<{ id: string; name: string }[]>(
+      `${this.baseUrl}/api/tags`,
+      {
+        headers: { "x-api-key": this.apiKey, Accept: "application/json" },
+        timeout: 30_000,
+      },
+    );
+
+    const existing = list.data.find((t) => t.name === name);
+    if (existing) {
+      return existing.id;
+    }
+
+    try {
+      const created = await axios.post<{ id: string; name: string }>(
+        `${this.baseUrl}/api/tags`,
+        { name },
+        {
+          headers: {
+            "x-api-key": this.apiKey,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          timeout: 30_000,
+        },
+      );
+      return created.data.id;
+    } catch (error) {
+      const status = (error as AxiosError).response?.status;
+      if (status === 409) {
+        const retry = await axios.get<{ id: string; name: string }[]>(
+          `${this.baseUrl}/api/tags`,
+          {
+            headers: { "x-api-key": this.apiKey, Accept: "application/json" },
+            timeout: 30_000,
+          },
+        );
+        const again = retry.data.find((t) => t.name === name);
+        if (again) {
+          return again.id;
+        }
+      }
+      throw error;
+    }
+  }
 }

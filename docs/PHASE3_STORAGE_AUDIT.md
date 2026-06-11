@@ -79,6 +79,8 @@ Found 5023 new files and 0 duplicates
 3. **勿刪** `/data/upload`（正式 library）
 4. Phase 4/5：SSD 優化 + B2 備份
 
+Runbook: [PHASE3_EXTERNAL_LIBRARY_CLEANUP.md](./PHASE3_EXTERNAL_LIBRARY_CLEANUP.md)
+
 ---
 
 **相關**: [PHASE3_PHOTO_SYNC.md](./PHASE3_PHOTO_SYNC.md) · [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md) §3.2.1

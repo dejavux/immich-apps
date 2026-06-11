@@ -13,6 +13,15 @@ import {
   resolveUploadFilename,
 } from "../../shared/media-types";
 import { logger } from "../../shared/logger";
+import {
+  coordinateImageSetReply,
+  type UploadSummaryItem,
+} from "./image-set-batch";
+import {
+  uploadDurationSeconds,
+  uploadsTotal,
+  webhookEventsTotal,
+} from "../metrics";
 
 const messagingClient = new messagingApi.MessagingApiClient({
   channelAccessToken: env.lineAccessToken,
@@ -35,6 +44,8 @@ export async function handleWebhookEvents(
 }
 
 async function handleEvent(event: WebhookEvent): Promise<void> {
+  webhookEventsTotal.inc({ type: event.type });
+
   if (event.type === "message" && event.message.type === "image") {
     await handleImageMessage(event as MessageEvent);
     return;
@@ -100,6 +111,9 @@ async function uploadLineMedia(
   const messageId = event.message.id;
   const replyToken = event.replyToken;
   const eventTime = lineEventTimeIso(event.timestamp);
+  const imageSet =
+    event.message.type === "image" ? event.message.imageSet : undefined;
+  const started = Date.now();
 
   logger.info(
     {
@@ -107,11 +121,15 @@ async function uploadLineMedia(
       messageId,
       source: params.source,
       preferredFileName: params.preferredFileName,
-      imageSet:
-        event.message.type === "image" ? event.message.imageSet : undefined,
+      imageSet,
     },
     "Processing LINE media",
   );
+
+  const modeLabel =
+    params.source === "line-file" ? "原檔（file）" : "照片（image）";
+
+  let summaryItem: UploadSummaryItem;
 
   try {
     const { buffer, contentType } = await downloadLineMessageContent(
@@ -147,9 +165,9 @@ async function uploadLineMedia(
       source: params.source,
     });
 
+    await immichClient.tagAsset(asset.id, ["line-import", lineUserTag(userId)]);
+
     const assetUrl = immichClient.assetPageUrl(asset.id, env.immichWebUrl);
-    const modeLabel =
-      params.source === "line-file" ? "原檔（file）" : "照片（image）";
 
     logger.info(
       {
@@ -162,34 +180,51 @@ async function uploadLineMedia(
       "Uploaded to Immich",
     );
 
-    await messagingClient.replyMessage({
-      replyToken,
-      messages: [
-        {
-          type: "text",
-          text:
-            `✅ 照片已上傳到 Immich（${modeLabel}）\n` +
-            `📄 ${filename} (${formatBytes(buffer.length)})\n\n` +
-            `🔗 ${assetUrl}`,
-        },
-      ],
-    });
+    uploadsTotal.inc({ source: params.source, status: "success" });
+    uploadDurationSeconds.observe(
+      { source: params.source },
+      (Date.now() - started) / 1000,
+    );
+
+    summaryItem = {
+      filename,
+      assetUrl,
+      bytes: buffer.length,
+      modeLabel,
+      success: true,
+    };
   } catch (error) {
     logger.error(
       { error, userId, messageId, source: params.source },
       "Failed to upload LINE media",
     );
 
-    await messagingClient.replyMessage({
-      replyToken,
-      messages: [
-        {
-          type: "text",
-          text: "❌ 照片上傳失敗，請稍後再試",
-        },
-      ],
-    });
+    uploadsTotal.inc({ source: params.source, status: "failure" });
+    uploadDurationSeconds.observe(
+      { source: params.source },
+      (Date.now() - started) / 1000,
+    );
+
+    summaryItem = {
+      filename: params.preferredFileName ?? messageId,
+      bytes: 0,
+      modeLabel,
+      success: false,
+    };
   }
+
+  await coordinateImageSetReply({
+    userId,
+    replyToken,
+    imageSet,
+    item: summaryItem,
+    sendReply: async (token, text) => {
+      await messagingClient.replyMessage({
+        replyToken: token,
+        messages: [{ type: "text", text }],
+      });
+    },
+  });
 }
 
 async function replyText(replyToken: string, text: string): Promise<void> {
@@ -199,12 +234,7 @@ async function replyText(replyToken: string, text: string): Promise<void> {
   });
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+function lineUserTag(userId: string): string {
+  const safe = userId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48);
+  return `line-user-${safe || "unknown"}`;
 }

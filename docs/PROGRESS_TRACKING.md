@@ -63,6 +63,7 @@
 - [x] Port range 規劃 → 30450-30479
 - [x] 設定 `scripts/dev/pf.sh`（port 30450）
 - [x] **CI/CD**：Tekton `ci-tenant-immich-apps` + `make release`（**不需** GitHub Actions workflow）
+- [x] **PR CI L0**：`ci/tekton/pr/` + `immich-pr` trigger（typecheck + eslint + helm lint）
 - [x] `npm install` + `npm run build` / `type-check` 通過
 
 **驗收**: ✅ Repo + Tekton release 就緒
@@ -224,8 +225,8 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 
 **待強化（Phase 2.5+）**:
 
-- [ ] P1: `imageSet` 批次 summary（單則 reply）
-- [ ] P2: upload 後 `line-import` / `line-user-{id}` tag
+- [x] P1: `imageSet` 批次 summary（單則 reply）— `image-set-batch.ts`（PR 待 merge + release）
+- [x] P1: upload 後 `line-import` / `line-user-{id}` tag — `immich-client.tagAsset`
 - [ ] P3: Qwen vision 繁中 description（V1.1；叢集 `local-llm/qwen-coder`）
 - [ ] Immich CLIP smart tags 觀察（上傳後數分鐘，無 Bot 改動）
 
@@ -235,13 +236,15 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 
 ### 2.7 監控設定
 
-**狀態**: ⏳ 待執行  
+**狀態**: 🚧 程式碼就緒（PR 待 merge）  
 **負責**: SRE Team  
 **預估**: 1 小時
 
 **任務**:
 
-- [ ] 驗證 Prometheus 指標
+- [x] LINE Bot `/metrics`（`prom-client`：uploads、latency、imageSet batches）
+- [x] Helm pod annotations `prometheus.io/scrape`
+- [ ] 驗證 Prometheus 指標 scrape + Grafana panel
 
   ```bash
   kubectl port-forward -n immich svc/immich-line-bot 3000:80
@@ -369,7 +372,7 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 - [ ] **local-archive 全量**（~44 GB，進行中；中斷可重跑續傳）
 - [ ] icloud-primary 全量（待 local 完成；預期大量 dup）
 - [ ] Immich Web UI 抽查 EXIF（Make/Model/Date taken）
-- [ ] 清理 external-library 冗餘磁碟（Phase 3 收尾）
+- [ ] 清理 external-library 冗餘磁碟（Phase 3 收尾；runbook：[PHASE3_EXTERNAL_LIBRARY_CLEANUP.md](./PHASE3_EXTERNAL_LIBRARY_CLEANUP.md)）
 
 **監控**:
 

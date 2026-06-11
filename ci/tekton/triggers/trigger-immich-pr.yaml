@@ -1,0 +1,36 @@
+# PRs targeting main — EventListener triggerRef immich-pr
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: immich-pr
+  namespace: ci-triggers
+  labels:
+    app.kubernetes.io/part-of: immich-apps
+spec:
+  serviceAccountName: tekton-ci-listener
+  interceptors:
+    - ref:
+        name: github
+        kind: ClusterInterceptor
+      params:
+        - name: secretRef
+          value:
+            secretName: github-webhook-credentials
+            secretKey: secretToken
+        - name: eventTypes
+          value:
+            - pull_request
+    - ref:
+        name: cel
+        kind: ClusterInterceptor
+      params:
+        - name: filter
+          value: >-
+            body.repository.full_name == 'dejavux/immich-apps'
+            && has(body.pull_request)
+            && body.pull_request.base.ref == 'main'
+            && body.action in ['opened', 'synchronize', 'reopened']
+  bindings:
+    - ref: immich-pr-binding
+  template:
+    ref: immich-pr-template

@@ -63,3 +63,11 @@ resources:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# Prometheus pod annotations（cluster Prometheus 需 scrape /metrics）
+serviceMonitor:
+  enabled: true
+  createResource: false
+  podAnnotations: true
+  interval: 30s
+  scrapeTimeout: 10s

@@ -1,0 +1,66 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: immich-pr-template
+  namespace: ci-triggers
+  labels:
+    app.kubernetes.io/part-of: immich-apps
+spec:
+  params:
+    - name: git-repo-url
+    - name: git-revision
+    - name: pr-number
+    - name: pr-base-ref
+    - name: pr-base-sha
+    - name: github-repo
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: immich-l0-
+        namespace: ci-tenant-immich-apps
+        labels:
+          app.kubernetes.io/part-of: immich-apps
+          tekton.dev/repo: immich-apps
+          tekton.dev/pr-number: $(tt.params.pr-number)
+      spec:
+        pipelineRef:
+          name: immich-l0
+        params:
+          - name: repo-url
+            value: $(tt.params.git-repo-url)
+          - name: revision
+            value: $(tt.params.git-revision)
+          - name: pr-base-ref
+            value: $(tt.params.pr-base-ref)
+          - name: pr-base-sha
+            value: $(tt.params.pr-base-sha)
+          - name: pr-number
+            value: $(tt.params.pr-number)
+          - name: github-repo
+            value: $(tt.params.github-repo)
+        workspaces:
+          - name: source
+            volumeClaimTemplate:
+              spec:
+                storageClassName: nfs-client
+                accessModes:
+                  - ReadWriteMany
+                resources:
+                  requests:
+                    storage: 8Gi
+          - name: git-credentials
+            secret:
+              secretName: github-clone
+        taskRunTemplate:
+          serviceAccountName: tekton-ci-runner
+          podTemplate:
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: nvidia.com/gpu
+                          operator: NotIn
+                          values:
+                            - "true"
