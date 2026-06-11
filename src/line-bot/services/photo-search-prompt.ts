@@ -24,36 +24,31 @@ intent 取值：
 - unknown：無法理解
 
 欄位（缺省用 null）：
-- personNames: string[]  人物暱稱/姓名
-- ageYears: number|null   年齡（可小數，1.5 = 一歲半）
+- personNames: string[]  人物暱稱/姓名（勿把「不」併入人名；「小蕊不在台灣」→ personNames=["小蕊"]）
+- ageYears: number|null   年齡（7歲 → 7，一歲半 → 1.5）；年齡不是 sceneQuery
 - ageMonths: number|null  月齡（優先於 ageYears 若兩者皆有）
 - dateFrom: string|null    YYYY-MM-DD 起始拍攝日
 - dateTo: string|null      YYYY-MM-DD 結束拍攝日
 - birthDate: string|null   使用者提供的生日 YYYY-MM-DD
 - personChoice: number|null  使用者選擇的人物編號（1-based）
-- sceneQuery: string|null    場景描述（使用者語言），例如「在海邊」「生日蛋糕」
-- sceneQueryEn: string|null  給 Immich CLIP 的英文關鍵字，例如 beach ocean sunset
-
-sceneQuery 含**地點**（海邊、學校）或**行為/活動**（吃飯、睡覺、玩耍）；「小蕊在吃飯的照片」→ sceneQuery=吃飯
+- sceneQuery: string|null    場景/行為/穿著/地點（海邊、吃飯、穿裙子、國外、不在台灣）
+- sceneQueryEn: string|null  給 Immich CLIP 的英文關鍵字
 
 範例：
-使用者「幫我找小蕊一歲半的照片」→
-{"intent":"search_photos","personNames":["小蕊"],"ageYears":1.5,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":null,"sceneQueryEn":null}
+使用者「找小蕊7歲的照片」→
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":7,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":null,"sceneQueryEn":null}
 
-使用者「找在海邊的照片」→
-{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"在海邊","sceneQueryEn":"beach ocean seaside"}
+使用者「找小蕊穿裙子的照片」→
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"穿裙子","sceneQueryEn":"wearing dress skirt girl"}
 
-使用者「小蕊在海邊一歲半的照片」→
-{"intent":"search_photos","personNames":["小蕊"],"ageYears":1.5,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"在海邊","sceneQueryEn":"beach ocean"}
+使用者「找小蕊在國外的照片」→
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"國外","sceneQueryEn":"abroad overseas foreign country travel"}
 
-使用者「找找小蕊今年在學校的照片」→
-{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":"${year}-01-01","dateTo":"${today}","birthDate":null,"personChoice":null,"sceneQuery":"學校","sceneQueryEn":"school classroom campus"}
+使用者「找小蕊不在台灣的照片」→
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"不在台灣","sceneQueryEn":"abroad overseas foreign travel not Taiwan"}
 
 使用者「小蕊在吃飯的照片」→
 {"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"吃飯","sceneQueryEn":"eating meal food dining"}
-
-使用者「生日 2019-03-15」（前文在找小蕊）→
-{"intent":"search_photos","personNames":["小蕊"],"ageYears":1.5,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":"2019-03-15","personChoice":null}
 
 使用者「2」且前文在選人物 →
 {"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":2}`;
@@ -197,34 +192,126 @@ function cleanPersonName(name: string): string {
     .trim();
 }
 
-const ACTIVITY_WORDS =
-  "吃飯|用餐|進食|睡覺|午睡|玩耍|遊玩|游泳|跑步|讀書|看書|唱歌|跳舞|刷牙|洗澡|畫畫|寫字|騎車|開車|坐車|搭車|看電視|看書";
-
-const PERSON_SCENE_PATTERNS: RegExp[] = [
-  // 找小蕊在吃飯的照片、找找小蕊在學校的照片
-  /^(?:幫)?(?:我)?(?:找|搜|查+)+(?:找)?(.{1,10}?)在(.+?)(?:的)?(?:照片|相片|圖)$/,
-  // 小蕊在吃飯的照片（無動詞）
-  /^(.{1,10}?)在(.+?)(?:的)?(?:照片|相片|圖)$/,
-  // 找小蕊吃飯的照片（行為，無「在」）
-  new RegExp(
-    `^(?:幫)?(?:我)?(?:找|搜|查+)+(?:找)?(.{1,10}?)(${ACTIVITY_WORDS})(?:的)?(?:照片|相片|圖)$`,
-  ),
-  // 小蕊吃飯的照片
-  new RegExp(`^(.{1,10}?)(${ACTIVITY_WORDS})(?:的)?(?:照片|相片|圖)$`),
-];
-
-export function tryParsePersonScenePhoto(
-  text: string,
-): { personNames: string[]; sceneQuery: string } | undefined {
+function isAgePhrase(text: string): boolean {
   const trimmed = text.trim();
-  for (const pattern of PERSON_SCENE_PATTERNS) {
+  return (
+    /^\d+(?:\.\d+)?\s*歲?$/.test(trimmed) ||
+    trimmed.includes("歲半") ||
+    trimmed === "半歲"
+  );
+}
+
+const SEARCH_PREFIX = "(?:幫)?(?:我)?(?:找|搜|查+)+(?:找)?";
+const PHOTO_SUFFIX = "(?:的)?(?:照片|相片|圖)$";
+
+export function tryParsePersonAge(
+  text: string,
+): { personNames: string[]; ageYears: number } | undefined {
+  const trimmed = text.trim();
+
+  const halfMatch = trimmed.match(
+    new RegExp(`^${SEARCH_PREFIX}(.{1,10}?)一歲半${PHOTO_SUFFIX}`),
+  );
+  if (halfMatch) {
+    const person = cleanPersonName(halfMatch[1]);
+    if (person) {
+      return { personNames: [person], ageYears: 1.5 };
+    }
+  }
+
+  const patterns = [
+    new RegExp(
+      `^${SEARCH_PREFIX}(.{1,10}?)(?:的)?(?:大約|約)?(\\d+(?:\\.\\d+)?)\\s*歲`,
+    ),
+    new RegExp(
+      `^(.{1,10}?)(?:的)?(?:大約|約)?(\\d+(?:\\.\\d+)?)\\s*歲${PHOTO_SUFFIX}`,
+    ),
+  ];
+
+  for (const pattern of patterns) {
     const match = trimmed.match(pattern);
     if (!match) {
       continue;
     }
     const person = cleanPersonName(match[1]);
-    const scene = cleanScenePhrase(match[2]);
-    if (!person || !scene) {
+    const age = Number.parseFloat(match[2]);
+    if (person && Number.isFinite(age)) {
+      return { personNames: [person], ageYears: age };
+    }
+  }
+  return undefined;
+}
+
+export function ensureAgeFromText(
+  plan: PhotoSearchPlan,
+  message: string,
+): PhotoSearchPlan {
+  const parsed = tryParsePersonAge(message);
+  if (!parsed) {
+    return plan;
+  }
+
+  const sceneLooksLikeAge =
+    plan.sceneQuery?.trim() && isAgePhrase(plan.sceneQuery);
+
+  return {
+    ...plan,
+    intent: plan.intent === "unknown" ? "search_photos" : plan.intent,
+    personNames: plan.personNames?.length
+      ? plan.personNames
+      : parsed.personNames,
+    ageYears: parsed.ageYears,
+    ...(sceneLooksLikeAge
+      ? { sceneQuery: undefined, sceneQueryEn: undefined }
+      : {}),
+  };
+}
+
+const ACTIVITY_WORDS =
+  "吃飯|用餐|進食|睡覺|午睡|玩耍|遊玩|游泳|跑步|讀書|看書|唱歌|跳舞|刷牙|洗澡|畫畫|寫字|騎車|開車|坐車|搭車|看電視";
+
+function buildPersonScenePatterns(): RegExp[] {
+  return [
+    // 找小蕊不在台灣的照片（必須早於「在」模式）
+    new RegExp(`^${SEARCH_PREFIX}(.{1,8}?)不在(.+?)${PHOTO_SUFFIX}`),
+    new RegExp(`^(.{1,8}?)不在(.+?)${PHOTO_SUFFIX}`),
+    new RegExp(`^${SEARCH_PREFIX}(.{1,8}?)(?<!不)在(.+?)${PHOTO_SUFFIX}`),
+    new RegExp(`^(.{1,8}?)(?<!不)在(.+?)${PHOTO_SUFFIX}`),
+    new RegExp(`^${SEARCH_PREFIX}(.{1,8}?)(穿|戴)(.+?)${PHOTO_SUFFIX}`),
+    new RegExp(`^(.{1,8}?)(穿|戴)(.+?)${PHOTO_SUFFIX}`),
+    new RegExp(`^${SEARCH_PREFIX}(.{1,8}?)(${ACTIVITY_WORDS})${PHOTO_SUFFIX}`),
+    new RegExp(`^(.{1,8}?)(${ACTIVITY_WORDS})${PHOTO_SUFFIX}`),
+    new RegExp(
+      `^${SEARCH_PREFIX}(.{1,8}?)([^在的照片\\d\\s][^的照片]{1,18}?)${PHOTO_SUFFIX}`,
+    ),
+  ];
+}
+
+export function tryParsePersonScenePhoto(
+  text: string,
+): { personNames: string[]; sceneQuery: string } | undefined {
+  const trimmed = text.trim();
+
+  if (tryParsePersonAge(trimmed)) {
+    return undefined;
+  }
+
+  for (const pattern of buildPersonScenePatterns()) {
+    const match = trimmed.match(pattern);
+    if (!match) {
+      continue;
+    }
+
+    const person = cleanPersonName(match[1]);
+    let sceneRaw = match[3] !== undefined ? `${match[2]}${match[3]}` : match[2];
+    if (match[2] === "穿" || match[2] === "戴") {
+      sceneRaw = `${match[2]}${match[3]}`;
+    }
+
+    const scene = pattern.source.includes("不在")
+      ? `不在${match[2].trim()}`
+      : cleanScenePhrase(sceneRaw);
+    if (!person || !scene || isAgePhrase(scene)) {
       continue;
     }
     return { personNames: [person], sceneQuery: scene };
@@ -236,13 +323,21 @@ export function ensureActivityFromText(
   plan: PhotoSearchPlan,
   message: string,
 ): PhotoSearchPlan {
-  if (plan.sceneQuery?.trim()) {
+  if (plan.ageYears !== undefined || plan.ageMonths !== undefined) {
     return plan;
   }
+  if (tryParsePersonAge(message)) {
+    return plan;
+  }
+  if (plan.sceneQuery?.trim() && !isAgePhrase(plan.sceneQuery)) {
+    return plan;
+  }
+
   const parsed = tryParsePersonScenePhoto(message);
   if (!parsed) {
     return plan;
   }
+
   return {
     ...plan,
     intent: plan.intent === "unknown" ? "search_photos" : plan.intent,
@@ -250,11 +345,14 @@ export function ensureActivityFromText(
       ? plan.personNames
       : parsed.personNames,
     sceneQuery: parsed.sceneQuery,
+    sceneQueryEn: undefined,
   };
 }
 
 const SCENE_TRANSLATIONS: Array<[RegExp, string]> = [
-  [/海邊|海灘|沙灘|海邊/, "beach ocean seaside"],
+  [/不在台灣|不是台灣|非台灣/, "abroad overseas foreign travel not Taiwan"],
+  [/國外|海外|國外旅行/, "abroad overseas foreign country travel"],
+  [/海邊|海灘|沙灘/, "beach ocean seaside"],
   [/山|登山|爬山/, "mountain hiking"],
   [/生日|慶生|蛋糕/, "birthday party cake"],
   [/吃飯|用餐|進食|美食/, "eating meal food dining"],
@@ -272,6 +370,10 @@ const SCENE_TRANSLATIONS: Array<[RegExp, string]> = [
   [/讀書|看書/, "reading book study"],
   [/跑步/, "running jogging"],
   [/畫畫|寫字/, "drawing writing art"],
+  [/穿裙子|裙子|洋裝|連身裙/, "wearing dress skirt girl"],
+  [/穿.*褲/, "wearing pants trousers"],
+  [/戴帽子|帽子/, "wearing hat cap"],
+  [/眼鏡/, "wearing glasses"],
 ];
 
 export function translateSceneQueryFallback(sceneQuery: string): string {
@@ -285,7 +387,7 @@ export function translateSceneQueryFallback(sceneQuery: string): string {
 }
 
 export function ensureSceneQueryEn(plan: PhotoSearchPlan): PhotoSearchPlan {
-  if (!plan.sceneQuery?.trim()) {
+  if (!plan.sceneQuery?.trim() || isAgePhrase(plan.sceneQuery)) {
     return plan;
   }
   const cleaned = cleanScenePhrase(plan.sceneQuery);
@@ -317,6 +419,21 @@ export function parseSearchPlanFallback(
   const rel = detectRelativeDateInText(trimmed, now);
   const working = rel ? stripRelativeDateTokens(trimmed) : trimmed;
 
+  const personAge = tryParsePersonAge(working);
+  if (personAge) {
+    const plan: PhotoSearchPlan = {
+      intent: "search_photos",
+      personNames: personAge.personNames,
+      ageYears: personAge.ageYears,
+    };
+    if (rel) {
+      plan.dateFrom = rel.dateFrom;
+      plan.dateTo = rel.dateTo;
+      plan.dateRangeLabel = rel.label;
+    }
+    return plan;
+  }
+
   const personScene = tryParsePersonScenePhoto(working);
   if (personScene) {
     const plan: PhotoSearchPlan = {
@@ -330,27 +447,6 @@ export function parseSearchPlanFallback(
       plan.dateRangeLabel = rel.label;
     }
     return ensureSceneQueryEn(plan);
-  }
-
-  const personAgeMatch = working.match(
-    /(?:找|搜|查).*?([^\d\s，,、的]{1,8}?)(?:的)?(?:大約|約)?(\d+(?:\.\d+)?)\s*歲/,
-  );
-  if (personAgeMatch) {
-    return {
-      intent: "search_photos",
-      personNames: [personAgeMatch[1].trim()],
-      ageYears: Number.parseFloat(personAgeMatch[2]),
-    };
-  }
-
-  const personHalfYearMatch = trimmed.match(/(?:找|搜|查)(?:我)?(.+?)一歲半/);
-  if (personHalfYearMatch) {
-    const name = personHalfYearMatch[1].replace(/的.*$/, "").trim();
-    return ensureSceneQueryEn({
-      intent: "search_photos",
-      personNames: [name],
-      ageYears: 1.5,
-    });
   }
 
   const sceneMatch = working.match(
@@ -386,9 +482,10 @@ export function parseSearchPlanFallback(
     const nameMatch = working.match(
       /(?:找|搜|查)+(?:找)?(?:我)?(.{1,10}?)(?:的)?(?:照片|相片|圖)/,
     );
+    const rawName = nameMatch ? nameMatch[1].replace(/的$/, "").trim() : "";
     const plan: PhotoSearchPlan = {
       intent: "search_photos",
-      personNames: nameMatch ? [nameMatch[1].replace(/的$/, "").trim()] : [],
+      personNames: rawName ? [cleanPersonName(rawName)] : [],
     };
     if (rel) {
       plan.dateFrom = rel.dateFrom;

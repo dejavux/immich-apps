@@ -5,9 +5,11 @@ import {
 } from "./photo-search-service";
 import {
   ensureActivityFromText,
+  ensureAgeFromText,
   ensureSceneQueryEn,
   parseSearchPlanFallback,
   translateSceneQueryFallback,
+  tryParsePersonAge,
   tryParsePersonScenePhoto,
 } from "./photo-search-prompt";
 
@@ -55,6 +57,34 @@ describe("parseSearchPlanFallback", () => {
     expect(plan.personNames).toEqual(["小蕊"]);
     expect(plan.sceneQuery).toBe("吃飯");
   });
+
+  it("parses age 7 years", () => {
+    const plan = parseSearchPlanFallback("找小蕊7歲的照片");
+    expect(plan.personNames).toEqual(["小蕊"]);
+    expect(plan.ageYears).toBe(7);
+    expect(plan.sceneQuery).toBeUndefined();
+  });
+
+  it("parses wearing dress", () => {
+    const plan = parseSearchPlanFallback("找小蕊穿裙子的照片");
+    expect(plan.personNames).toEqual(["小蕊"]);
+    expect(plan.sceneQuery).toBe("穿裙子");
+    expect(plan.sceneQueryEn).toContain("dress");
+  });
+
+  it("parses abroad location", () => {
+    const plan = parseSearchPlanFallback("找小蕊在國外的照片");
+    expect(plan.personNames).toEqual(["小蕊"]);
+    expect(plan.sceneQuery).toBe("國外");
+    expect(plan.sceneQueryEn).toContain("abroad");
+  });
+
+  it("parses negated Taiwan without breaking person name", () => {
+    const plan = parseSearchPlanFallback("找小蕊不在台灣的照片");
+    expect(plan.personNames).toEqual(["小蕊"]);
+    expect(plan.sceneQuery).toBe("不在台灣");
+    expect(plan.sceneQueryEn).toContain("not Taiwan");
+  });
 });
 
 describe("tryParsePersonScenePhoto", () => {
@@ -62,6 +92,30 @@ describe("tryParsePersonScenePhoto", () => {
     const parsed = tryParsePersonScenePhoto("小蕊在吃飯的照片");
     expect(parsed?.personNames).toEqual(["小蕊"]);
     expect(parsed?.sceneQuery).toBe("吃飯");
+  });
+});
+
+describe("ensureAgeFromText", () => {
+  it("fills age when LLM only returned person or wrong scene", () => {
+    const plan = ensureAgeFromText(
+      {
+        intent: "search_photos",
+        personNames: ["小蕊"],
+        sceneQuery: "7歲",
+      },
+      "找小蕊7歲的照片",
+    );
+    expect(plan.ageYears).toBe(7);
+    expect(plan.sceneQuery).toBeUndefined();
+  });
+});
+
+describe("tryParsePersonAge", () => {
+  it("extracts 7歲", () => {
+    expect(tryParsePersonAge("找小蕊7歲的照片")).toEqual({
+      personNames: ["小蕊"],
+      ageYears: 7,
+    });
   });
 });
 
@@ -132,6 +186,18 @@ describe("resolveTakenRange", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.takenAfter).toContain("2020");
+    }
+  });
+
+  it("computes range for 7 years old", () => {
+    const result = resolveTakenRange(
+      { ageYears: 7, birthDate: "2019-03-15" },
+      { id: "p1", name: "rayna", birthDate: null },
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.takenAfter).toContain("2026");
+      expect(result.label).toContain("7");
     }
   });
 });

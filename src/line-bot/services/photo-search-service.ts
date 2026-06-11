@@ -15,6 +15,7 @@ import {
   buildSearchUserPrompt,
   buildPhotoSearchSystemPrompt,
   ensureActivityFromText,
+  ensureAgeFromText,
   ensureRelativeDatesFromText,
   ensureSceneQueryEn,
   parseLlmSearchResponse,
@@ -106,7 +107,7 @@ export class PhotoSearchService {
   ): PhotoSearchPlan {
     return ensureSceneQueryEn(
       ensureActivityFromText(
-        ensureRelativeDatesFromText(plan, message),
+        ensureAgeFromText(ensureRelativeDatesFromText(plan, message), message),
         message,
       ),
     );
@@ -327,10 +328,11 @@ export class PhotoSearchService {
   ): Promise<PhotoSearchResult> {
     const displayName = this.personDisplayName(plan, person);
     const hasScene = this.hasSceneQuery(plan);
+    const hasAge = plan.ageYears !== undefined || plan.ageMonths !== undefined;
     const range = resolveTakenRange(plan, person, this.options.ageWindowDays);
 
     if (!range.ok) {
-      if (!hasScene) {
+      if (hasAge || !hasScene) {
         this.options.sessionStore.save(userId, {
           plan: {
             ...plan,
