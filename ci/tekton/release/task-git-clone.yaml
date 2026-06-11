@@ -1,4 +1,4 @@
-# Clone immich-apps at release revision (master base ref).
+# Clone immich-apps at release revision (main base ref).
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
@@ -19,7 +19,7 @@ spec:
       default: "1"
     - name: pr-base-ref
       type: string
-      default: master
+      default: main
   workspaces:
     - name: output
     - name: basic-auth

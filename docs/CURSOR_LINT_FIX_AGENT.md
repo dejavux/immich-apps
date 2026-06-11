@@ -13,7 +13,7 @@ Upstream 通用文件：[`docs/CONSUMER_ONBOARDING.md`](https://github.com/dejav
 | `make lint-mechanical` | 僅腳本 lint（無 SDK；CI / 離線） | npm、eslint |
 | `make lint-all` | 全庫 lint + agent | 同上 |
 | `make commit` | lint → git add → Cursor SDK conventional commit | `CURSOR_API_KEY` |
-| `make pull_request` | lint → commit → push → PR → merge `master` | `gh`、`CURSOR_API_KEY` |
+| `make pull_request` | lint → commit → push → PR → merge `main` | `gh`、`CURSOR_API_KEY` |
 | `make release` | Tekton BuildKit build + helm deploy | kubectl（Tekton 就緒前 fallback docker） |
 
 **`make release` 不會呼叫 lint agent。** Release 前請手動 `make lint` 或 `make lint-mechanical`。
@@ -71,7 +71,7 @@ Lint 腳本檢查：ESLint、Prettier、tsc、markdownlint、shellcheck、helm l
 make lint
 make commit
 
-# 一鍵 PR（預設 merge 回 master）
+# 一鍵 PR（預設 merge 回 main）
 make pull_request
 
 # 只開 PR、不 merge
@@ -81,7 +81,7 @@ PR_SKIP_MERGE=1 make pull_request
 AUTO_COMMIT_LINT_TARGET=lint-mechanical make commit
 ```
 
-本 repo 預設 base branch 為 **`master`**（`PR_BASE_BRANCH=master`）。
+本 repo 預設 base branch 為 **`main`**（`PR_BASE_BRANCH=main`）。
 
 ## Release 工作流
 

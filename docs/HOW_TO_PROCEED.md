@@ -249,7 +249,7 @@ cd /Users/light0/DEV/immich-apps
 
 make lint              # 變更檔 + Cursor lint-fix-agent
 make commit            # lint + AI commit
-make pull_request      # lint → commit → PR → merge master
+make pull_request      # lint → commit → PR → merge main
 make release           # Tekton build + helm deploy
 ```
 
@@ -283,7 +283,7 @@ make logs
 | Webhook 本機測試 | ngrok 或 `make pf`（部署後） |
 | 生產部署 | K8s + Helm + HTTPS（見 PHASE2_K8S_DEPLOYMENT.md） |
 | Immich server Helm vs kubectl | 短期沿用 `deploy/manifests/`；中期包成 Helm wrapper |
-| master vs main branch | 目前 repo 用 `master`，可選擇 rename → `main` |
+| 預設分支 | `main`（與 fuqi / ibkr / infra-bootstrap 一致） |
 
 ---
 

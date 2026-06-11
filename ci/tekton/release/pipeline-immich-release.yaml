@@ -42,7 +42,7 @@ spec:
         - name: depth
           value: "1"
         - name: pr-base-ref
-          value: master
+          value: main
       workspaces:
         - name: output
           workspace: source
