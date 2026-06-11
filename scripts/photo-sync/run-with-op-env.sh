@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launchd / cron wrapper：從 1Password 載入 Immich 憑證後執行子命令
+# Launchd / cron wrapper：載入 Immich 憑證後執行子命令
 #
 # 用法:
 #   ./scripts/photo-sync/run-with-op-env.sh ./scripts/photo-sync/immich-watch.sh
@@ -14,15 +14,12 @@ if [[ $# -lt 1 ]]; then
   exit 1
 fi
 
-if [[ -z "${IMMICH_API_KEY:-}" ]]; then
-  if command -v op >/dev/null 2>&1; then
-    eval "$("$ROOT/scripts/dev/load-env-from-op.sh")"
-  else
-    echo "ERROR: IMMICH_API_KEY unset and op CLI not found" >&2
-    exit 1
-  fi
+if [[ -z "${IMMICH_API_KEY:-}" || "${IMMICH_API_KEY}" == "your-immich-api-key-here" || "${IMMICH_API_KEY}" == your-* ]]; then
+  unset IMMICH_API_KEY
 fi
 
-export IMMICH_INSTANCE_URL="${IMMICH_INSTANCE_URL:-${IMMICH_BASE_URL:-https://immich.3q.fi}}"
+# shellcheck source=scripts/photo-sync/ensure-immich-creds.sh
+source "$ROOT/scripts/photo-sync/ensure-immich-creds.sh"
+load_immich_creds "$ROOT"
 
 exec "$@"

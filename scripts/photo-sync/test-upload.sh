@@ -15,12 +15,15 @@ if ! command -v immich >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ -z "${IMMICH_API_KEY:-}" ]]; then
-  echo "ERROR: IMMICH_API_KEY not set" >&2
-  exit 1
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+if [[ -z "${IMMICH_API_KEY:-}" || "${IMMICH_API_KEY}" == "your-immich-api-key-here" || "${IMMICH_API_KEY}" == your-* ]]; then
+  unset IMMICH_API_KEY
 fi
 
-export IMMICH_INSTANCE_URL="${IMMICH_INSTANCE_URL:-${IMMICH_BASE_URL:-https://immich.3q.fi}}"
+# shellcheck source=scripts/photo-sync/ensure-immich-creds.sh
+source "$ROOT/scripts/photo-sync/ensure-immich-creds.sh"
+load_immich_creds "$ROOT"
 
 SAMPLE=$(find "$LIB_PATH" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.heic' -o -iname '*.png' \) -print -quit 2>/dev/null || true)
 

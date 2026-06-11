@@ -11,16 +11,20 @@
 | 項目 | 狀態 |
 |------|------|
 | Repo `immich-apps` / 預設分支 **`main`** | ✅ |
-| LINE Bot MVP + 生產部署 | ✅ `immich-line-bot:3abfca8` |
-| HTTPS Webhook + E2E | ✅ `https://immich-bot.3q.fi/webhook/line` |
-| Tekton `make release`（git short SHA tag） | ✅ |
-| 1Password → K8s（Infra-Platform） | ✅ |
-| Cursor lint / commit / PR | ✅ `.envrc` + lint-fix-agent |
-| file 訊息原檔實驗 | ✅ 已實作；iPhone 相簿無法直接選「檔案」 |
-| Immich ML（人臉 / CLIP） | ✅ 上傳後自動；Bot 不寫 GPT |
-| Phase 3 Photo Sync | 🚧 進行中（CLI ✅、多 library 腳本就緒） |
+| LINE Bot MVP + 生產部署 | ✅ `immich-line-bot:ee98e7a` |
+| Phase 3 Photo Sync | 🚧 **local-archive 全量上傳中**（5023 檔 / ~44 GB；0 dup vs DB） |
 
-**整體進度**: ~**72%**（Phase 2 核心 **85%** 完成）
+**整體進度**: ~**78%**（Phase 2: **85%** · Phase 3: **55%**）
+
+---
+
+## 🎯 下一步（2026-06-11 晚）
+
+1. **等 local-archive 上傳完成**（中斷可 `./scripts/photo-sync/immich-sync.sh --library local-archive` 續傳）
+2. **跑 icloud-primary**（預期大量 hash dup）
+3. **commit 憑證 fix PR**（`bootstrap-credentials.sh`、`ensure-immich-creds.sh`）
+4. **清理 external-library 冗餘** — 見 [PHASE3_STORAGE_AUDIT.md](./PHASE3_STORAGE_AUDIT.md)
+5. Phase 3.5 tier_policy / Phase 5 B2 備份
 
 ---
 
@@ -40,12 +44,15 @@
 多 library：`Photos Library`（iCloud）+ `LOCAL PHOTO LIBRARY`（archive）→ Immich union。
 
 ```bash
-eval "$(./scripts/dev/load-env-from-op.sh)"
-./scripts/photo-sync/test-upload.sh          # Step 0 ✅
-./scripts/photo-sync/immich-sync.sh --dry-run
+# 憑證（擇一）
+./scripts/photo-sync/bootstrap-credentials.sh   # 一次性，LaunchAgent 用
+# 或 eval "$(./scripts/dev/load-env-from-op.sh)"
+
+./scripts/photo-sync/immich-sync.sh --library local-archive   # 進行中 ~44GB
+./scripts/photo-sync/immich-sync.sh --library icloud-primary  # 待 local 完成
 ```
 
-→ 詳見 [PHASE3_PHOTO_SYNC.md](./PHASE3_PHOTO_SYNC.md) · [scripts/photo-sync/README.md](../scripts/photo-sync/README.md)
+→ [PHASE3_PHOTO_SYNC.md](./PHASE3_PHOTO_SYNC.md) · [PHASE3_STORAGE_AUDIT.md](./PHASE3_STORAGE_AUDIT.md)
 
 ### 軌 C — Ops 收尾
 
@@ -70,7 +77,7 @@ graph LR
     B --> D[Phase 2c<br/>Tekton + Helm + HTTPS ✅]
     C --> D
     D --> E[Phase 2d<br/>E2E 測試 ✅]
-    E --> F[Phase 3<br/>Photo Sync ⏳]
+    E --> F[Phase 3<br/>Photo Sync 🚧]
     E --> G[Phase 2+<br/>批次/tag 可選]
 ```
 
