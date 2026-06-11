@@ -31,3 +31,17 @@ export const imageSetBatchesTotal = new client.Counter({
   help: "imageSet batch summaries sent",
   registers: [register],
 });
+
+export const assetMetadataWaitSeconds = new client.Histogram({
+  name: "immich_line_bot_asset_metadata_wait_seconds",
+  help: "Time spent polling Immich asset hasMetadata after upload",
+  buckets: [0.5, 1, 2, 4, 8, 15, 30],
+  registers: [register],
+});
+
+export const assetMetadataReadyTotal = new client.Counter({
+  name: "immich_line_bot_asset_metadata_ready_total",
+  help: "Immich metadata extraction outcome after upload poll",
+  labelNames: ["ready"] as const,
+  registers: [register],
+});

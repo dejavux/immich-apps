@@ -29,6 +29,15 @@ cp scripts/photo-sync/photo-sync.config.yaml.example ~/.config/immich-apps/photo
 
 中斷後 **重跑同一指令**；CLI hash skip 已上傳檔案。
 
+同步統計（`sync.json_output: true`）寫入 `~/Library/Logs/immich-photo-sync/stats/*.json`（`new_files` / `duplicates` / `new_assets`）。
+
+觀察 Immich 背景 metadata / 人臉 / Smart Search：
+
+```bash
+./scripts/photo-sync/observe-asset-intelligence.sh --tag line-import
+./scripts/photo-sync/observe-asset-intelligence.sh --smart "beach sunset"
+```
+
 ## 多 Library
 
 | ID | 路徑 | Album | 狀態 |

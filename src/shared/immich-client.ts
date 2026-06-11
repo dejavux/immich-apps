@@ -1,14 +1,39 @@
 import axios, { type AxiosError } from "axios";
 import FormData from "form-data";
 
-import type { ImmichAsset, UploadAssetOptions } from "./types/immich";
+import {
+  formatMetadataNote,
+  snapshotFromAssetResponse,
+} from "./asset-metadata";
 import { logger } from "./logger";
+import type {
+  AssetMetadataSnapshot,
+  ImmichAlbumSummary,
+  ImmichAsset,
+  UploadAssetOptions,
+  WaitForAssetMetadataOptions,
+} from "./types/immich";
+
+const DEFAULT_POLL_INTERVAL_MS = 1_500;
 
 export class ImmichClient {
+  private readonly albumIdCache = new Map<string, string>();
+
   constructor(
     private readonly baseUrl: string,
     private readonly apiKey: string,
   ) {}
+
+  private headers(json = false): Record<string, string> {
+    const base: Record<string, string> = {
+      "x-api-key": this.apiKey,
+      Accept: "application/json",
+    };
+    if (json) {
+      base["Content-Type"] = "application/json";
+    }
+    return base;
+  }
 
   async uploadAsset(
     imageBuffer: Buffer,
@@ -39,8 +64,7 @@ export class ImmichClient {
           {
             headers: {
               ...attemptForm.getHeaders(),
-              "x-api-key": this.apiKey,
-              Accept: "application/json",
+              ...this.headers(),
             },
             maxBodyLength: Infinity,
             maxContentLength: Infinity,
@@ -65,39 +89,98 @@ export class ImmichClient {
     throw lastError;
   }
 
-  assetPageUrl(assetId: string, webBaseUrl: string): string {
-    return `${webBaseUrl}/photos/${assetId}`;
-  }
-
-  /** Set asset description (Immich assets API). */
-  async updateAssetDescription(
-    assetId: string,
-    description: string,
-  ): Promise<void> {
+  async getAsset(assetId: string): Promise<unknown> {
     const endpoints = [`/api/assets/${assetId}`, `/api/asset/${assetId}`];
 
     let lastError: unknown;
     for (const path of endpoints) {
       try {
-        await axios.patch(
-          `${this.baseUrl}${path}`,
-          { description },
-          {
-            headers: {
-              "x-api-key": this.apiKey,
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            timeout: 30_000,
-          },
-        );
+        const response = await axios.get(`${this.baseUrl}${path}`, {
+          headers: this.headers(),
+          timeout: 30_000,
+        });
+        return response.data;
+      } catch (error) {
+        lastError = error;
+        const status = (error as AxiosError).response?.status;
+        if (status === 404) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw lastError;
+  }
+
+  /**
+   * Poll until Immich metadata extraction completes (hasMetadata) or timeout.
+   * Immich v2 no longer exposes legacy asset.status=READY; hasMetadata is the signal.
+   */
+  async waitForAssetMetadata(
+    assetId: string,
+    options: WaitForAssetMetadataOptions,
+  ): Promise<AssetMetadataSnapshot | undefined> {
+    if (options.timeoutMs <= 0) {
+      return undefined;
+    }
+
+    const pollIntervalMs = options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
+    const deadline = Date.now() + options.timeoutMs;
+
+    while (Date.now() < deadline) {
+      const data = await this.getAsset(assetId);
+      const snapshot = snapshotFromAssetResponse(data);
+      if (snapshot.hasMetadata) {
+        return snapshot;
+      }
+      await sleep(Math.min(pollIntervalMs, deadline - Date.now()));
+    }
+
+    return undefined;
+  }
+
+  buildMetadataReplyNote(snapshot: AssetMetadataSnapshot | undefined): string {
+    if (!snapshot) {
+      return "⏳ 背景處理中（縮圖 / EXIF / 人臉 / 智慧搜尋）";
+    }
+    const formatted = formatMetadataNote(snapshot);
+    return formatted.length > 0 ? formatted : "✅ Metadata 已就緒";
+  }
+
+  assetPageUrl(assetId: string, webBaseUrl: string): string {
+    return `${webBaseUrl}/photos/${assetId}`;
+  }
+
+  /** Set asset description (Immich v2: PUT /api/assets/{id}). */
+  async updateAssetDescription(
+    assetId: string,
+    description: string,
+  ): Promise<void> {
+    const attempts: Array<{ path: string; method: "put" | "patch" }> = [
+      { path: `/api/assets/${assetId}`, method: "put" },
+      { path: `/api/assets/${assetId}`, method: "patch" },
+      { path: `/api/asset/${assetId}`, method: "put" },
+      { path: `/api/asset/${assetId}`, method: "patch" },
+    ];
+
+    let lastError: unknown;
+    for (const attempt of attempts) {
+      try {
+        await axios.request({
+          method: attempt.method,
+          url: `${this.baseUrl}${attempt.path}`,
+          data: { description },
+          headers: this.headers(true),
+          timeout: 30_000,
+        });
         return;
       } catch (error) {
         lastError = error;
         const status = (error as AxiosError).response?.status;
         if (status === 404 || status === 405) {
           logger.warn(
-            { path, assetId },
+            { path: attempt.path, method: attempt.method, assetId },
             "Immich asset description path unavailable, trying fallback",
           );
           continue;
@@ -107,6 +190,55 @@ export class ImmichClient {
     }
 
     throw lastError;
+  }
+
+  /** Find album by exact name or create it (Immich v2 /api/albums). */
+  async findOrCreateAlbum(albumName: string): Promise<string> {
+    const cached = this.albumIdCache.get(albumName);
+    if (cached) {
+      return cached;
+    }
+
+    const list = await axios.get<ImmichAlbumSummary[]>(
+      `${this.baseUrl}/api/albums`,
+      {
+        headers: this.headers(),
+        timeout: 30_000,
+      },
+    );
+
+    const existing = list.data.find((album) => album.albumName === albumName);
+    if (existing) {
+      this.albumIdCache.set(albumName, existing.id);
+      return existing.id;
+    }
+
+    const created = await axios.post<{ id: string; albumName: string }>(
+      `${this.baseUrl}/api/albums`,
+      { albumName },
+      {
+        headers: this.headers(true),
+        timeout: 30_000,
+      },
+    );
+
+    this.albumIdCache.set(albumName, created.data.id);
+    return created.data.id;
+  }
+
+  async addAssetsToAlbum(albumId: string, assetIds: string[]): Promise<void> {
+    if (assetIds.length === 0) {
+      return;
+    }
+
+    await axios.put(
+      `${this.baseUrl}/api/albums/${albumId}/assets`,
+      { ids: assetIds },
+      {
+        headers: this.headers(true),
+        timeout: 30_000,
+      },
+    );
   }
 
   /** Attach tags to an asset (creates tags if missing). */
@@ -122,11 +254,7 @@ export class ImmichClient {
         `${this.baseUrl}/api/tags/${tagId}/assets`,
         { ids: [assetId] },
         {
-          headers: {
-            "x-api-key": this.apiKey,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
+          headers: this.headers(true),
           timeout: 30_000,
         },
       );
@@ -137,7 +265,7 @@ export class ImmichClient {
     const list = await axios.get<{ id: string; name: string }[]>(
       `${this.baseUrl}/api/tags`,
       {
-        headers: { "x-api-key": this.apiKey, Accept: "application/json" },
+        headers: this.headers(),
         timeout: 30_000,
       },
     );
@@ -152,11 +280,7 @@ export class ImmichClient {
         `${this.baseUrl}/api/tags`,
         { name },
         {
-          headers: {
-            "x-api-key": this.apiKey,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
+          headers: this.headers(true),
           timeout: 30_000,
         },
       );
@@ -167,7 +291,7 @@ export class ImmichClient {
         const retry = await axios.get<{ id: string; name: string }[]>(
           `${this.baseUrl}/api/tags`,
           {
-            headers: { "x-api-key": this.apiKey, Accept: "application/json" },
+            headers: this.headers(),
             timeout: 30_000,
           },
         );
@@ -179,4 +303,13 @@ export class ImmichClient {
       throw error;
     }
   }
+}
+
+function sleep(ms: number): Promise<void> {
+  if (ms <= 0) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }

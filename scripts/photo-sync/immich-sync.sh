@@ -73,7 +73,10 @@ log() {
 }
 
 python3 - "$CONFIG" "$ONLY_LIBRARY" "$DRY_RUN" "$LOG_FILE" <<'PY'
-import os, subprocess, sys
+import json
+import os
+import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -82,11 +85,31 @@ import yaml
 config_path, only_lib, dry_run, log_file = sys.argv[1:5]
 dry = dry_run == "true"
 
+
 def log(msg: str) -> None:
     line = f"[{datetime.now():%Y-%m-%d %H:%M:%S}] {msg}\n"
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(line)
     print(line, end="")
+
+
+def parse_immich_json_output(stdout: str) -> dict:
+    """Parse immich CLI --json-output (JSON may follow log lines)."""
+    for line in reversed(stdout.strip().splitlines()):
+        stripped = line.strip()
+        if not stripped.startswith("{"):
+            continue
+        try:
+            data = json.loads(stripped)
+        except json.JSONDecodeError:
+            continue
+        return {
+            "new_files": len(data.get("newFiles") or []),
+            "duplicates": len(data.get("duplicates") or []),
+            "new_assets": len(data.get("newAssets") or []),
+        }
+    return {"new_files": 0, "duplicates": 0, "new_assets": 0}
+
 
 with open(config_path, encoding="utf-8") as f:
     cfg = yaml.safe_load(f)
@@ -103,7 +126,12 @@ if url:
 sync_cfg = cfg.get("sync", {})
 recursive = sync_cfg.get("recursive", True)
 concurrency = sync_cfg.get("upload_concurrency", 4)
+json_output = sync_cfg.get("json_output", True)
 os.environ["IMMICH_UPLOAD_CONCURRENCY"] = str(concurrency)
+
+log_dir = Path(log_file).parent
+stats_dir = log_dir / "stats"
+stats_dir.mkdir(parents=True, exist_ok=True)
 
 for lib in cfg.get("libraries", []):
     if not lib.get("enabled", True):
@@ -123,11 +151,34 @@ for lib in cfg.get("libraries", []):
     cmd.extend(["-A", album])
     if dry:
         cmd.append("-n")
-    result = subprocess.run(cmd, capture_output=False)
+    if json_output:
+        cmd.append("-j")
+
+    result = subprocess.run(cmd, capture_output=json_output, text=True)
+    stats = parse_immich_json_output(result.stdout) if json_output else {}
+    if stats:
+        log(
+            "STATS "
+            f"library={lib_id} new_files={stats['new_files']} "
+            f"duplicates={stats['duplicates']} new_assets={stats['new_assets']}"
+        )
+        stats_path = stats_dir / f"{lib_id}-{datetime.now():%Y%m%d-%H%M%S}.json"
+        payload = {
+            "library_id": lib_id,
+            "dry_run": dry,
+            "at": datetime.now().isoformat(),
+            **stats,
+        }
+        stats_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        log(f"STATS_JSON {stats_path}")
+
     if result.returncode == 0:
         log(f"DONE library={lib_id}")
     else:
+        if json_output and result.stderr:
+            log(f"STDERR library={lib_id}: {result.stderr.strip()[:500]}")
         log(f"FAILED library={lib_id} exit={result.returncode}")
+        sys.exit(result.returncode)
 
 log("All libraries processed")
 PY

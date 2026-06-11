@@ -65,6 +65,10 @@ spec:
                 secretKeyRef:
                   name: {{ include "immich-line-bot.immichApiSecretName" . }}
                   key: {{ .Values.secretKeys.immichApiKey }}
+            - name: IMMICH_LINE_ALBUM_NAME
+              value: {{ .Values.env.immichLineAlbumName | quote }}
+            - name: ASSET_METADATA_WAIT_MS
+              value: {{ .Values.env.assetMetadataWaitMs | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:

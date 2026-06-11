@@ -44,8 +44,18 @@ tier_policy:
 sync:
   recursive: true
   upload_concurrency: 4
+  # immich CLI -j：寫入 log_dir/stats/*.json（new_files / duplicates / new_assets）
+  json_output: true
   debounce_seconds: 30
   log_dir: ~/Library/Logs/immich-photo-sync
+
+# XMP sidecar（Immich CLI 上傳時自動偵測同目錄 *.xmp / *.jpg.xmp）
+# 見 https://docs.immich.app/features/xmp-sidecars
+# 若 originals 含 Lightroom / digiKam sidecar，metadata 會在 server Metadata Extraction job 匯入。
+# 可選 glob 排除（傳給 immich upload --ignore）：
+# ignore_patterns:
+#   - "**/Raw/**"
+#   - "**/@eaDir/**"
 
 # Immich 備份（Phase 5 — server 端；見 docs/PHASE5_BACKUP_MONITORING.md）
 backup_policy:

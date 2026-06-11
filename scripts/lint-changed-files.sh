@@ -194,7 +194,7 @@ fi
 if [[ ${#SH_FILES[@]} -gt 0 ]]; then
   echo -e "${BLUE}shellcheck${NC}"
   if command -v shellcheck >/dev/null 2>&1; then
-    if shellcheck "${SH_FILES[@]}" 2>&1; then
+    if shellcheck -x "${SH_FILES[@]}" 2>&1; then
       echo -e "${GREEN}   shellcheck 通過（${#SH_FILES[@]} 個檔案）${NC}"
     else
       echo -e "${RED}   shellcheck 失敗${NC}"; HAS_ERROR=true

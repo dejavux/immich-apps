@@ -37,6 +37,8 @@ ingress:
 env:
   nodeEnv: production
   logLevel: info
+  immichLineAlbumName: LINE Inbox
+  assetMetadataWaitMs: "8000"
   # Cluster-internal Immich API (same namespace)
   immichBaseUrl: http://immich-server:2283
   immichWebUrl: https://immich.3q.fi

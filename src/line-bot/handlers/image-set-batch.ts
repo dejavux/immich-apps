@@ -12,6 +12,8 @@ export type UploadSummaryItem = {
   bytes: number;
   modeLabel: string;
   success: boolean;
+  /** Optional Immich post-upload metadata note (EXIF / faces). */
+  metadataNote?: string;
 };
 
 type BatchState = {
@@ -72,11 +74,15 @@ export function buildSingleUploadText(item: UploadSummaryItem): string {
   if (!item.success) {
     return "❌ 照片上傳失敗，請稍後再試";
   }
-  return (
-    `✅ 照片已上傳到 Immich（${item.modeLabel}）\n` +
-    `📄 ${item.filename} (${formatBytes(item.bytes)})\n\n` +
-    `🔗 ${item.assetUrl ?? ""}`
-  );
+  const lines = [
+    `✅ 照片已上傳到 Immich（${item.modeLabel}）`,
+    `📄 ${item.filename} (${formatBytes(item.bytes)})`,
+  ];
+  if (item.metadataNote) {
+    lines.push(item.metadataNote);
+  }
+  lines.push("", `🔗 ${item.assetUrl ?? ""}`);
+  return lines.join("\n");
 }
 
 export async function coordinateImageSetReply(params: {
