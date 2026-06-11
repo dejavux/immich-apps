@@ -15,7 +15,9 @@
 # ── 配置 ──────────────────────────────────────────────────────────────────────
 
 NAMESPACE ?= immich
+# 本機 build/deploy 可覆寫；release 一律用 RELEASE_TAG（git short SHA）
 IMAGE_TAG ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo latest)
+RELEASE_TAG := $(shell git rev-parse --short HEAD 2>/dev/null || echo latest)
 REGISTRY ?= registry-internal.3q.fi
 TEKTON_TENANT_NS ?= ci-tenant-immich-apps
 export PR_BASE_BRANCH ?= master
@@ -155,10 +157,10 @@ ci-logs: ## 最新 release PipelineRun logs
 	  kubectl -n $(TEKTON_TENANT_NS) logs -l tekton.dev/pipelineRun=$$LATEST -f --max-log-requests=10 ; \
 	fi
 
-release: ## Tekton BuildKit build + helm deploy
-	@echo "$(BLUE)Release: $(IMAGE_TAG)$(NC)"
+release: ## Tekton BuildKit build + helm deploy（tag = git short SHA）
+	@echo "$(BLUE)Release: $(RELEASE_TAG)$(NC)"
 	@bash scripts/release-tekton-build.sh line-bot
-	@$(MAKE) deploy-line-bot IMAGE_TAG=$(IMAGE_TAG)
+	@$(MAKE) deploy-line-bot IMAGE_TAG=$(RELEASE_TAG)
 
 release-build: ## 僅 Tekton build（不 deploy）
 	@IMMICH_RELEASE_SKIP_DEPLOY=1 bash scripts/release-tekton-build.sh line-bot

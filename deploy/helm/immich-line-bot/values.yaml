@@ -41,8 +41,9 @@ env:
 
 onepassword:
   enabled: true
-  lineBotItemPath: vaults/Infra-Apps/items/Immich-LINE-Bot
-  immichApiItemPath: vaults/Infra-Apps/items/Immich-API-Key
+  # immich namespace Connect 僅授權 Infra-Platform（同 Immich-PostgreSQL）
+  lineBotItemPath: vaults/Infra-Platform/items/Immich-LINE-Bot
+  immichApiItemPath: vaults/Infra-Platform/items/Immich-API-Key
 
 secretKeys:
   lineChannelSecret: channel-secret
