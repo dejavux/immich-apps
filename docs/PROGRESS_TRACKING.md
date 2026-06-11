@@ -2,11 +2,11 @@
 
 **單一真相來源（Single Source of Truth）**：Immich 增強專案所有任務的集中管理。
 
-> 🏗️ **Repo**: <https://github.com/dejavux/immich-apps（整合> server + LINE Bot + photo sync）  
+> 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-10  
-**專案狀態**: 🚧 Phase 2 — MVP + Helm 骨架完成，待 Tekton release + HTTPS 部署  
+**最後更新**: 2026-06-11  
+**專案狀態**: ✅ Phase 2 核心 MVP 已上線（HTTPS + E2E）；強化功能與 Phase 3 待進行  
 **負責人**: Infrastructure Team + App Dev Team
 
 ---
@@ -15,11 +15,11 @@
 
 | 指標 | 數值 | 說明 |
 |------|------|------|
-| 🔴 高優先級任務 | 7 | Phase 2 LINE Bot (P0) — repo 已建，剩開發/部署 |
+| 🔴 高優先級任務 | 3 | Phase 2 強化（批次/tag）+ Phase 3 啟動 |
 | 🟡 中優先級任務 | 5 | Phase 3 Photo Sync (P1) |
 | 🟢 低優先級任務 | 8 | Phase 4-5 優化項目 (P2) |
-| ✅ 本週完成 | 8 | Repo、MVP 源碼、1P 憑證、Helm 骨架、K8s 部署規劃 |
-| 📈 整體進度 | **45%** | Phase 0: 100%, Phase 1: 50%, Phase 2: 45% |
+| ✅ 本週完成 | 12 | Tekton release、HTTPS、E2E、1P 對齊、file 上傳實驗 |
+| 📈 整體進度 | **72%** | Phase 0: 100%, Phase 1: 50%, Phase 2: **85%** |
 
 ---
 
@@ -29,8 +29,8 @@
 |-------|------|--------|------|------|----------|
 | **Phase 0** | Repo 整合 | ✅ 完成 | 100% | ██████████ 100% | 2026-05-27 |
 | **Phase 1** | 基礎設施 | ✅ 已部署 | 50% 完成 | █████░░░░░ 50% | 2025-10-06 |
-| **Phase 2** | LINE Bot | 🔴 P0 最高 | 🚧 Helm + CI 規劃 | █████░░░░░ 45% | 2026-06-21 |
-| **Phase 3** | Photo Sync | 🟡 P1 次優先 | 📋 規劃完成 | ░░░░░░░░░░ 0% | 2026-06-28 |
+| **Phase 2** | LINE Bot | 🔴 P0 最高 | ✅ 核心 MVP 上線 | ████████░░ 85% | 2026-06-11 |
+| **Phase 3** | Photo Sync | 🟡 P1 次優先 | 🚧 進行中 | ██░░░░░░░░ 20% | 2026-06-28 |
 | **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-05 |
 | **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-12 |
 
@@ -62,10 +62,10 @@
 - [x] infra-bootstrap 清理（僅保留指向 README）
 - [x] Port range 規劃 → 30450-30479
 - [x] 設定 `scripts/dev/pf.sh`（port 30450）
-- [ ] 建立 `.github/workflows/` (ci.yml, release.yml)
+- [x] **CI/CD**：Tekton `ci-tenant-immich-apps` + `make release`（**不需** GitHub Actions workflow）
 - [x] `npm install` + `npm run build` / `type-check` 通過
 
-**驗收**: ✅ Repo + pf.sh 就緒；⏳ CI / Tekton release 待補
+**驗收**: ✅ Repo + Tekton release 就緒
 
 ---
 
@@ -81,10 +81,10 @@
 - [x] 啟用 Messaging API（Channel ID: 2010362663）
 - [x] Issue Channel Access Token
 - [x] 關閉自動回應訊息
-- [ ] 設定 Webhook URL: `https://immich-bot.3q.fi/webhook/line`（待 server 部署）
-- [ ] 啟用 Webhook（部署後）
+- [x] 設定 Webhook URL: `https://immich-bot.3q.fi/webhook/line`
+- [x] 啟用 Webhook + Verify Success（2026-06-11）
 
-**驗收**: ✅ Channel + Token 就緒；⏳ Webhook 待部署
+**驗收**: ✅ Channel + Token + 公網 Webhook 就緒
 
 ---
 
@@ -98,12 +98,16 @@
 - [x] 建立 vault `Infra-Apps`（若不存在）
 - [x] **Item: Immich-LINE-Bot** — channel-id, channel-secret, access-token, bot-id
   - 腳本: `scripts/create-line-bot-op-item.sh`
+  - **K8s 使用**: `Infra-Platform`（`scripts/sync-op-items-infra-platform.sh` 自 Infra-Apps 同步）
 - [x] **Item: Immich-API-Key** — api-key
   - 腳本: `scripts/create-immich-api-key-op-item.sh`
-- [ ] **Item: OpenAI-API-Key** — MVP 可略過
-- [ ] K8s `OnePasswordItem` + Operator 同步（Helm chart 已含 template，待 deploy）
+- [x] **AI 描述（V1.1）**：改用叢集 **Qwen vLLM**（`local-llm/qwen-coder`，OpenAI 相容 API）；**不需** OpenAI-API-Key
+  - 叢集內：`http://qwen-coder.local-llm.svc:8001/v1`
+  - 本機 dev：`QWEN_BASE_URL=http://127.0.0.1:30420`（`infra-bootstrap/60_apps/local_llm/`）
+  - Cursor SDK 僅用於 **lint/commit/PR** 開發流程，非 runtime 照片描述
+- [x] K8s `OnePasswordItem` + Operator 同步（Helm deploy 後 Ready）
 
-**驗收**: ✅ LINE + Immich 憑證已存 1Password；K8s 同步待 Helm 部署
+**驗收**: ✅ LINE + Immich 憑證已同步至 Infra-Platform；Pod secrets OK
 
 ---
 
@@ -119,118 +123,113 @@
 - [x] 下載 LINE 圖片 → 上傳 Immich
 - [x] 成功/失敗回覆用戶
 - [x] `scripts/dev/load-env-from-op.sh` — 從 1Password 載入憑證
-- [ ] 本機 ngrok 測試
-- [ ] Helm deploy + 生產 Webhook（見 [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md)）
+- [x] **file 訊息**支援（PR #6）— 保留檔名 + Content-Type；iPhone 需經「檔案」App
+- [x] **P0 中繼資料**：`fileCreatedAt` 用 webhook `event.timestamp`；MIME 自 LINE response
+- [x] `.envrc` + Cursor lint-fix-agent 整合
+- [x] 預設分支 **`main`**（PR #5）
+- [x] Helm deploy + 生產 Webhook（見 [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md)）
 
-**本機開發**:
+**本機開發**（憑證 + lint + dev）:
 
 ```bash
 cd immich-apps
 npm install && npm run build
 eval "$(./scripts/dev/load-env-from-op.sh)"
+make lint              # ESLint + Prettier + tsc + markdownlint + shellcheck（無 cspell）
 npm run dev
-# ngrok http 3000 → 設 LINE Webhook
 ```
 
 **驗收**: `npm run build` + `npm run type-check` 通過；`/health` 可本機驗證
 
 ---
 
-### 2.4 本地功能測試
+### 2.3.1 原檔 / EXIF 調查結論（2026-06-11）
 
-**狀態**: ⏳ 待執行  
-**負責**: Dev Team  
-**預估**: 1 小時
+**狀態**: ✅ 已驗證（實測 + Immich API）
+
+| 管道 | 解析度範例 | 相機 EXIF | 適用途 |
+|------|------------|-----------|--------|
+| LINE「照片」/ 相機 | 960×1706、~280KB | ❌ 無 make/model/GPS | 快速分享 |
+| LINE「檔案」（經「檔案」App） | 較大、保留檔名 | ⚠️ 視來源 | 少數原檔 |
+| iPhone 直接選「檔案」 | — | — | ❌ 無法從「照片」App 選 |
+| **Immich App / Photo Sync** | 原解析度 | ✅ | **原檔 SSOT** |
+
+**決策**: LINE Bot = convenience channel；**Phase 3 Photo Sync** = 原檔 + EXIF 主路徑。
+
+---
+
+### 2.4 本地 / 生產功能測試
+
+**狀態**: ✅ 生產 E2E 完成（2026-06-11）  
+**負責**: Dev + Ops
 
 **任務**:
 
-- [ ] ngrok + LINE Webhook 驗證
-- [ ] 手機傳照片 → Bot 回覆 Immich 連結
-- [ ] Immich Web UI 確認新照片
+- [x] HTTPS Webhook Verify Success
+- [x] 手機傳照片 → Bot 回覆 Immich 連結
+- [x] Immich Web UI 確認新照片 + ML 人臉偵測
+- [x] 多張批次上傳（8 張）成功（每張獨立 reply，待 P1 imageSet 聚合）
 
-**驗收**: LINE 轉發照片 → Immich 可見（MVP 不含 GPT-4V）
+**驗收**: ✅ LINE → Immich 上傳成功率 100%（實測）；Immich ML pipeline 正常
 
 ---
 
 ### 2.5 Kubernetes 部署（Helm + Tekton + BuildKit + HTTPS）
 
-**狀態**: 🚧 Tekton release 就緒，待首次 build + HTTPS 部署（~50%）  
-**文檔**: [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md) ⭐
+**狀態**: ✅ 完成（2026-06-11）  
+**文檔**: [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md) ⭐  
+**目前映像**: `registry-internal.3q.fi/immich-line-bot:3abfca8`（Helm revision 6）
 
 **目標架構**:
 
-- **Build**: Tekton `ci-tenant-immich-apps` + BuildKit → `registry-internal.3q.fi/immich-line-bot`
-- **Deploy**: `helm upgrade immich-line-bot` → namespace `immich`
-- **HTTPS**: `https://immich-bot.3q.fi/webhook/line`（Caddy + Route53 + cert-manager）
+- **Build**: Tekton `ci-tenant-immich-apps` + BuildKit → `registry-internal.3q.fi/immich-line-bot:<git-short-sha>`
+- **Deploy**: `make release` → `helm upgrade immich-line-bot` → namespace `immich`
+- **HTTPS**: `https://immich-bot.3q.fi/webhook/line`（Route53 → Caddy → ingress-nginx → cert-manager）
 
 **任務**:
 
-- [x] Helm chart 骨架 `deploy/helm/immich-line-bot/`
+- [x] Helm chart `deploy/helm/immich-line-bot/`
 - [x] `scripts/dev/pf.sh`（port 30450）
-- [x] 部署規劃文檔 PHASE2_K8S_DEPLOYMENT.md
 - [x] Tekton release pipeline `ci/tekton/release/`
-- [x] infra-bootstrap: `ci-tenant-immich-apps` bootstrap（已 apply + secrets）
-- [ ] `make release` 首次 Tekton PipelineRun 成功
-- [ ] Caddy + Route53: `immich-bot.3q.fi` HTTPS
-- [ ] 首次 `helm upgrade` + LINE Webhook Verify
-- [ ] E2E：傳照片 → Immich 可見
+- [x] infra-bootstrap: `ci-tenant-immich-apps` + bootstrap secrets
+- [x] `make release` Tekton PipelineRun 成功（tag = git short SHA）
+- [x] Caddy + Route53: `immich-bot.3q.fi` HTTPS + Certificate Ready
+- [x] LINE Webhook Verify + E2E 傳照片
+- [x] ingress `ssl-redirect: false`（Caddy→ingress HTTP-01 相容）
+- [x] BuildKit Task CPU 下調（避免 worker1 Pending，PR #4）
 
-**暫時手動部署**（Tekton 完成前）:
+**驗收**: ✅ 全部通過
 
 ```bash
-make build-line-bot IMAGE_TAG=v0.1.0
-make deploy-line-bot IMAGE_TAG=v0.1.0
-make pf   # 30450
+curl -sS https://immich-bot.3q.fi/health
+kubectl get certificate immich-bot-3q-fi-tls -n immich
+kubectl logs -n immich deployment/immich-line-bot --tail=20
 ```
-
-**驗收**: HTTPS health OK + LINE Webhook Verify + 照片上傳成功
-
-- [ ] 檢查 Pod 狀態
-
-  ```bash
-  kubectl get pods -n immich -l app=immich-line-bot
-  kubectl logs -n immich -l app=immich-line-bot --tail=50
-  ```
-
-- [ ] 驗證 Ingress TLS
-
-  ```bash
-  curl -I https://immich-bot.3q.fi/health
-  ```
-
-**驗收**: 2/2 Pods Running, Ingress 有有效 TLS 證書
 
 ---
 
 ### 2.6 生產環境測試
 
-**狀態**: ⏳ 待執行  
-**負責**: QA Team  
-**預估**: 1 小時
+**狀態**: ✅ 核心案例完成（2026-06-11）  
+**負責**: QA / Ops
 
 **任務**:
 
-- [ ] 加入 LINE Bot 好友
-  - [ ] 從 LINE Developers Console 掃描 QR Code
+- [x] 加入 LINE Bot 好友（@189oipta / 分享照片）
+- [x] 轉發 / 傳送照片 → 上傳成功 + Bot 回覆連結
+- [x] Immich Web UI 確認 + ML 人臉偵測 log
+- [x] LINE 相機直拍 EXIF 調查（無相機 metadata，見 §2.3.1）
+- [ ] 連續 10 張壓力測試 + 成功率統計
+- [ ] 非圖片訊息 / 大檔案邊界案例
 
-- [ ] 功能測試
-  - [ ] 轉發 1 張照片 → 驗證成功上傳
-  - [ ] 檢查回覆訊息（< 5 秒）
-  - [ ] 登入 Immich Web UI 確認照片存在
-  - [ ] 驗證 AI 描述（CLIP + GPT-4V）
-  - [ ] 檢查 EXIF GPS 反向地理編碼
+**待強化（Phase 2.5+）**:
 
-- [ ] 壓力測試
-  - [ ] 連續轉發 10 張照片
-  - [ ] 檢查成功率
-  - [ ] 驗證沒有重複上傳
+- [ ] P1: `imageSet` 批次 summary（單則 reply）
+- [ ] P2: upload 後 `line-import` / `line-user-{id}` tag
+- [ ] P3: Qwen vision 繁中 description（V1.1；叢集 `local-llm/qwen-coder`）
+- [ ] Immich CLIP smart tags 觀察（上傳後數分鐘，無 Bot 改動）
 
-- [ ] 錯誤處理測試
-  - [ ] 發送非圖片訊息 → 驗證忽略
-  - [ ] 網絡中斷場景 → 驗證重試
-  - [ ] 大圖片（> 10MB）→ 驗證處理
-
-**驗收**: 成功率 > 95%, P95 延遲 < 5 秒
+**驗收**: 核心 E2E ✅；進階案例與強化功能待下一迭代
 
 ---
 
@@ -267,97 +266,76 @@ make pf   # 30450
 
 ### 2.8 文檔更新
 
-**狀態**: ⏳ 待執行  
-**負責**: Tech Writer  
-**預估**: 30 分鐘
+**狀態**: 🚧 進行中（2026-06-11）
 
 **任務**:
 
-- [ ] 更新 `60_apps/immich/line-bot/README.md`
-  - [ ] 加入實際部署日期
-  - [ ] 更新 Webhook URL（如果不同）
-  - [ ] 加入監控 Dashboard 連結
-
-- [ ] 更新 `PROGRESS_TRACKING.md` (本文件)
-  - [ ] Phase 2 標記為完成
-  - [ ] 記錄實際完成日期
-  - [ ] 更新下一步為 Phase 3
-
-- [ ] 建立 Phase 2 完成報告
-  - [ ] 在 `00_docs/projects/immich-enhancement/` 建立 `PHASE2_COMPLETION_REPORT.md`
-  - [ ] 記錄成功指標（成功率、延遲等）
-  - [ ] 遇到的問題與解決方案
-  - [ ] 經驗教訓
-
-**驗收**: 所有文檔更新完成，Phase 2 標記為已完成
+- [x] 更新 `PROGRESS_TRACKING.md`（本文件）
+- [x] 更新 `HOW_TO_PROCEED.md`、`PHASE2_K8S_DEPLOYMENT.md`
+- [x] infra-bootstrap 指向 + Caddy `immich-bot.3q.fi`
+- [ ] infra-bootstrap Caddyfile commit + PR
+- [ ] Phase 2 完成報告（可選 `PHASE2_COMPLETION_REPORT.md`）
 
 ---
 
 ## 🟡 P1：中優先級（Phase 3 - Photo Sync）
 
-**目標**: Mac Photos Library 自動同步到 Immich  
-**預估**: 2-3 天  
-**前置條件**: Phase 2 完成  
-**截止**: 2026-06-04
+**狀態**: 🚧 **進行中**（2026-06-11 開工）  
+**目標**: 多個 Mac `.photoslibrary` → Immich（原檔 + EXIF SSOT）  
+**預估**: 2-3 天（同步）+ Phase 3.5 分層搬移  
+**前置條件**: ✅ Phase 2 核心完成
+
+### 架構決策
+
+| 層 | SSOT | 說明 |
+|----|------|------|
+| Mac | `.photoslibrary` | iCloud + Local 兩個 library |
+| Immich | union + hash dedupe | 兩 library 都 sync，Immich 去重 |
+| 分層 | Phase 3.5 | iCloud 超量→Local 需 osxphotos（規劃中） |
+| 備份 | Phase 5 | Immich server + B2 異地（3-2-1） |
+
+**本機 libraries**（light0 Mac）:
+
+- `~/Pictures/Photos Library.photoslibrary` — iCloud / iPhone sync
+- `~/Pictures/LOCAL PHOTO LIBRARY.photoslibrary` — 離線 archive
+
+### 3.0 CLI 煙霧測試
+
+**狀態**: ✅ 完成（2026-06-11）
+
+- [x] Immich CLI 2.2.61 已安裝
+- [x] `./scripts/photo-sync/test-upload.sh` — 上傳 1 張 HEIC 成功
+- [x] dry-run：`icloud-primary` 3511 檔 / ~32 GB 待同步
 
 ### 3.1 安裝依賴
 
-**狀態**: ⏳ 待執行  
-**負責**: Dev Team  
-**預估**: 15 分鐘
+**狀態**: 🚧 部分完成
 
 **任務**:
 
-- [ ] 安裝 Immich CLI
+- [x] Immich CLI（`immich --version` → 2.2.61）
+- [ ] fswatch — `brew install fswatch`
+- [x] 設定檔範例 `scripts/photo-sync/photo-sync.config.yaml.example`
+- [x] 同步腳本 `scripts/photo-sync/immich-sync.sh`（多 library）
+- [x] 監控腳本 `scripts/photo-sync/immich-watch.sh`
 
-  ```bash
-  npm install -g @immich/cli
-  immich --version
-  ```
-
-- [ ] 安裝 fswatch
-
-  ```bash
-  brew install fswatch
-  fswatch --version
-  ```
-
-**驗收**: 兩個工具安裝成功，版本正常顯示
+**驗收**: CLI ✅；fswatch 待裝
 
 ---
 
-### 3.2 腳本設定
+### 3.2 腳本與設定
 
-**狀態**: ⏳ 待執行  
-**負責**: Dev Team  
-**預估**: 1 小時
+**狀態**: 🚧 進行中
 
 **任務**:
 
-- [ ] 建立腳本目錄
+- [x] `~/.config/immich-apps/photo-sync.config.yaml`（自 example 複製）
+- [x] 多 library config（icloud-primary + local-archive）
+- [x] `tier_policy` 區塊（Phase 3.5 預留；自動 iCloud→Local 尚未實作）
+- [ ] Launchd plist（`immich-watch`）
+- [ ] local-archive dry-run + 首次全量
 
-  ```bash
-  mkdir -p ~/scripts ~/Library/Logs
-  ```
-
-- [ ] 建立 `~/scripts/immich-sync.sh`（參考 PHASE3_PHOTO_SYNC.md）
-- [ ] 建立 `~/scripts/immich-watch.sh`
-- [ ] 設定執行權限
-
-  ```bash
-  chmod +x ~/scripts/immich-sync.sh
-  chmod +x ~/scripts/immich-watch.sh
-  ```
-
-- [ ] 設定環境變數
-
-  ```bash
-  # ~/.zshrc
-  export IMMICH_INSTANCE_URL=https://immich.3q.fi
-  export IMMICH_API_KEY=<from Immich Web UI>
-  ```
-
-**驗收**: 腳本可手動執行，環境變數正確設定
+**驗收**: `./scripts/photo-sync/immich-sync.sh --dry-run` 通過
 
 ---
 

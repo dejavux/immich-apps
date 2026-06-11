@@ -23,6 +23,7 @@ export LINE_CHANNEL_SECRET='${LINE_SECRET//\'/\'\\\'\'}'
 export LINE_CHANNEL_ACCESS_TOKEN='${LINE_TOKEN//\'/\'\\\'\'}'
 export IMMICH_API_KEY='${IMMICH_KEY//\'/\'\\\'\'}'
 export IMMICH_BASE_URL='${IMMICH_BASE_URL:-https://immich.3q.fi}'
+export IMMICH_INSTANCE_URL='${IMMICH_INSTANCE_URL:-${IMMICH_BASE_URL:-https://immich.3q.fi}}'
 export IMMICH_WEB_URL='${IMMICH_WEB_URL:-https://immich.3q.fi}'
 export PORT='${PORT:-3000}'
 EOF

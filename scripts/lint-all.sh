@@ -47,6 +47,12 @@ else
   echo -e "\n${YELLOW}markdownlint 未設定，略過${NC}"
 fi
 
+if npm run spellcheck:md --if-present >/dev/null 2>&1; then
+  run_ok "cspell（md, npm run spellcheck:md）" npm run spellcheck:md
+else
+  echo -e "\n${YELLOW}cspell 未設定，略過${NC}"
+fi
+
 if [[ -d deploy/helm/immich-line-bot ]]; then
   run_ok "helm lint immich-line-bot" helm lint deploy/helm/immich-line-bot
 fi
