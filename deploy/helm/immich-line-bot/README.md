@@ -4,7 +4,8 @@ Deploy LINE Bot to `immich` namespace.
 
 ## Prerequisites
 
-- 1Password items in `Infra-Apps`: `Immich-LINE-Bot`, `Immich-API-Key`
+- 1Password items in `Infra-Platform`（immich namespace Connect 授權範圍）: `Immich-LINE-Bot`, `Immich-API-Key`
+- 若 items 在 `Infra-Apps`，先執行 `./scripts/sync-op-items-infra-platform.sh`
 - 1Password Connect Operator watching `immich` namespace
 - Image in `registry-internal.3q.fi/immich-line-bot:<tag>`
 - Caddy + Route53 for `immich-bot.3q.fi` (see `docs/PHASE2_K8S_DEPLOYMENT.md`)

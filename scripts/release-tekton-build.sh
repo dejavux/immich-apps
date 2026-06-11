@@ -61,14 +61,13 @@ fi
 FULL_SHA="$(git rev-parse HEAD)"
 SHORT_SHA="$(git rev-parse --short HEAD)"
 REGISTRY="${IMMICH_REGISTRY:-registry.docker-registry-internal.svc.cluster.local:5000}"
-IMAGE_TAG="${IMAGE_TAG:-$SHORT_SHA}"
 
 echo -e "${BLUE}=== Immich Apps Release Build ===${NC}"
 echo "  namespace    : ${NS}"
 echo "  revision     : ${SHORT_SHA}"
 echo "  build-target : ${BUILD_TARGET}"
 echo "  registry     : ${REGISTRY}"
-echo "  image        : ${REGISTRY}/immich-line-bot:${IMAGE_TAG}"
+echo "  image        : ${REGISTRY}/immich-line-bot:${SHORT_SHA}"
 echo ""
 
 for secret in github-clone registry-push; do
@@ -94,7 +93,7 @@ metadata:
   labels:
     app.kubernetes.io/part-of: immich-apps
     tekton.dev/pipeline: ${PIPELINE}
-    tekton.dev/image-tag: ${IMAGE_TAG}
+    tekton.dev/image-tag: ${SHORT_SHA}
 spec:
   pipelineRef:
     name: ${PIPELINE}
@@ -104,7 +103,7 @@ spec:
     - name: registry
       value: ${REGISTRY}
     - name: image-tag
-      value: ${IMAGE_TAG}
+      value: ${SHORT_SHA}
     - name: build-target
       value: ${BUILD_TARGET}
   workspaces:
@@ -147,14 +146,14 @@ echo "  kubectl -n ${NS} get pipelinerun ${RUN_NAME} -w"
 echo "  kubectl -n ${NS} logs -l tekton.dev/pipelineRun=${RUN_NAME} -f --max-log-requests=10"
 echo ""
 echo "完成後部署："
-echo "  make deploy-line-bot IMAGE_TAG=${IMAGE_TAG}"
+echo "  make deploy-line-bot IMAGE_TAG=${SHORT_SHA}"
 echo ""
 
 if [[ "${IMMICH_RELEASE_WAIT:-1}" == "1" ]]; then
   echo -e "${YELLOW}等待 PipelineRun 完成（最長 ${TIMEOUT}）...${NC}"
   if kubectl wait --for=condition=Succeeded "pipelinerun/${RUN_NAME}" \
       -n "${NS}" --timeout="${TIMEOUT}" 2>/dev/null; then
-    echo -e "${GREEN}✅ Build 成功！映像 tag: ${IMAGE_TAG}${NC}"
+    echo -e "${GREEN}✅ Build 成功！映像 tag: ${SHORT_SHA}${NC}"
   else
     echo -e "${RED}❌ Build 失敗或超時，查看 logs:${NC}"
     echo "  kubectl -n ${NS} describe pipelinerun ${RUN_NAME}"
