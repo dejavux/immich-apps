@@ -292,8 +292,8 @@ curl -sS https://immich-bot.3q.fi/health
 | # | 任務 | 負責 | 狀態 | 預估 |
 |---|------|------|------|------|
 | M1 | Helm chart 完整化 + `helm template` lint | immich-apps | ✅ 骨架 | 0.5d |
-| M2 | Tekton release pipeline + Task | immich-apps + infra-bootstrap | ⏳ | 1d |
-| M3 | `ci-tenant-immich-apps` bootstrap | infra-bootstrap | ⏳ | 0.5d |
+| M2 | Tekton release pipeline + Task | immich-apps + infra-bootstrap | ✅ | 1d |
+| M3 | `ci-tenant-immich-apps` bootstrap | infra-bootstrap | ✅ | 0.5d |
 | M4 | Caddy + Route53 + Ingress TLS | infra-bootstrap | ⏳ | 0.5d |
 | M5 | `make release` 首次成功 push | immich-apps | ⏳ | 0.5d |
 | M6 | LINE Webhook Verify + E2E 傳照片 | Ops | ⏳ | 0.5d |

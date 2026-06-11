@@ -1,0 +1,78 @@
+# BuildKit daemonless build task (pattern from ibkr-portfolio-miniapp).
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: immich-buildkit-build
+  namespace: ci-tenant-immich-apps
+  labels:
+    app.kubernetes.io/part-of: immich-apps
+    tekton.dev/phase: release
+spec:
+  description: Build and push one image via buildctl-daemonless (registry cache).
+  params:
+    - name: image
+      type: string
+      description: Full image ref (registry/repo:tag)
+    - name: dockerfile
+      type: string
+      default: Dockerfile
+    - name: context-subpath
+      type: string
+      default: ""
+      description: Subdir under workspace source (empty = repo root under src/)
+    - name: cache-ref
+      type: string
+      description: registry.../buildkit-cache/<image-name>
+    - name: build-args-csv
+      type: string
+      default: ""
+      description: Comma-separated key=value build args (no spaces)
+  workspaces:
+    - name: source
+    - name: dockerconfig
+      description: registry push credentials (.dockerconfigjson)
+  steps:
+    - name: build
+      image: moby/buildkit:v0.13.2
+      workingDir: $(workspaces.source.path)/src/$(params.context-subpath)
+      securityContext:
+        privileged: true
+      computeResources:
+        requests:
+          cpu: "2"
+          memory: "4Gi"
+          ephemeral-storage: 20Gi
+        limits:
+          cpu: "4"
+          memory: "8Gi"
+          ephemeral-storage: 50Gi
+      env:
+        - name: DOCKER_CONFIG
+          value: $(workspaces.dockerconfig.path)
+      script: |
+        #!/bin/sh
+        set -eu
+        CONTEXT="$(workspaces.source.path)/src/$(params.context-subpath)"
+        CONTEXT="${CONTEXT%/}"
+        IMAGE="$(params.image)"
+        CACHE="$(params.cache-ref)"
+        EXTRA_OPTS=""
+        if [ -n "$(params.build-args-csv)" ]; then
+          OLDIFS=$IFS; IFS=','
+          # shellcheck disable=SC2086
+          set -- $(params.build-args-csv)
+          for arg in "$@"; do
+            EXTRA_OPTS="$EXTRA_OPTS --opt build-arg:${arg}"
+          done
+          IFS=$OLDIFS
+        fi
+        # shellcheck disable=SC2086
+        buildctl-daemonless.sh build \
+          --frontend dockerfile.v0 \
+          --local context="${CONTEXT}" \
+          --local dockerfile="${CONTEXT}" \
+          --opt "filename=$(params.dockerfile)" \
+          $EXTRA_OPTS \
+          --import-cache "type=registry,ref=${CACHE},registry.insecure=true" \
+          --export-cache "type=registry,ref=${CACHE},mode=max,registry.insecure=true" \
+          --output "type=image,name=${IMAGE},push=true,registry.insecure=true"
