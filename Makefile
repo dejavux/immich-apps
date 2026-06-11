@@ -4,6 +4,7 @@
 .PHONY: help build test deploy clean logs status \
 	deploy-all deploy-server deploy-line-bot deploy-sync \
 	build-line-bot release-line-bot helm-lint \
+	ci-setup ci-setup-secrets ci-apply ci-apply-release ci-status ci-logs ci-release \
 	lint lint-all lint-mechanical lint-changed-files lint-eslint lint-fix \
 	cursor-lint cursor-lint-changed cursor-lint-all \
 	git-commit auto-commit auto-commit-brief commit pull_request \
@@ -64,9 +65,13 @@ help: ## 顯示幫助信息
 	@echo "  PR_SKIP_MERGE=1 make pull_request"
 	@echo "  AUTO_COMMIT_LINT_TARGET=lint-mechanical make commit"
 	@echo ""
-	@echo "$(YELLOW)Release:$(NC)"
-	@echo "  make release           # Tekton BuildKit（或 fallback docker build）+ helm deploy"
-	@echo "  make release-build     # 僅 build 映像"
+	@echo "$(YELLOW)Release (Tekton BuildKit):$(NC)"
+	@echo "  make ci-setup            # 套用 infra-bootstrap Tekton base（首次）"
+	@echo "  make ci-setup-secrets    # bootstrap ci-tenant-immich-apps secrets"
+	@echo "  make ci-apply-release    # 套用 ci/tekton/release/"
+	@echo "  make ci-release          # Tekton build immich-line-bot"
+	@echo "  make release             # ci-release + helm deploy"
+	@echo "  make release-build       # ci-release only"
 	@echo ""
 	@echo "$(YELLOW)本機開發:$(NC)"
 	@echo "  make pf                # Port-forward 30450"
@@ -108,12 +113,54 @@ deploy-line-bot: ## 部署 LINE Bot (Helm)
 helm-lint: ## Helm chart lint
 	helm lint ./deploy/helm/immich-line-bot
 
+# ═══════════════════════════════════════════════════════════════
+# Tekton CI / Release
+# ═══════════════════════════════════════════════════════════════
+
+ci-setup: ## 套用 infra-bootstrap Tekton 平台設定（首次）
+	@INFRA_DIR="$$(dirname $$(pwd))/infra/infra-bootstrap" ; \
+	if [ -d "$$INFRA_DIR/60_apps/tekton-ci" ]; then \
+	  kubectl apply -k "$$INFRA_DIR/60_apps/tekton-ci/kustomize/base/" ; \
+	  echo "$(GREEN)✓ Tekton 平台設定已套用$(NC)" ; \
+	else \
+	  echo "$(RED)✗ 找不到 infra-bootstrap$(NC)" ; exit 1 ; \
+	fi
+
+ci-setup-secrets: ## Bootstrap ci-tenant-immich-apps secrets
+	@INFRA_DIR="$$(dirname $$(pwd))/infra/infra-bootstrap" ; \
+	bash "$$INFRA_DIR/60_apps/tekton-ci/scripts/bootstrap-immich-apps-tenant-secrets.sh"
+
+ci-apply-release: ## 套用 release Pipeline + Tasks
+	kubectl apply -k ci/tekton/release/
+	@echo "$(GREEN)✓ Release 設定已套用到 $(TEKTON_TENANT_NS)$(NC)"
+
+ci-release: ## Tekton BuildKit release build（line-bot）
+	@bash scripts/release-tekton-build.sh line-bot
+
+ci-status: ## 最近 PipelineRun 狀態
+	@kubectl get pipelineruns -n $(TEKTON_TENANT_NS) \
+	  --sort-by=.metadata.creationTimestamp \
+	  -o custom-columns='NAME:.metadata.name,PIPELINE:.spec.pipelineRef.name,STATUS:.status.conditions[-1].type,AGE:.metadata.creationTimestamp' \
+	  | tail -11
+
+ci-logs: ## 最新 release PipelineRun logs
+	@LATEST=$$(kubectl get pipelineruns -n $(TEKTON_TENANT_NS) \
+	  -l tekton.dev/pipeline=immich-release \
+	  --sort-by=.metadata.creationTimestamp \
+	  -o jsonpath='{.items[-1].metadata.name}' 2>/dev/null) ; \
+	if [ -z "$$LATEST" ]; then \
+	  echo "$(YELLOW)找不到 immich-release PipelineRun$(NC)" ; \
+	else \
+	  echo "PipelineRun: $$LATEST" ; \
+	  kubectl -n $(TEKTON_TENANT_NS) logs -l tekton.dev/pipelineRun=$$LATEST -f --max-log-requests=10 ; \
+	fi
+
 release: ## Tekton BuildKit build + helm deploy
 	@echo "$(BLUE)Release: $(IMAGE_TAG)$(NC)"
 	@bash scripts/release-tekton-build.sh line-bot
 	@$(MAKE) deploy-line-bot IMAGE_TAG=$(IMAGE_TAG)
 
-release-build: ## 僅 build 映像（不 deploy）
+release-build: ## 僅 Tekton build（不 deploy）
 	@IMMICH_RELEASE_SKIP_DEPLOY=1 bash scripts/release-tekton-build.sh line-bot
 
 deploy-sync: ## 部署 Photo Sync (CronJob)

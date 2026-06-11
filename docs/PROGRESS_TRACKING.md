@@ -154,7 +154,7 @@ npm run dev
 
 ### 2.5 Kubernetes 部署（Helm + Tekton + BuildKit + HTTPS）
 
-**狀態**: 🚧 規劃 + Helm 骨架完成  
+**狀態**: 🚧 Tekton release 就緒，待首次 build + HTTPS 部署（~50%）  
 **文檔**: [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md) ⭐
 
 **目標架構**:
@@ -168,10 +168,10 @@ npm run dev
 - [x] Helm chart 骨架 `deploy/helm/immich-line-bot/`
 - [x] `scripts/dev/pf.sh`（port 30450）
 - [x] 部署規劃文檔 PHASE2_K8S_DEPLOYMENT.md
-- [ ] Tekton release pipeline `ci/tekton/release/`
-- [ ] infra-bootstrap: `ci-tenant-immich-apps` bootstrap
-- [ ] Caddy + Route53: `immich-bot.3q.fi`
-- [ ] `make release` → Tekton PipelineRun
+- [x] Tekton release pipeline `ci/tekton/release/`
+- [x] infra-bootstrap: `ci-tenant-immich-apps` bootstrap（已 apply + secrets）
+- [ ] `make release` 首次 Tekton PipelineRun 成功
+- [ ] Caddy + Route53: `immich-bot.3q.fi` HTTPS
 - [ ] 首次 `helm upgrade` + LINE Webhook Verify
 - [ ] E2E：傳照片 → Immich 可見
 

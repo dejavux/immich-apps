@@ -6,20 +6,39 @@
 
 | Component | Status |
 |-----------|--------|
-| `ci/tekton/release/` manifests | ⏳ Planned |
-| `ci-tenant-immich-apps` (infra-bootstrap) | ⏳ Planned |
-| BuildKit release Task | ⏳ Copy/adapt from fuqi-asset-manager |
+| `ci/tekton/release/` | ✅ Pipeline + Tasks |
+| `ci-tenant-immich-apps` (infra-bootstrap) | ✅ Namespace + RBAC + bootstrap script |
+| PR CI triggers | ⏳ Planned |
 
-## Target
+## 首次設定（infra + secrets）
 
 ```bash
-make release IMAGE_TAG=$(git rev-parse --short HEAD)
+# infra-bootstrap（cluster 一次）
+cd ../infra/infra-bootstrap
+kubectl apply -k 60_apps/tekton-ci/kustomize/base/
+bash 60_apps/tekton-ci/scripts/bootstrap-immich-apps-tenant-secrets.sh
+
+# immich-apps
+cd /Users/light0/DEV/immich-apps
+make ci-apply-release
 ```
 
-Pipeline: git clone → BuildKit (`Dockerfile.line-bot`) → optional helm deploy.
+## Release
+
+```bash
+make release              # Tekton build + helm deploy
+make release-build        # 僅 build
+make ci-release           # 同 release-build（不 deploy）
+make ci-status
+make ci-logs
+```
+
+Pipeline: `immich-release` @ `ci-tenant-immich-apps`  
+Image: `registry.docker-registry-internal.svc.cluster.local:5000/immich-line-bot:<short-sha>`  
+Helm pull: `registry-internal.3q.fi/immich-line-bot:<tag>`
 
 ## References
 
-- `fuqi-asset-manager/ci/tekton/release/`
+- `ibkr-portfolio-miniapp/ci/tekton/release/`
+- `infra-bootstrap/60_apps/tekton-ci/scripts/bootstrap-immich-apps-tenant-secrets.sh`
 - `infra-bootstrap/60_apps/buildkit/docs/USAGE-CI.md`
-- `infra-bootstrap/60_apps/tekton-ci/scripts/bootstrap-fuqi-asset-manager-tenant-secrets.sh`

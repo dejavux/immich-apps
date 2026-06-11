@@ -1,0 +1,49 @@
+# Clone immich-apps at release revision (master base ref).
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: immich-git-clone
+  namespace: ci-tenant-immich-apps
+  labels:
+    app.kubernetes.io/part-of: immich-apps
+    tekton.dev/phase: release
+spec:
+  description: Clone private repo at release SHA.
+  params:
+    - name: url
+      type: string
+    - name: revision
+      type: string
+    - name: depth
+      type: string
+      default: "1"
+    - name: pr-base-ref
+      type: string
+      default: master
+  workspaces:
+    - name: output
+    - name: basic-auth
+  steps:
+    - name: clone
+      image: alpine/git:2.45.2
+      env:
+        - name: HOME
+          value: /tekton/home
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        export HOME=/tekton/home
+        mkdir -p "${HOME}"
+        if [ -f "$(workspaces.basic-auth.path)/password" ]; then
+          USER="$(cat "$(workspaces.basic-auth.path)/username" 2>/dev/null || echo git)"
+          PASS="$(cat "$(workspaces.basic-auth.path)/password")"
+          HOST="$(echo "$(params.url)" | sed -E 's#https?://([^/]+)/.*#\1#')"
+          printf 'https://%s:%s@%s\n' "${USER}" "${PASS}" "${HOST}" > "${HOME}/.git-credentials"
+          chmod 600 "${HOME}/.git-credentials"
+          git config --global credential.helper store
+        fi
+        git clone --depth="$(params.depth)" "$(params.url)" "$(workspaces.output.path)/src"
+        cd "$(workspaces.output.path)/src"
+        git fetch --depth="$(params.depth)" origin "$(params.pr-base-ref)"
+        git fetch --depth="$(params.depth)" origin "$(params.revision)"
+        git checkout "$(params.revision)"

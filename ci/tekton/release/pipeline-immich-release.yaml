@@ -1,0 +1,73 @@
+# Release Pipeline — BuildKit daemonless (immich-line-bot)
+# Trigger: scripts/release-tekton-build.sh
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: immich-release
+  namespace: ci-tenant-immich-apps
+  labels:
+    app.kubernetes.io/part-of: immich-apps
+    tekton.dev/phase: release
+spec:
+  params:
+    - name: repo-url
+      type: string
+      default: https://github.com/dejavux/immich-apps.git
+    - name: revision
+      type: string
+      description: Full git SHA
+    - name: registry
+      type: string
+      default: registry.docker-registry-internal.svc.cluster.local:5000
+    - name: image-tag
+      type: string
+      description: Short SHA tag
+    - name: build-target
+      type: string
+      default: line-bot
+      description: line-bot | all
+  workspaces:
+    - name: source
+    - name: git-credentials
+    - name: dockerconfig
+  tasks:
+    - name: fetch-source
+      taskRef:
+        name: immich-git-clone
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.revision)
+        - name: depth
+          value: "1"
+        - name: pr-base-ref
+          value: master
+      workspaces:
+        - name: output
+          workspace: source
+        - name: basic-auth
+          workspace: git-credentials
+
+    - name: build-line-bot
+      runAfter: [fetch-source]
+      when:
+        - input: $(params.build-target)
+          operator: in
+          values: ["line-bot", "all"]
+      taskRef:
+        name: immich-buildkit-build
+      params:
+        - name: image
+          value: $(params.registry)/immich-line-bot:$(params.image-tag)
+        - name: dockerfile
+          value: Dockerfile.line-bot
+        - name: context-subpath
+          value: ""
+        - name: cache-ref
+          value: $(params.registry)/buildkit-cache/immich-line-bot
+      workspaces:
+        - name: source
+          workspace: source
+        - name: dockerconfig
+          workspace: dockerconfig
