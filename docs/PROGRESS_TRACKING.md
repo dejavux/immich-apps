@@ -5,8 +5,8 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-11  
-**專案狀態**: ✅ Phase 2 核心 MVP 已上線（HTTPS + E2E）；強化功能與 Phase 3 待進行  
+**最後更新**: 2026-06-11（Phase 3 local-archive 全量上傳進行中）  
+**專案狀態**: ✅ Phase 2 核心上線；🚧 Phase 3 Photo Sync ~55%  
 **負責人**: Infrastructure Team + App Dev Team
 
 ---
@@ -18,8 +18,8 @@
 | 🔴 高優先級任務 | 3 | Phase 2 強化（批次/tag）+ Phase 3 啟動 |
 | 🟡 中優先級任務 | 5 | Phase 3 Photo Sync (P1) |
 | 🟢 低優先級任務 | 8 | Phase 4-5 優化項目 (P2) |
-| ✅ 本週完成 | 12 | Tekton release、HTTPS、E2E、1P 對齊、file 上傳實驗 |
-| 📈 整體進度 | **72%** | Phase 0: 100%, Phase 1: 50%, Phase 2: **85%** |
+| ✅ 本週完成 | 18 | PR #7 Photo Sync、cspell lint、LaunchAgent、儲存盤點 |
+| 📈 整體進度 | **78%** | Phase 0: 100%, Phase 1: 50%, Phase 2: **85%**, Phase 3: **55%** |
 
 ---
 
@@ -30,7 +30,7 @@
 | **Phase 0** | Repo 整合 | ✅ 完成 | 100% | ██████████ 100% | 2026-05-27 |
 | **Phase 1** | 基礎設施 | ✅ 已部署 | 50% 完成 | █████░░░░░ 50% | 2025-10-06 |
 | **Phase 2** | LINE Bot | 🔴 P0 最高 | ✅ 核心 MVP 上線 | ████████░░ 85% | 2026-06-11 |
-| **Phase 3** | Photo Sync | 🟡 P1 次優先 | 🚧 進行中 | ██░░░░░░░░ 20% | 2026-06-28 |
+| **Phase 3** | Photo Sync | 🟡 P1 | 🚧 上傳中 | █████░░░░░ 55% | 2026-06-28 |
 | **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-05 |
 | **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-12 |
 
@@ -305,100 +305,103 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 
 - [x] Immich CLI 2.2.61 已安裝
 - [x] `./scripts/photo-sync/test-upload.sh` — 上傳 1 張 HEIC 成功
-- [x] dry-run：`icloud-primary` 3511 檔 / ~32 GB 待同步
+- [x] dry-run：`local-archive` 5023 檔 / ~44 GB（0 dup vs DB）
+- [x] dry-run：`icloud-primary` 3512 檔 / ~37 GB（待 local 完成後跑）
 
 ### 3.1 安裝依賴
 
-**狀態**: 🚧 部分完成
+**狀態**: ✅ 完成（2026-06-11）
 
 **任務**:
 
 - [x] Immich CLI（`immich --version` → 2.2.61）
-- [ ] fswatch — `brew install fswatch`
-- [x] 設定檔範例 `scripts/photo-sync/photo-sync.config.yaml.example`
+- [x] fswatch（`install-launchd.sh` 已安裝）
+- [x] 設定檔 `scripts/photo-sync/photo-sync.config.yaml.example`
 - [x] 同步腳本 `scripts/photo-sync/immich-sync.sh`（多 library）
 - [x] 監控腳本 `scripts/photo-sync/immich-watch.sh`
+- [x] PR [#7](https://github.com/dejavux/immich-apps/pull/7) merge · release `ee98e7a`
 
-**驗收**: CLI ✅；fswatch 待裝
+**驗收**: ✅
 
 ---
 
-### 3.2 腳本與設定
+### 3.2 腳本、憑證與設定
 
-**狀態**: 🚧 進行中
+**狀態**: ✅ 完成（本機）；⏳ credential fix 待 commit PR
 
 **任務**:
 
-- [x] `~/.config/immich-apps/photo-sync.config.yaml`（自 example 複製）
+- [x] `~/.config/immich-apps/photo-sync.config.yaml`
 - [x] 多 library config（icloud-primary + local-archive）
-- [x] `tier_policy` 區塊（Phase 3.5 預留；自動 iCloud→Local 尚未實作）
-- [ ] Launchd plist（`immich-watch`）
-- [ ] local-archive dry-run + 首次全量
+- [x] `tier_policy` 區塊（Phase 3.5 預留）
+- [x] LaunchAgent `com.immich.photo-sync.watch`（`install-launchd.sh`）
+- [x] `bootstrap-credentials.sh` → `~/.config/immich-apps/photo-sync.env`（減少 1Password 彈窗）
+- [x] `ensure-immich-creds.sh` — 略過 `.env` placeholder、優先 photo-sync.env
+- [x] `.env` 移除 `IMMICH_API_KEY` placeholder（direnv 不再注入假 key）
+- [x] cspell 加入 `make lint`（`.cspell.json`）
+- [x] 上述憑證 fix（PR 待 merge）
 
-**驗收**: `./scripts/photo-sync/immich-sync.sh --dry-run` 通過
+**驗收**: dry-run ✅；LaunchAgent ✅
+
+---
+
+### 3.2.1 伺服器儲存盤點（2026-06-11）
+
+**狀態**: ✅ 完成  
+**文檔**: [PHASE3_STORAGE_AUDIT.md](./PHASE3_STORAGE_AUDIT.md)
+
+**結論**:
+
+- ~112 GB = `upload` 44G + `external-library` 43G×2 + 轉檔 23G + thumbs 2G
+- DB ~3143 assets（上傳前）≈ 過去 iCloud/App 子集；**非** LOCAL archive 全量
+- LOCAL 5023 檔 vs DB：**0 hash duplicate** → 全量上傳正確
+- External library「Migrated photos」：`assetCount: 0` — 磁碟舊副本，upload 完成後可清理
 
 ---
 
 ### 3.3 初次全量同步
 
-**狀態**: ⏳ 待執行  
-**負責**: Ops Team  
-**預估**: 視照片數量（建議夜間執行）
+**狀態**: 🚧 **local-archive 上傳中**（2026-06-11 16:38 起）
 
 **任務**:
 
-- [ ] 執行初次同步
+- [x] dry-run local-archive（5023 new / 0 dup）
+- [ ] **local-archive 全量**（~44 GB，進行中；中斷可重跑續傳）
+- [ ] icloud-primary 全量（待 local 完成；預期大量 dup）
+- [ ] Immich Web UI 抽查 EXIF（Make/Model/Date taken）
+- [ ] 清理 external-library 冗餘磁碟（Phase 3 收尾）
 
-  ```bash
-  ~/scripts/immich-sync.sh
-  ```
+**監控**:
 
-- [ ] 監控日誌
+```bash
+tail -f ~/Library/Logs/immich-photo-sync/sync.log
+# 或 terminal Uploading assets 進度列
+```
 
-  ```bash
-  tail -f ~/Library/Logs/immich-sync.log
-  ```
+**續傳**: 重跑 `./scripts/photo-sync/immich-sync.sh --library local-archive`；CLI hash skip 已完成檔。
 
-- [ ] 驗證上傳完成
-  - [ ] 登入 Immich Web UI
-  - [ ] 檢查照片數量
-  - [ ] 隨機抽查照片完整性
-
-**驗收**: 所有照片成功上傳，無重複，無遺漏
+**驗收**: local + icloud 全量完成；Immich union 完整；hash dedupe 跨 library
 
 ---
 
 ### 3.4 Launchd 自動啟動
 
-**狀態**: ⏳ 待執行  
-**負責**: Dev Team  
-**預估**: 30 分鐘
+**狀態**: ✅ 已安裝（2026-06-11）
 
 **任務**:
 
-- [ ] 建立 `~/Library/LaunchAgents/com.user.immich-watch.plist`
-- [ ] 修改 plist 中的 USERNAME 和 API_KEY
-- [ ] 載入服務
+- [x] `com.immich.photo-sync.watch.plist`（`install-launchd.sh`）
+- [x] `run-with-op-env.sh` + `photo-sync.env`
+- [x] `launchctl bootstrap gui/$(id -u)/com.immich.photo-sync.watch`
+- [ ] 增量同步實測（待全量完成後）
 
-  ```bash
-  launchctl load ~/Library/LaunchAgents/com.user.immich-watch.plist
-  ```
-
-- [ ] 檢查服務狀態
-
-  ```bash
-  launchctl list | grep immich
-  ```
-
-**驗收**: 服務自動啟動，重啟 Mac 後仍運行
+**驗收**: LaunchAgent running；增量待驗
 
 ---
 
 ### 3.5 增量同步測試
 
-**狀態**: ⏳ 待執行  
-**負責**: QA Team  
-**預估**: 30 分鐘
+**狀態**: ⏳ 待全量完成後
 
 **任務**:
 

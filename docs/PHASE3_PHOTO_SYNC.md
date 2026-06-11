@@ -1,6 +1,6 @@
 # Phase 3: 照片同步與上傳
 
-**狀態**: 🚧 **進行中**（2026-06-11）  
+**狀態**: 🚧 **local-archive 全量上傳中**（2026-06-11）  
 **預估時間**: 2-3 天（多 library 同步）+ Phase 3.5 分層  
 **優先級**: **P1 — 當前主軌**（原檔 + EXIF SSOT）  
 **負責人**: Infrastructure Team
@@ -304,6 +304,24 @@ done
 
 ---
 
+## 📦 伺服器儲存盤點
+
+Immich 磁碟 ~112 GB **≠** DB 內兩份 library。詳見 **[PHASE3_STORAGE_AUDIT.md](./PHASE3_STORAGE_AUDIT.md)**。
+
+**重點**：LOCAL archive 5023 檔 vs DB = **0 hash dup**（應上傳）；`external-library` 43 GB 為舊 rsync 副本（`assetCount: 0`），upload 完成後可清理。
+
+---
+
+## 🔄 續傳
+
+中斷後重跑同一指令；CLI 依 hash skip 已完成檔：
+
+```bash
+./scripts/photo-sync/immich-sync.sh --library local-archive
+```
+
+---
+
 ## 🚀 部署步驟（Phase 3 — 當前）
 
 ### Step 0: CLI 煙霧測試 ✅
@@ -512,11 +530,12 @@ ls -la ~/Pictures/Photos\ Library.photoslibrary/originals/
 
 - [x] Immich CLI 煙霧測試（單張 HEIC 上傳成功）
 - [x] 多 library config + sync 腳本
-- [x] dry-run 通過（icloud-primary）
-- [ ] fswatch 安裝 + Launchd
-- [ ] local-archive 首次全量
-- [ ] icloud-primary 首次全量（~32 GB）
-- [ ] 新增照片 5 分鐘內同步
+- [x] dry-run local-archive（5023 new / 0 dup）
+- [ ] local-archive 全量（🚧 進行中 ~44 GB）
+- [ ] icloud-primary 全量
+- [x] LaunchAgent 安裝
+- [ ] 增量同步實測
+- [ ] external-library 磁碟清理
 
 ---
 

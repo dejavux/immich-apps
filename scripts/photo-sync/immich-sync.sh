@@ -39,16 +39,13 @@ if [[ ! -f "$CONFIG" ]]; then
   exit 1
 fi
 
-if [[ -z "${IMMICH_API_KEY:-}" ]]; then
-  if command -v op >/dev/null 2>&1 && [[ -x "$ROOT/scripts/dev/load-env-from-op.sh" ]]; then
-    eval "$("$ROOT/scripts/dev/load-env-from-op.sh")"
-  else
-    echo "ERROR: IMMICH_API_KEY not set. eval \"\$(./scripts/dev/load-env-from-op.sh)\"" >&2
-    exit 1
-  fi
+if [[ -z "${IMMICH_API_KEY:-}" ]] || [[ "${IMMICH_API_KEY}" == "your-immich-api-key-here" ]] || [[ "${IMMICH_API_KEY}" == your-* ]]; then
+  unset IMMICH_API_KEY
 fi
 
-export IMMICH_INSTANCE_URL="${IMMICH_INSTANCE_URL:-${IMMICH_BASE_URL:-https://immich.3q.fi}}"
+# shellcheck source=scripts/photo-sync/ensure-immich-creds.sh
+source "$ROOT/scripts/photo-sync/ensure-immich-creds.sh"
+load_immich_creds "$ROOT"
 
 if [ -f "$LOCK_FILE" ]; then
   PID=$(cat "$LOCK_FILE")

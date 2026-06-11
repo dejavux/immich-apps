@@ -15,6 +15,7 @@
     "buildctl",
     "cicd",
     "configmap",
+    "creds",
     "cspell",
     "daemonless",
     "dejavux",
