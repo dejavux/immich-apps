@@ -235,6 +235,9 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 - [x] P2: Immich server Prometheus（`IMMICH_TELEMETRY_INCLUDE=all`；infra-bootstrap）
 - [x] P3: CLIP / metadata 觀察腳本 — `scripts/photo-sync/observe-asset-intelligence.sh`
 - [x] P3: XMP sidecar 說明 — `photo-sync.config.yaml.example`
+- [x] V1: LINE 自然語言搜尋（人名 + 年齡/日期）— Qwen + `/search/metadata` + session 追問
+- [x] V1.5: Smart Search 場景語意（CLIP query，英文）+ Flex carousel 縮圖
+- [x] V1 UI: 搜尋結果 Flex carousel（`/media/assets/{id}/preview.jpg` proxy）
 - [ ] P3: Qwen vision 繁中 description（V1.1；叢集 `local-llm/qwen-coder`；Immich CLIP 觀察後再決定）
 - [ ] Immich CLIP smart tags 觀察（上傳後數分鐘，用 observe 腳本）
 

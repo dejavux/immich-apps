@@ -22,6 +22,7 @@ import {
   coordinateImageSetReply,
   type UploadSummaryItem,
 } from "./image-set-batch";
+import { handleTextMessage } from "./text-search";
 import {
   uploadDurationSeconds,
   uploadsTotal,
@@ -68,18 +69,13 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
     event.message.type === "text" &&
     "replyToken" in event
   ) {
-    await messagingClient.replyMessage({
-      replyToken: event.replyToken,
-      messages: [
-        {
-          type: "text",
-          text:
-            "請傳送照片給我，我會自動上傳到 Immich 📸\n\n" +
-            "• 一般照片：直接傳圖\n" +
-            "• 保留原檔：請用「檔案」傳送（非相簿），支援 JPG/HEIC/PNG 等",
-        },
-      ],
+    await handleTextMessage(event as MessageEvent, async (messages) => {
+      await messagingClient.replyMessage({
+        replyToken: event.replyToken,
+        messages,
+      });
     });
+    return;
   }
 }
 

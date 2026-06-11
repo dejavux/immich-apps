@@ -40,3 +40,32 @@ export interface ImmichAlbumSummary {
   id: string;
   albumName: string;
 }
+
+export interface ImmichPersonSummary {
+  id: string;
+  name: string;
+  birthDate?: string | null;
+}
+
+export interface PhotoSearchAssetHit {
+  id: string;
+  originalFileName?: string;
+  localDateTime?: string;
+}
+
+export interface MetadataSearchParams {
+  personIds?: string[];
+  takenAfter?: string;
+  takenBefore?: string;
+  size?: number;
+  page?: number;
+}
+
+export interface SmartSearchParams {
+  query: string;
+  personIds?: string[];
+  takenAfter?: string;
+  takenBefore?: string;
+  size?: number;
+  page?: number;
+}

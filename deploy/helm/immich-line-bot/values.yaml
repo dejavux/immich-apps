@@ -39,9 +39,17 @@ env:
   logLevel: info
   immichLineAlbumName: LINE Inbox
   assetMetadataWaitMs: "8000"
+  photoSearchEnabled: "true"
+  qwenBaseUrl: "http://qwen-coder.local-llm.svc.cluster.local:8001/v1"
+  qwenModel: default
+  qwenTimeoutMs: "30000"
+  searchMaxResults: "5"
+  searchAgeWindowDays: "45"
+  searchSessionTtlMs: "1800000"
   # Cluster-internal Immich API (same namespace)
   immichBaseUrl: http://immich-server:2283
   immichWebUrl: https://immich.3q.fi
+  lineBotPublicUrl: https://immich-bot.3q.fi
 
 onepassword:
   enabled: true

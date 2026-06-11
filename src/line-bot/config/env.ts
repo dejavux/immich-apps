@@ -40,4 +40,26 @@ export const env = {
     optional("ASSET_METADATA_WAIT_MS", "8000"),
     10,
   ),
+  photoSearchEnabled: optional("PHOTO_SEARCH_ENABLED", "true") === "true",
+  qwenBaseUrl: optional(
+    "QWEN_BASE_URL",
+    "http://qwen-coder.local-llm.svc.cluster.local:8001/v1",
+  ).replace(/\/$/, ""),
+  qwenApiKey: optional("QWEN_API_KEY", ""),
+  qwenModel: optional("QWEN_MODEL", "default"),
+  qwenTimeoutMs: Number.parseInt(optional("QWEN_TIMEOUT_MS", "30000"), 10),
+  searchMaxResults: Number.parseInt(optional("SEARCH_MAX_RESULTS", "5"), 10),
+  searchAgeWindowDays: Number.parseInt(
+    optional("SEARCH_AGE_WINDOW_DAYS", "45"),
+    10,
+  ),
+  searchSessionTtlMs: Number.parseInt(
+    optional("SEARCH_SESSION_TTL_MS", "1800000"),
+    10,
+  ),
+  /** Public HTTPS base URL for LINE-accessible media (thumbnail proxy). */
+  lineBotPublicUrl: optional(
+    "LINE_BOT_PUBLIC_URL",
+    "https://immich-bot.3q.fi",
+  ).replace(/\/$/, ""),
 };

@@ -10,6 +10,10 @@ import type {
   AssetMetadataSnapshot,
   ImmichAlbumSummary,
   ImmichAsset,
+  MetadataSearchParams,
+  SmartSearchParams,
+  ImmichPersonSummary,
+  PhotoSearchAssetHit,
   UploadAssetOptions,
   WaitForAssetMetadataOptions,
 } from "./types/immich";
@@ -239,6 +243,133 @@ export class ImmichClient {
         timeout: 30_000,
       },
     );
+  }
+
+  async searchPersonByName(name: string): Promise<ImmichPersonSummary[]> {
+    const response = await axios.get<ImmichPersonSummary[]>(
+      `${this.baseUrl}/api/search/person`,
+      {
+        headers: this.headers(),
+        params: { name, withHidden: false },
+        timeout: 30_000,
+      },
+    );
+    return response.data;
+  }
+
+  async searchMetadata(
+    params: MetadataSearchParams,
+  ): Promise<{ items: PhotoSearchAssetHit[]; total: number }> {
+    const body: Record<string, unknown> = {
+      size: params.size ?? 20,
+      page: params.page ?? 1,
+    };
+    if (params.personIds?.length) {
+      body.personIds = params.personIds;
+    }
+    if (params.takenAfter) {
+      body.takenAfter = params.takenAfter;
+    }
+    if (params.takenBefore) {
+      body.takenBefore = params.takenBefore;
+    }
+
+    const response = await axios.post<{
+      assets?: {
+        items?: Array<Record<string, unknown>>;
+        total?: number;
+      };
+    }>(`${this.baseUrl}/api/search/metadata`, body, {
+      headers: this.headers(true),
+      timeout: 60_000,
+    });
+
+    const items = (response.data.assets?.items ?? []).map((item) => ({
+      id: String(item.id ?? ""),
+      originalFileName:
+        typeof item.originalFileName === "string"
+          ? item.originalFileName
+          : undefined,
+      localDateTime:
+        typeof item.localDateTime === "string" ? item.localDateTime : undefined,
+    }));
+
+    return {
+      items: items.filter((item) => item.id.length > 0),
+      total: response.data.assets?.total ?? items.length,
+    };
+  }
+
+  async searchSmart(
+    params: SmartSearchParams,
+  ): Promise<{ items: PhotoSearchAssetHit[]; total: number }> {
+    const body: Record<string, unknown> = {
+      query: params.query,
+      size: params.size ?? 20,
+      page: params.page ?? 1,
+    };
+    if (params.personIds?.length) {
+      body.personIds = params.personIds;
+    }
+    if (params.takenAfter) {
+      body.takenAfter = params.takenAfter;
+    }
+    if (params.takenBefore) {
+      body.takenBefore = params.takenBefore;
+    }
+
+    const response = await axios.post<{
+      assets?: {
+        items?: Array<Record<string, unknown>>;
+        total?: number;
+      };
+    }>(`${this.baseUrl}/api/search/smart`, body, {
+      headers: this.headers(true),
+      timeout: 90_000,
+    });
+
+    const items = (response.data.assets?.items ?? []).map((item) => ({
+      id: String(item.id ?? ""),
+      originalFileName:
+        typeof item.originalFileName === "string"
+          ? item.originalFileName
+          : undefined,
+      localDateTime:
+        typeof item.localDateTime === "string" ? item.localDateTime : undefined,
+    }));
+
+    return {
+      items: items.filter((item) => item.id.length > 0),
+      total: response.data.assets?.total ?? items.length,
+    };
+  }
+
+  async fetchAssetThumbnail(
+    assetId: string,
+    size: "preview" | "thumbnail" = "preview",
+  ): Promise<{ data: Buffer; contentType: string }> {
+    const response = await axios.get<ArrayBuffer>(
+      `${this.baseUrl}/api/assets/${assetId}/thumbnail`,
+      {
+        headers: {
+          "x-api-key": this.apiKey,
+          Accept: "image/*",
+        },
+        params: { size },
+        responseType: "arraybuffer",
+        timeout: 30_000,
+      },
+    );
+
+    const contentType =
+      typeof response.headers["content-type"] === "string"
+        ? response.headers["content-type"]
+        : "image/jpeg";
+
+    return {
+      data: Buffer.from(response.data),
+      contentType,
+    };
   }
 
   /** Attach tags to an asset (creates tags if missing). */

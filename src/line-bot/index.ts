@@ -3,10 +3,15 @@ import { middleware } from "@line/bot-sdk";
 
 import { env } from "./config/env";
 import { handleWebhookEvents } from "./handlers/line-webhook";
+import { registerMediaProxyRoutes } from "./routes/media-proxy";
 import { logger } from "../shared/logger";
+import { ImmichClient } from "../shared/immich-client";
 import { register } from "./metrics";
 
 const app = express();
+const immichClient = new ImmichClient(env.immichBaseUrl, env.immichApiKey);
+
+registerMediaProxyRoutes(app, immichClient);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "immich-line-bot" });

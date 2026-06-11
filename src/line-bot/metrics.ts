@@ -45,3 +45,10 @@ export const assetMetadataReadyTotal = new client.Counter({
   labelNames: ["ready"] as const,
   registers: [register],
 });
+
+export const photoSearchTotal = new client.Counter({
+  name: "immich_line_bot_photo_search_total",
+  help: "Natural language photo search requests",
+  labelNames: ["kind", "status"] as const,
+  registers: [register],
+});

@@ -50,6 +50,8 @@ spec:
               value: {{ .Values.env.immichBaseUrl | quote }}
             - name: IMMICH_WEB_URL
               value: {{ .Values.env.immichWebUrl | quote }}
+            - name: LINE_BOT_PUBLIC_URL
+              value: {{ .Values.env.lineBotPublicUrl | quote }}
             - name: LINE_CHANNEL_SECRET
               valueFrom:
                 secretKeyRef:
@@ -69,6 +71,20 @@ spec:
               value: {{ .Values.env.immichLineAlbumName | quote }}
             - name: ASSET_METADATA_WAIT_MS
               value: {{ .Values.env.assetMetadataWaitMs | quote }}
+            - name: PHOTO_SEARCH_ENABLED
+              value: {{ .Values.env.photoSearchEnabled | quote }}
+            - name: QWEN_BASE_URL
+              value: {{ .Values.env.qwenBaseUrl | quote }}
+            - name: QWEN_MODEL
+              value: {{ .Values.env.qwenModel | quote }}
+            - name: QWEN_TIMEOUT_MS
+              value: {{ .Values.env.qwenTimeoutMs | quote }}
+            - name: SEARCH_MAX_RESULTS
+              value: {{ .Values.env.searchMaxResults | quote }}
+            - name: SEARCH_AGE_WINDOW_DAYS
+              value: {{ .Values.env.searchAgeWindowDays | quote }}
+            - name: SEARCH_SESSION_TTL_MS
+              value: {{ .Values.env.searchSessionTtlMs | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
