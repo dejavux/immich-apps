@@ -14,6 +14,7 @@ import type {
 import {
   buildSearchUserPrompt,
   buildPhotoSearchSystemPrompt,
+  ensureActivityFromText,
   ensureRelativeDatesFromText,
   ensureSceneQueryEn,
   parseLlmSearchResponse,
@@ -103,7 +104,12 @@ export class PhotoSearchService {
     plan: PhotoSearchPlan,
     message: string,
   ): PhotoSearchPlan {
-    return ensureRelativeDatesFromText(ensureSceneQueryEn(plan), message);
+    return ensureSceneQueryEn(
+      ensureActivityFromText(
+        ensureRelativeDatesFromText(plan, message),
+        message,
+      ),
+    );
   }
 
   private hasSceneQuery(plan: Partial<PhotoSearchPlan>): boolean {

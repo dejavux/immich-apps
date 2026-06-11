@@ -34,6 +34,8 @@ intent 取值：
 - sceneQuery: string|null    場景描述（使用者語言），例如「在海邊」「生日蛋糕」
 - sceneQueryEn: string|null  給 Immich CLIP 的英文關鍵字，例如 beach ocean sunset
 
+sceneQuery 含**地點**（海邊、學校）或**行為/活動**（吃飯、睡覺、玩耍）；「小蕊在吃飯的照片」→ sceneQuery=吃飯
+
 範例：
 使用者「幫我找小蕊一歲半的照片」→
 {"intent":"search_photos","personNames":["小蕊"],"ageYears":1.5,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":null,"sceneQueryEn":null}
@@ -46,6 +48,9 @@ intent 取值：
 
 使用者「找找小蕊今年在學校的照片」→
 {"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":"${year}-01-01","dateTo":"${today}","birthDate":null,"personChoice":null,"sceneQuery":"學校","sceneQueryEn":"school classroom campus"}
+
+使用者「小蕊在吃飯的照片」→
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"吃飯","sceneQueryEn":"eating meal food dining"}
 
 使用者「生日 2019-03-15」（前文在找小蕊）→
 {"intent":"search_photos","personNames":["小蕊"],"ageYears":1.5,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":"2019-03-15","personChoice":null}
@@ -185,11 +190,76 @@ function normalizeIntent(value: string | undefined): PhotoSearchPlan["intent"] {
   return "unknown";
 }
 
+function cleanPersonName(name: string): string {
+  return name
+    .replace(/^(?:幫|我|找|搜|查)+/, "")
+    .replace(/的$/, "")
+    .trim();
+}
+
+const ACTIVITY_WORDS =
+  "吃飯|用餐|進食|睡覺|午睡|玩耍|遊玩|游泳|跑步|讀書|看書|唱歌|跳舞|刷牙|洗澡|畫畫|寫字|騎車|開車|坐車|搭車|看電視|看書";
+
+const PERSON_SCENE_PATTERNS: RegExp[] = [
+  // 找小蕊在吃飯的照片、找找小蕊在學校的照片
+  /^(?:幫)?(?:我)?(?:找|搜|查+)+(?:找)?(.{1,10}?)在(.+?)(?:的)?(?:照片|相片|圖)$/,
+  // 小蕊在吃飯的照片（無動詞）
+  /^(.{1,10}?)在(.+?)(?:的)?(?:照片|相片|圖)$/,
+  // 找小蕊吃飯的照片（行為，無「在」）
+  new RegExp(
+    `^(?:幫)?(?:我)?(?:找|搜|查+)+(?:找)?(.{1,10}?)(${ACTIVITY_WORDS})(?:的)?(?:照片|相片|圖)$`,
+  ),
+  // 小蕊吃飯的照片
+  new RegExp(`^(.{1,10}?)(${ACTIVITY_WORDS})(?:的)?(?:照片|相片|圖)$`),
+];
+
+export function tryParsePersonScenePhoto(
+  text: string,
+): { personNames: string[]; sceneQuery: string } | undefined {
+  const trimmed = text.trim();
+  for (const pattern of PERSON_SCENE_PATTERNS) {
+    const match = trimmed.match(pattern);
+    if (!match) {
+      continue;
+    }
+    const person = cleanPersonName(match[1]);
+    const scene = cleanScenePhrase(match[2]);
+    if (!person || !scene) {
+      continue;
+    }
+    return { personNames: [person], sceneQuery: scene };
+  }
+  return undefined;
+}
+
+export function ensureActivityFromText(
+  plan: PhotoSearchPlan,
+  message: string,
+): PhotoSearchPlan {
+  if (plan.sceneQuery?.trim()) {
+    return plan;
+  }
+  const parsed = tryParsePersonScenePhoto(message);
+  if (!parsed) {
+    return plan;
+  }
+  return {
+    ...plan,
+    intent: plan.intent === "unknown" ? "search_photos" : plan.intent,
+    personNames: plan.personNames?.length
+      ? plan.personNames
+      : parsed.personNames,
+    sceneQuery: parsed.sceneQuery,
+  };
+}
+
 const SCENE_TRANSLATIONS: Array<[RegExp, string]> = [
   [/海邊|海灘|沙灘|海邊/, "beach ocean seaside"],
   [/山|登山|爬山/, "mountain hiking"],
   [/生日|慶生|蛋糕/, "birthday party cake"],
-  [/吃飯|用餐|餐廳|美食/, "dining restaurant food"],
+  [/吃飯|用餐|進食|美食/, "eating meal food dining"],
+  [/睡覺|午睡/, "sleeping nap bed"],
+  [/玩耍|遊玩/, "playing fun children"],
   [/公園|遊樂/, "park playground"],
   [/游泳|泳池/, "swimming pool"],
   [/雪|滑雪|冬天/, "snow winter"],
@@ -199,6 +269,9 @@ const SCENE_TRANSLATIONS: Array<[RegExp, string]> = [
   [/花|櫻/, "flowers blossom"],
   [/夕陽|日落/, "sunset golden hour"],
   [/學校|校園|教室|補習/, "school classroom campus"],
+  [/讀書|看書/, "reading book study"],
+  [/跑步/, "running jogging"],
+  [/畫畫|寫字/, "drawing writing art"],
 ];
 
 export function translateSceneQueryFallback(sceneQuery: string): string {
@@ -244,16 +317,12 @@ export function parseSearchPlanFallback(
   const rel = detectRelativeDateInText(trimmed, now);
   const working = rel ? stripRelativeDateTokens(trimmed) : trimmed;
 
-  const personSceneMatch = working.match(
-    /(?:找|搜|查)+(?:找)?(?:我)?(.{1,10}?)在(.+?)(?:的)?(?:照片|相片|圖)/,
-  );
-  if (personSceneMatch) {
-    const person = personSceneMatch[1].replace(/的$/, "").trim();
-    const scene = cleanScenePhrase(personSceneMatch[2]);
+  const personScene = tryParsePersonScenePhoto(working);
+  if (personScene) {
     const plan: PhotoSearchPlan = {
       intent: "search_photos",
-      personNames: person ? [person] : [],
-      sceneQuery: scene,
+      personNames: personScene.personNames,
+      sceneQuery: personScene.sceneQuery,
     };
     if (rel) {
       plan.dateFrom = rel.dateFrom;

@@ -4,8 +4,11 @@ import {
   resolveTakenRange,
 } from "./photo-search-service";
 import {
+  ensureActivityFromText,
+  ensureSceneQueryEn,
   parseSearchPlanFallback,
   translateSceneQueryFallback,
+  tryParsePersonScenePhoto,
 } from "./photo-search-prompt";
 
 describe("parseSearchPlanFallback", () => {
@@ -38,6 +41,40 @@ describe("parseSearchPlanFallback", () => {
     expect(plan.dateRangeLabel).toBe("今年");
     expect(plan.dateFrom).toBe("2026-01-01");
     expect(plan.dateTo).toBe("2026-06-11");
+  });
+
+  it("parses person eating without 找 prefix", () => {
+    const plan = parseSearchPlanFallback("小蕊在吃飯的照片");
+    expect(plan.personNames).toEqual(["小蕊"]);
+    expect(plan.sceneQuery).toBe("吃飯");
+    expect(plan.sceneQueryEn).toContain("eating");
+  });
+
+  it("parses person eating without 在", () => {
+    const plan = parseSearchPlanFallback("小蕊吃飯的照片");
+    expect(plan.personNames).toEqual(["小蕊"]);
+    expect(plan.sceneQuery).toBe("吃飯");
+  });
+});
+
+describe("tryParsePersonScenePhoto", () => {
+  it("extracts eating activity", () => {
+    const parsed = tryParsePersonScenePhoto("小蕊在吃飯的照片");
+    expect(parsed?.personNames).toEqual(["小蕊"]);
+    expect(parsed?.sceneQuery).toBe("吃飯");
+  });
+});
+
+describe("ensureActivityFromText", () => {
+  it("fills scene when LLM only returned person", () => {
+    const plan = ensureSceneQueryEn(
+      ensureActivityFromText(
+        { intent: "search_photos", personNames: ["小蕊"] },
+        "小蕊在吃飯的照片",
+      ),
+    );
+    expect(plan.sceneQuery).toBe("吃飯");
+    expect(plan.sceneQueryEn).toContain("eating");
   });
 });
 
