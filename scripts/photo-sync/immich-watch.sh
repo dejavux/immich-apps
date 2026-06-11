@@ -10,25 +10,26 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG="${PHOTO_SYNC_CONFIG:-$HOME/.config/immich-apps/photo-sync.config.yaml}"
 SYNC_SCRIPT="$SCRIPT_DIR/immich-sync.sh"
+RUNNER="$SCRIPT_DIR/immich_sync_runner.py"
 
 if ! command -v fswatch >/dev/null 2>&1; then
   echo "ERROR: fswatch not found. brew install fswatch" >&2
   exit 1
 fi
 
-LOG_DIR=$(python3 -c "import yaml; from pathlib import Path; c=yaml.safe_load(open('$CONFIG')); print(Path(c.get('sync',{}).get('log_dir','~/Library/Logs/immich-photo-sync')).expanduser())")
-DEBOUNCE=$(python3 -c "import yaml; c=yaml.safe_load(open('$CONFIG')); print(c.get('sync',{}).get('debounce_seconds', 30))")
+LOG_DIR=""
+DEBOUNCE=30
+WATCH_PATHS=()
+while IFS= read -r line; do
+  case "$line" in
+    LOG_DIR=*) LOG_DIR="${line#LOG_DIR=}" ;;
+    DEBOUNCE=*) DEBOUNCE="${line#DEBOUNCE=}" ;;
+    *) [[ -n "$line" ]] && WATCH_PATHS+=("$line") ;;
+  esac
+done < <(python3 "$RUNNER" --watch-config "$CONFIG")
+
 LOG_FILE="$LOG_DIR/watch.log"
 mkdir -p "$LOG_DIR"
-
-mapfile -t WATCH_PATHS < <(python3 -c "
-import yaml, os
-with open('$CONFIG') as f:
-    cfg = yaml.safe_load(f)
-for lib in cfg.get('libraries', []):
-    if lib.get('enabled', True):
-        print(os.path.expanduser(lib['path']))
-")
 
 if [[ ${#WATCH_PATHS[@]} -eq 0 ]]; then
   echo "ERROR: no enabled libraries in $CONFIG" >&2

@@ -43,8 +43,12 @@ tier_policy:
 
 sync:
   recursive: true
-  upload_concurrency: 4
-  # immich CLI -j：寫入 log_dir/stats/*.json（new_files / duplicates / new_assets）
+  upload_concurrency: 2
+  retry_failed_uploads: true
+  retry_concurrency: 1
+  max_retries: 2
+  retry_delay_seconds: 30
+  # 從 immich CLI 文字輸出解析統計，寫入 log_dir/stats/*.json
   json_output: true
   debounce_seconds: 30
   log_dir: ~/Library/Logs/immich-photo-sync

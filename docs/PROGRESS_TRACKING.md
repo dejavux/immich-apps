@@ -5,8 +5,8 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-11（Phase 3 local-archive 全量上傳進行中）  
-**專案狀態**: ✅ Phase 2 核心上線；🚧 Phase 3 Photo Sync ~55%  
+**最後更新**: 2026-06-12（icloud-primary ~22% · external 已清 · LINE Bot `f906783`）  
+**專案狀態**: ✅ Phase 2 核心 + V1 搜尋上線；🚧 Phase 3 Photo Sync ~75%  
 **負責人**: Infrastructure Team + App Dev Team
 
 ---
@@ -18,8 +18,8 @@
 | 🔴 高優先級任務 | 3 | Phase 2 強化（批次/tag）+ Phase 3 啟動 |
 | 🟡 中優先級任務 | 5 | Phase 3 Photo Sync (P1) |
 | 🟢 低優先級任務 | 8 | Phase 4-5 優化項目 (P2) |
-| ✅ 本週完成 | 18 | PR #7 Photo Sync、cspell lint、LaunchAgent、儲存盤點 |
-| 📈 整體進度 | **78%** | Phase 0: 100%, Phase 1: 50%, Phase 2: **85%**, Phase 3: **55%** |
+| ✅ 本週完成 | 24+ | PR #9–#11、local-archive 全量、external 清理、V1 搜尋 |
+| 📈 整體進度 | **82%** | Phase 0: 100%, Phase 1: 50%, Phase 2: **92%**, Phase 3: **75%** |
 
 ---
 
@@ -29,8 +29,8 @@
 |-------|------|--------|------|------|----------|
 | **Phase 0** | Repo 整合 | ✅ 完成 | 100% | ██████████ 100% | 2026-05-27 |
 | **Phase 1** | 基礎設施 | ✅ 已部署 | 50% 完成 | █████░░░░░ 50% | 2025-10-06 |
-| **Phase 2** | LINE Bot | 🔴 P0 最高 | ✅ 核心 MVP 上線 | ████████░░ 85% | 2026-06-11 |
-| **Phase 3** | Photo Sync | 🟡 P1 | 🚧 上傳中 | █████░░░░░ 55% | 2026-06-28 |
+| **Phase 2** | LINE Bot | 🔴 P0 最高 | ✅ V1 搜尋上線 | █████████░ 92% | 2026-06-12 |
+| **Phase 3** | Photo Sync | 🟡 P1 | icloud ~22% | ███████░░░ 75% | 2026-06-14 |
 | **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-05 |
 | **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-12 |
 
@@ -177,9 +177,9 @@ npm run dev
 
 ### 2.5 Kubernetes 部署（Helm + Tekton + BuildKit + HTTPS）
 
-**狀態**: ✅ 完成（2026-06-11）  
+**狀態**: ✅ 完成（2026-06-12）  
 **文檔**: [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md) ⭐  
-**目前映像**: `registry-internal.3q.fi/immich-line-bot:3abfca8`（Helm revision 6）
+**目前映像**: `registry-internal.3q.fi/immich-line-bot:f906783`（Helm revision 9+）
 
 **目標架構**:
 
@@ -229,7 +229,7 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 - [x] P1: `imageSet` 批次 summary（單則 reply）— `image-set-batch.ts`
 - [x] P1: upload 後 `line-import` / `line-user-{id}` tag — `immich-client.tagAsset`
 - [x] P1: LINE 上傳加入 `LINE Inbox` 相簿 — `findOrCreateAlbum` / `addAssetsToAlbum`
-- [x] P1: photo-sync CLI `--json-output` 統計 — `immich-sync.sh` → `log_dir/stats/*.json`
+- [x] P1: photo-sync 統計 — `immich-sync.sh` 解析 CLI 文字輸出 → `log_dir/stats/*.json`
 - [x] P2: 上傳後 poll `hasMetadata`（Bot 回覆拍攝時間 / 人臉）— `waitForAssetMetadata`
 - [x] P2: OpenAPI v2.0.1 types — `open-api/` + `npm run openapi:sync`
 - [x] P2: Immich server Prometheus（`IMMICH_TELEMETRY_INCLUDE=all`；infra-bootstrap）
@@ -247,9 +247,8 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 
 ### 2.7 監控設定
 
-**狀態**: 🚧 程式碼就緒（PR 待 merge）  
-**負責**: SRE Team  
-**預估**: 1 小時
+**狀態**: 🚧 metrics 就緒；Grafana 待建  
+**負責**: SRE Team
 
 **任務**:
 
@@ -280,14 +279,14 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 
 ### 2.8 文檔更新
 
-**狀態**: 🚧 進行中（2026-06-11）
+**狀態**: 🚧 進行中（2026-06-12）
 
 **任務**:
 
 - [x] 更新 `PROGRESS_TRACKING.md`（本文件）
 - [x] 更新 `HOW_TO_PROCEED.md`、`PHASE2_K8S_DEPLOYMENT.md`
-- [x] infra-bootstrap 指向 + Caddy `immich-bot.3q.fi`
-- [ ] infra-bootstrap Caddyfile commit + PR
+- [x] infra-bootstrap Caddy `immich-bot.3q.fi`（PR #120）
+- [x] [IMMICH_UPGRADE_v2.7.5.md](./IMMICH_UPGRADE_v2.7.5.md) 升級 checklist
 - [ ] Phase 2 完成報告（可選 `PHASE2_COMPLETION_REPORT.md`）
 
 ---
@@ -341,7 +340,7 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 
 ### 3.2 腳本、憑證與設定
 
-**狀態**: ✅ 完成（本機）；⏳ credential fix 待 commit PR
+**狀態**: ✅ 完成（2026-06-12）
 
 **任務**:
 
@@ -349,11 +348,12 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 - [x] 多 library config（icloud-primary + local-archive）
 - [x] `tier_policy` 區塊（Phase 3.5 預留）
 - [x] LaunchAgent `com.immich.photo-sync.watch`（`install-launchd.sh`）
-- [x] `bootstrap-credentials.sh` → `~/.config/immich-apps/photo-sync.env`（減少 1Password 彈窗）
-- [x] `ensure-immich-creds.sh` — 略過 `.env` placeholder、優先 photo-sync.env
-- [x] `.env` 移除 `IMMICH_API_KEY` placeholder（direnv 不再注入假 key）
-- [x] cspell 加入 `make lint`（`.cspell.json`）
-- [x] 上述憑證 fix（PR 待 merge）
+- [x] `bootstrap-credentials.sh` → `~/.config/immich-apps/photo-sync.env`
+- [x] `ensure-immich-creds.sh` — 略過 `.env` placeholder
+- [x] cspell 加入 `make lint`
+- [x] 憑證 fix（PR [#8](https://github.com/dejavux/immich-apps/pull/8)）
+- [x] `immich-sync.sh` 統計 JSON、`retry`、pseudo-TTY 進度列
+- [x] Caddy 長 timeout（3600s）— infra-bootstrap PR #120
 
 **驗收**: dry-run ✅；LaunchAgent ✅
 
@@ -375,24 +375,45 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 
 ### 3.3 初次全量同步
 
-**狀態**: 🚧 **local-archive 上傳中**（2026-06-11 16:38 起）
+**狀態**: 🚧 **local-archive ✅** · **icloud-primary ~22%**（3511 new / 1 dup，~32 GB）
+
+**進度摘要**：
+
+| Library | 狀態 | CLI 最後已知 |
+|---------|------|--------------|
+| local-archive | ✅ 完成 | `0 new / 5023 dup`（2026-06-12 00:40） |
+| icloud-primary | 🚧 ~22% | `3511 new / 1 dup`，`7.2 GB / 32 GB`（2026-06-12 00:41 起） |
+
+**歷史**：local 首跑曾 502（album update）失敗 80 檔；重跑 `-c 1` + 續傳後 **5023/5023** 完成。
+
+**儲存（2026-06-12）**：`/data/upload` **88 GB**；external **已清 ~86 GB** → 4 KB；詳見 [PHASE3_STORAGE_AUDIT.md](./PHASE3_STORAGE_AUDIT.md)。
+
+**基礎建設修正**（2026-06-11～12）：
+
+- [x] 移除 CLI 已不支援的 `-j`；改解析文字輸出
+- [x] 失敗檔 `-c 1` 自動重試 + 502 transient 重跑
+- [x] Caddy `immich.3q.fi` 長 timeout（read/write 3600s）
+- [x] `immich-sync.sh` pseudo-TTY 轉發（修復進度列不更新）
+- [x] 本機 config：`upload_concurrency: 2`、retry 設定
 
 **任務**:
 
 - [x] dry-run local-archive（5023 new / 0 dup）
-- [ ] **local-archive 全量**（~44 GB，進行中；中斷可重跑續傳）
-- [ ] icloud-primary 全量（待 local 完成；預期大量 dup）
-- [ ] Immich Web UI 抽查 EXIF（Make/Model/Date taken）
-- [ ] 清理 external-library 冗餘磁碟（Phase 3 收尾；runbook：[PHASE3_EXTERNAL_LIBRARY_CLEANUP.md](./PHASE3_EXTERNAL_LIBRARY_CLEANUP.md)）
+- [x] **local-archive 全量**（5023 檔，2026-06-12 完成）
+- [x] Immich Web UI / API 抽查 EXIF（2026-06-12；album 內 3016 筆 API 回傳，server 共 6016 assets）
+- [x] 清理 external-library 冗餘（~86 GB → 4 KB；`/data/upload` 85G 不變）
+- [x] LaunchAgent 增量同步（`install-launchd.sh`；已修 `yaml` 依賴）
+- [ ] icloud-primary 全量（**進行中**；3511 new，預估 ~6h）
 
 **監控**:
 
 ```bash
+tail -f ~/Library/Logs/immich-photo-sync/stats/icloud-primary-run-*.log
+ls -t ~/Library/Logs/immich-photo-sync/stats/icloud-primary-*.json | head -1 | xargs cat
 tail -f ~/Library/Logs/immich-photo-sync/sync.log
-# 或 terminal Uploading assets 進度列
 ```
 
-**續傳**: 重跑 `./scripts/photo-sync/immich-sync.sh --library local-archive`；CLI hash skip 已完成檔。
+**續傳**: `./scripts/photo-sync/immich-sync.sh --library icloud-primary`（hash skip 已完成檔）。
 
 **驗收**: local + icloud 全量完成；Immich union 完整；hash dedupe 跨 library
 
@@ -487,10 +508,11 @@ tail -f ~/Library/Logs/immich-photo-sync/sync.log
 
 | 指標 | 目標 | 當前 | 狀態 |
 |------|------|------|------|
-| 同步延遲 | < 5 min | - | ⏳ 待測試 |
-| 上傳成功率 | > 98% | - | ⏳ 待測試 |
-| 重複檔案 | 0 | - | ⏳ 待測試 |
-| 服務穩定性 | 24/7 運行 | - | ⏳ 待部署 |
+| local-archive 覆蓋 | 5023/5023 | 5023/5023 | ✅ |
+| icloud-primary 覆蓋 | 3511 new | ~22% (~7.2 GB) | 🚧 |
+| hash dup（跨 library） | 預期低 | **1** | ✅ |
+| 同步延遲（增量） | < 5 min | — | ⏳ 待 icloud 完成 |
+| 上傳成功率 | > 98% | local 100%（續傳後） | ✅ |
 
 ---
 
@@ -540,7 +562,10 @@ tail -f ~/Library/Logs/immich-photo-sync/sync.log
 
 ### 開放問題
 
-_目前無開放問題_
+| ID | 問題 | 狀態 |
+|----|------|------|
+| #4 | icloud-primary 全量進行中（~32 GB） | 🚧 監控 terminal / stats log |
+| #5 | Immich server v2.0.1 → v2.7.5 升級 | 📋 見 [IMMICH_UPGRADE_v2.7.5.md](./IMMICH_UPGRADE_v2.7.5.md)；建議 icloud 完成後 |
 
 ---
 
@@ -551,6 +576,9 @@ _目前無開放問題_
 | #1 | lama GPU 是否都給 qwen 了？ | 否，lama 有 4 個 GPU，qwen 只用 1 個 | 2026-05-27 |
 | #2 | immich-ml 是否可在不同 node？ | 是，當前在 worker3（與 qwen 隔離） | 2026-05-27 |
 | #3 | 優先級不明確 | LINE Bot (P0) > Photo Sync (P1) | 2026-05-27 |
+| #6 | local-archive 502 album update | Caddy 長 timeout + 續傳；79+80 檔補齊 | 2026-06-12 |
+| #7 | external-library ~86 GB 冗餘 | `cleanup-external-library.sh --execute` | 2026-06-12 |
+| #8 | icloud 預期大量 dup | 實測僅 **1** hash dup（disjoint libraries） | 2026-06-12 |
 
 ---
 
@@ -562,6 +590,8 @@ _目前無開放問題_
 - [README.md](./README.md) - 專案總覽
 - [PHASE2_LINE_BOT.md](./PHASE2_LINE_BOT.md) - LINE Bot 完整實作（P0）
 - [PHASE3_PHOTO_SYNC.md](./PHASE3_PHOTO_SYNC.md) - 照片同步實作（P1）
+- [PHASE3_STORAGE_AUDIT.md](./PHASE3_STORAGE_AUDIT.md) - 儲存盤點
+- [IMMICH_UPGRADE_v2.7.5.md](./IMMICH_UPGRADE_v2.7.5.md) - Server 升級 checklist
 - [GPU_CONFIGURATION.md](./GPU_CONFIGURATION.md) - GPU 配置詳解
 - [COMPLETION_SUMMARY.md](./COMPLETION_SUMMARY.md) - 重構完成總結
 
@@ -578,37 +608,26 @@ _目前無開放問題_
 
 > 詳細步驟見 [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-### 本週重點（Week 1: 6/10-6/14）
-
-**已完成** ✅:
-
-- [x] LINE Bot Channel + 1Password 憑證
-- [x] LINE Bot MVP 源碼（webhook → Immich upload）
-- [x] Helm chart 骨架 `deploy/helm/immich-line-bot/`
-- [x] K8s 部署規劃 [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md)
-- [x] `scripts/dev/pf.sh`（30450）
+### 本週重點（2026-06-12）
 
 **進行中** 🚧:
 
-1. **Infra**（Week 2 優先）:
-   - [ ] Tekton release pipeline `ci/tekton/release/`
-   - [ ] infra-bootstrap: `ci-tenant-immich-apps` bootstrap
-   - [ ] Caddy + Route53: `immich-bot.3q.fi` HTTPS
-   - [ ] `make release` → BuildKit build + Helm deploy
+1. **icloud-primary 全量**（~32 GB，terminal 續傳中）
+2. **Phase 3 收尾**：icloud dry-run `0 new` → LaunchAgent 增量實測 → Admin 移除空 External library
 
-2. **驗收**:
-   - [ ] LINE Webhook Verify Success
-   - [ ] E2E：LINE 轉發照片 → Immich 可見
+**排程** 📋:
 
-### 下週（Week 2: 6/15-6/21）
+1. **Immich v2.7.5 升級**（icloud 完成或維護窗口；見 upgrade checklist）
+2. **Phase 3.5** osxphotos spike（tier_policy 自動搬移）
+3. **Phase 4** PostgreSQL → SSD
+4. **Phase 5** B2 備份 + 還原測試
+5. **Grafana** LINE Bot + Immich server metrics
 
-- [ ] 首次 `helm upgrade immich-line-bot` + 生產 Webhook
-- [ ] Prometheus metrics（V1.1）
-- [ ] Phase 2 結案
+**已完成** ✅（本週）:
 
-### Week 3+
-
-- [ ] Phase 3: Photo Sync（Mac launchd）
+- local-archive 5023/5023、external ~86 GB 清理
+- PR #9 imageSet/tags/metrics/L0 CI、PR #11 OpenAPI metadata
+- LINE Bot V1 自然語言搜尋 + V1.5 Smart Search（`f906783`）
 
 ---
 
@@ -631,19 +650,20 @@ _目前無開放問題_
 
 ### Phase 3 完成條件
 
-- [ ] Immich CLI 安裝並配置
-- [ ] 環境變數設定正確
-- [ ] 初次全量同步完成
-- [ ] Launchd 服務自動啟動
+- [x] Immich CLI 安裝並配置
+- [x] 環境變數 / photo-sync.env
+- [x] local-archive 全量同步完成
+- [ ] icloud-primary 全量同步完成
+- [x] Launchd 服務安裝
 - [ ] 增量同步測試通過（< 5 分鐘）
-- [ ] 日誌記錄正常
+- [x] 日誌 + stats JSON 記錄
 
 ---
 
-**專案狀態**: 🚧 Phase 2 — Tekton + HTTPS 部署階段  
-**當前重點**: Tekton release pipeline + `immich-bot.3q.fi` HTTPS + Helm 首次部署  
-**下一里程碑**: Phase 2 E2E 完成（2026-06-21）
+**專案狀態**: 🚧 Phase 3 — icloud-primary 全量上傳中  
+**當前重點**: 完成 icloud sync → 增量 LaunchAgent → v2.7.5 升級評估  
+**下一里程碑**: Phase 3 結案（2026-06-14）
 
-**最後更新**: 2026-06-10  
+**最後更新**: 2026-06-12  
 **維護者**: Infrastructure Team + App Dev Team  
-**更新頻率**: 每週（或 Phase 里程碑完成時）
+**更新頻率**: Phase 里程碑或全量 sync 階段變更時

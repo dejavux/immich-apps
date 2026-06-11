@@ -55,12 +55,13 @@ remove_path() {
   local label="$1"
   local path="$2"
   if [[ "$EXECUTE" -eq 0 ]]; then
-    log "[dry-run] would remove: $label ($path)"
+    log "[dry-run] would remove contents of: $label ($path)"
     return
   fi
-  log "Removing $label ($path)..."
+  log "Removing contents of $label ($path)..."
+  # Mount roots (/external-library) cannot be rm -rf'd; delete children only.
   kubectl exec -n "$NAMESPACE" deploy/immich-server -- \
-    sh -c "rm -rf '$path' && mkdir -p '$path'"
+    sh -c "find '$path' -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true; ls -la '$path' | head -5"
 }
 
 log "Node hint: $NODE · namespace: $NAMESPACE · execute=$EXECUTE"

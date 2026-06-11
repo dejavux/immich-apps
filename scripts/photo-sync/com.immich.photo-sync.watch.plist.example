@@ -27,7 +27,7 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <string>__HOME__/.pyenv/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
         <key>PHOTO_SYNC_CONFIG</key>
         <string>__HOME__/.config/immich-apps/photo-sync.config.yaml</string>
     </dict>

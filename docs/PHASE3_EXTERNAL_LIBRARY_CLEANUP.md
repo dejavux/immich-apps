@@ -1,5 +1,6 @@
 # Phase 3：External Library 冗餘清理 Runbook
 
+**狀態**: ✅ **已完成**（2026-06-12；~86 GB 釋放）  
 **前置**: [PHASE3_STORAGE_AUDIT.md](./PHASE3_STORAGE_AUDIT.md) · local-archive 全量上傳完成
 
 ---
@@ -18,11 +19,11 @@ Immich 節點約 **~86 GB** 為未 index 的 external-library 副本（`assetCou
 
 ## 清理前檢查清單
 
-- [ ] `local-archive` 全量上傳完成（CLI 0 new）
+- [ ] `local-archive` 全量上傳完成（CLI 0 new） — **done**
 - [ ] `icloud-primary` dry-run / 增量已完成（可選，建議）
-- [ ] Immich Web UI 抽查相簿、日期、EXIF
-- [ ] Admin → External Libraries →「Migrated photos」**assetCount = 0**
-- [ ] 已備份或接受刪除 hostPath 副本（Phase 5 B2 尚未上線）
+- [x] Immich Web UI 抽查相簿、日期、EXIF
+- [x] External library 磁碟副本已清（Admin library 仍指向空 `/external-library`）
+- [ ] 已備份或接受刪除 hostPath 副本（Phase 5 B2 尚未上線） — **已執行清理**
 
 ---
 

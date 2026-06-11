@@ -9,6 +9,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
+if [[ -d "${HOME}/.pyenv/shims" ]]; then
+  export PATH="${HOME}/.pyenv/shims:${PATH}"
+fi
+
 if [[ $# -lt 1 ]]; then
   echo "Usage: $0 <command> [args...]" >&2
   exit 1
