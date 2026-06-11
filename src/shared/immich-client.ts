@@ -25,8 +25,12 @@ export class ImmichClient {
       });
       attemptForm.append("deviceId", options.deviceId);
       attemptForm.append("deviceAssetId", options.deviceAssetId);
-      attemptForm.append("fileCreatedAt", options.fileCreatedAt);
-      attemptForm.append("fileModifiedAt", options.fileModifiedAt);
+      if (options.fileCreatedAt) {
+        attemptForm.append("fileCreatedAt", options.fileCreatedAt);
+      }
+      if (options.fileModifiedAt) {
+        attemptForm.append("fileModifiedAt", options.fileModifiedAt);
+      }
 
       try {
         const response = await axios.post<ImmichAsset>(
@@ -63,6 +67,46 @@ export class ImmichClient {
 
   assetPageUrl(assetId: string, webBaseUrl: string): string {
     return `${webBaseUrl}/photos/${assetId}`;
+  }
+
+  /** Set asset description (Immich assets API). */
+  async updateAssetDescription(
+    assetId: string,
+    description: string,
+  ): Promise<void> {
+    const endpoints = [`/api/assets/${assetId}`, `/api/asset/${assetId}`];
+
+    let lastError: unknown;
+    for (const path of endpoints) {
+      try {
+        await axios.patch(
+          `${this.baseUrl}${path}`,
+          { description },
+          {
+            headers: {
+              "x-api-key": this.apiKey,
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            timeout: 30_000,
+          },
+        );
+        return;
+      } catch (error) {
+        lastError = error;
+        const status = (error as AxiosError).response?.status;
+        if (status === 404 || status === 405) {
+          logger.warn(
+            { path, assetId },
+            "Immich asset description path unavailable, trying fallback",
+          );
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw lastError;
   }
 
   /** Attach tags to an asset (creates tags if missing). */

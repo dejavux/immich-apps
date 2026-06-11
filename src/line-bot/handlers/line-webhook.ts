@@ -14,6 +14,11 @@ import {
 } from "../../shared/media-types";
 import { logger } from "../../shared/logger";
 import {
+  LINE_BOT_RECEIVED_TIME_DESCRIPTION,
+  LINE_FORWARDED_TAG,
+  resolveUploadTimestamps,
+} from "../../shared/upload-timestamps";
+import {
   coordinateImageSetReply,
   type UploadSummaryItem,
 } from "./image-set-batch";
@@ -142,6 +147,8 @@ async function uploadLineMedia(
       contentType,
     });
 
+    const timestampPlan = await resolveUploadTimestamps(buffer, eventTime);
+
     logger.info(
       {
         messageId,
@@ -150,7 +157,9 @@ async function uploadLineMedia(
         contentType: uploadContentType,
         lineContentType: contentType,
         bytes: buffer.length,
-        fileCreatedAt: eventTime,
+        fileCreatedAt: timestampPlan.fileCreatedAt ?? "(immich-exif)",
+        exifDateTimeOriginal: timestampPlan.exifDateTimeOriginal,
+        usedBotReceivedTime: timestampPlan.usedBotReceivedTime,
       },
       "Downloaded LINE content",
     );
@@ -160,12 +169,27 @@ async function uploadLineMedia(
       deviceAssetId: messageId,
       filename,
       contentType: uploadContentType,
-      fileCreatedAt: eventTime,
-      fileModifiedAt: eventTime,
+      ...(timestampPlan.omitFileTimestamps
+        ? {}
+        : {
+            fileCreatedAt: timestampPlan.fileCreatedAt,
+            fileModifiedAt: timestampPlan.fileModifiedAt,
+          }),
       source: params.source,
     });
 
-    await immichClient.tagAsset(asset.id, ["line-import", lineUserTag(userId)]);
+    const tags = ["line-import", lineUserTag(userId)];
+    if (timestampPlan.usedBotReceivedTime) {
+      tags.push(LINE_FORWARDED_TAG);
+    }
+    await immichClient.tagAsset(asset.id, tags);
+
+    if (timestampPlan.usedBotReceivedTime) {
+      await immichClient.updateAssetDescription(
+        asset.id,
+        LINE_BOT_RECEIVED_TIME_DESCRIPTION,
+      );
+    }
 
     const assetUrl = immichClient.assetPageUrl(asset.id, env.immichWebUrl);
 
