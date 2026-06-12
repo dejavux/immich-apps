@@ -44,7 +44,19 @@ pip3 install --user osxphotos          # 若尚未安裝
 ./scripts/photo-sync/immich-sync.sh --library icloud-primary --dry-run  # 0 new
 ```
 
-**M2 下一步**：評估 osxphotos / AppleScript 跨 library 移動
+**M2 spot-check + 跨 library 研究** — 完成 ✅：
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+./scripts/photo-sync/tier-policy-spotcheck.sh
+./scripts/photo-sync/tier-policy-cross-library-poc.sh
+# → 577 local eligible 100% 已在 Immich
+# → 2900 eligible：577 可 export · 2188 iCloud-only · export→import 可行、無一鍵 move
+```
+
+→ [20_CROSS_LIBRARY_MOVE_RESEARCH.md](./photo-sync/tier-policy/20_CROSS_LIBRARY_MOVE_RESEARCH.md)
+
+**M3 下一步**：`tier-policy.sh` execute（先小批次 577 張 local-path）
 
 ### Optional — Photo Edit + AI（P3 · 非主軌）
 
