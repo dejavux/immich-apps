@@ -29,7 +29,7 @@ BLUE := \033[0;34m
 NC := \033[0m
 
 # ── Cursor lint-fix-agent ─────────────────────────────────────────────────────
-# 見 docs/CURSOR_LINT_FIX_AGENT.md
+# 見 docs/20_guides/CURSOR_LINT_FIX_AGENT.md
 
 CURSOR_LINT_FIX_AGENT_DIR ?= $(HOME)/workspace/cursor-lint-fix-agent
 LINT_TARGET_PREFIX := cursor-
@@ -175,7 +175,7 @@ release-build: ## 僅 Tekton build（不 deploy）
 deploy-sync: ## 部署 Photo Sync (CronJob)
 	@echo "$(BLUE)部署 Photo Sync...$(NC)"
 	@echo "$(YELLOW)⚠ Photo Sync (Mac 本機) 暫不支援 k8s 部署$(NC)"
-	@echo "  請參考: docs/PHASE3_PHOTO_SYNC.md"
+	@echo "  請參考: docs/00_planning/photo-sync/10_REQUIREMENTS.md"
 
 # ═══════════════════════════════════════════════════════════════
 # Build（本機 fallback）

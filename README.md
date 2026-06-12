@@ -2,10 +2,10 @@
 
 **完整的 Immich 生態系統**：Immich server + LINE Bot + Photo Sync
 
-> 🚀 **Status**: Phase 2 — MVP + Helm 骨架完成，待 Tekton release + HTTPS 部署  
-> 📊 **Progress**: [PROGRESS_TRACKING.md](./docs/PROGRESS_TRACKING.md)  
-> 📋 **如何進行**: [HOW_TO_PROCEED.md](./docs/HOW_TO_PROCEED.md)  
-> 🏗️ **K8s 部署**: [PHASE2_K8S_DEPLOYMENT.md](./docs/PHASE2_K8S_DEPLOYMENT.md)
+> 🚀 **Status**: Phase 2 MVP ✅ · Phase 3 ~96% · Immich **v2.7.5** ✅  
+> 📊 **Progress**: [PROGRESS_TRACKING.md](./docs/00_planning/PROGRESS_TRACKING.md)  
+> 📋 **如何進行**: [HOW_TO_PROCEED.md](./docs/00_planning/HOW_TO_PROCEED.md)  
+> 🏗️ **K8s 部署**: [K8S_DEPLOYMENT.md](./docs/00_planning/infra/K8S_DEPLOYMENT.md)
 
 ---
 
@@ -36,11 +36,10 @@ immich-apps/
 ├── scripts/
 │   ├── dev/pf.sh                  # Port-forward (30450-30479)
 │   └── deploy-all.sh              # 部署所有組件
-├── docs/                          # 完整文檔
-│   ├── PROGRESS_TRACKING.md       # SSOT
-│   ├── PHASE2_LINE_BOT.md
-│   ├── PHASE3_PHOTO_SYNC.md
-│   └── ...
+├── docs/                          # 文檔（00_planning / 20_guides / 60_completed）
+│   ├── 00_planning/               # SSOT + 進行中專案
+│   ├── 20_guides/                 # 操作手冊
+│   └── 60_completed/              # 已結案歸檔
 ├── Makefile
 ├── package.json
 └── README.md
@@ -155,22 +154,17 @@ make logs              # 查看 k8s logs
 
 ## 📚 文檔
 
-### 核心文檔
+→ **[docs/README.md](./docs/README.md)** — 完整導覽
 
-- **[PROGRESS_TRACKING.md](./docs/PROGRESS_TRACKING.md)** - 進度追蹤 SSOT ⭐
-- **[REPO_CONSOLIDATION_PLAN.md](./docs/REPO_CONSOLIDATION_PLAN.md)** - Repo 整合方案
-- **[QUESTIONS_ANSWERED.md](./docs/QUESTIONS_ANSWERED.md)** - 架構決策問答
-
-### Phase 實作
-
-- **[CURSOR_LINT_FIX_AGENT.md](./docs/CURSOR_LINT_FIX_AGENT.md)** - make lint / commit / PR ⭐
-- **[PHASE2_K8S_DEPLOYMENT.md](./docs/PHASE2_K8S_DEPLOYMENT.md)** - K8s / Tekton / Helm / HTTPS
-- **[PHASE2_LINE_BOT.md](./docs/PHASE2_LINE_BOT.md)** - LINE Bot 實作（P0）
-- **[PHASE3_PHOTO_SYNC.md](./docs/PHASE3_PHOTO_SYNC.md)** - Photo Sync 實作（P1）
-
-### 技術文檔
-
-- **[GPU_CONFIGURATION.md](./docs/GPU_CONFIGURATION.md)** - GPU 配置
+| 用途 | 連結 |
+|------|------|
+| 任務 SSOT | [PROGRESS_TRACKING.md](./docs/00_planning/PROGRESS_TRACKING.md) |
+| 執行指南 | [HOW_TO_PROCEED.md](./docs/00_planning/HOW_TO_PROCEED.md) |
+| 指令參考 | [COMMAND_REFERENCE.md](./docs/20_guides/COMMAND_REFERENCE.md) |
+| LINE Bot 規格 | [line-bot/10_REQUIREMENTS.md](./docs/00_planning/line-bot/10_REQUIREMENTS.md) |
+| Photo Sync | [photo-sync/10_REQUIREMENTS.md](./docs/00_planning/photo-sync/10_REQUIREMENTS.md) |
+| K8s / Tekton | [K8S_DEPLOYMENT.md](./docs/00_planning/infra/K8S_DEPLOYMENT.md) |
+| 已結案 | [60_completed/](./docs/60_completed/) |
 
 ---
 
@@ -238,7 +232,7 @@ curl https://immich-bot.3q.fi/health
 
 ### 常見問題
 
-詳見：[PHASE2_LINE_BOT.md - Troubleshooting](./docs/PHASE2_LINE_BOT.md#troubleshooting)
+詳見：[line-bot/10_REQUIREMENTS.md - Troubleshooting](./docs/00_planning/line-bot/10_REQUIREMENTS.md#troubleshooting)
 
 ### 快速診斷
 
@@ -280,6 +274,6 @@ MIT
 
 ---
 
-**最後更新**: 2026-06-10  
+**最後更新**: 2026-06-12  
 **維護者**: Infrastructure Team + App Dev Team  
 **Repo**: <https://github.com/dejavux/immich-apps>
