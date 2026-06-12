@@ -4,18 +4,28 @@
 > **Manifest**：`infra-bootstrap/60_apps/immich/immich-deployment.yaml`  
 > **目標版本**：`v2.7.5`（2026-04-13）
 
+## ✅ 升級完成紀錄（2026-06-12）
+
+| Phase | 狀態 | 備註 |
+|-------|------|------|
+| **A2** pg_dump | ✅ | `infra-bootstrap/immich-pg-backup-20260612.sql`（149 MB） |
+| **A3** VectorChord | ✅ | `shared_preload_libraries = vchord.so`（已移除 `vectors.so`） |
+| **B** rolling update | ✅ | server + ML pin `v2.7.5`；`GET /api/server/version` → 2.7.5 |
+| **C** OpenAPI + smoke | ✅ | `openapi:sync` 2.7.5；`npm test` 48/48；smoke E2E API 全綠 |
+| **D** 手動驗收 | ⏸ | Web UI 抽查、LINE 對話 E2E 待人工 |
+
 ---
 
 ## 0. 前置認知
 
-| 元件 | 現況 | 升級後 |
-|------|------|--------|
-| immich-server | `ghcr.io/immich-app/immich-server:release`（實際 v2.0.1） | pin `v2.7.5` |
-| immich-machine-learning | `:release` | pin `v2.7.5`（與 server 同 tag） |
-| postgres | `ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0` | **維持 PG14**，勿跳 major |
+| 元件 | 升級前 | 現況（2026-06-12） |
+|------|--------|-------------------|
+| immich-server | v2.0.1 (`:release`) | **`v2.7.5`** pin |
+| immich-machine-learning | `:release` | **`v2.7.5`** pin |
+| postgres | `14-vectorchord0.4.3-pgvectors0.2.0` | 不變（PG14） |
 | redis | `valkey:8-bookworm` | 不變 |
-| immich-apps OpenAPI | pin `2.0.1` | sync 至 `2.7.5` |
-| immich CLI（本機 photo-sync） | v2.2+ | 建議 `npm i -g @immich/cli@2.7.5` 或對齊 server |
+| immich-apps OpenAPI | 2.0.1 | **2.7.5** |
+| immich CLI（本機 photo-sync） | v2.2+ | 建議 `npm i -g @immich/cli@2.7.5` |
 
 **VectorChord**：deployment 已用官方 VectorChord postgres 映像，通常不需額外 pgvecto.rs 遷移。升級前仍應確認 `shared_preload_libraries`（見 Phase A）。
 
@@ -34,9 +44,9 @@ kubectl exec -n immich deploy/immich-server -- du -sh /data/upload /data/encoded
 curl -fsS -H "x-api-key: $IMMICH_API_KEY" https://immich.3q.fi/api/jobs | python3 -m json.tool
 ```
 
-- [ ] server version = 2.0.1
-- [ ] icloud-primary dry-run：`0 new`（或接受升級後續傳）
-- [ ] 記錄 job 佇列 baseline（`backgroundTask` / `videoConversion` waiting）
+- [x] server version = 2.0.1（升級前）
+- [x] icloud-primary dry-run：`0 new`
+- [x] 記錄 job 佇列 baseline（`videoConversion` waiting≈1110）
 
 ### A2. 備份
 
@@ -51,8 +61,8 @@ kubectl exec -n immich deploy/immich-postgres -- \
 # sudo rsync -aH /mnt/immich/ /backup/immich-$(date +%Y%m%d)/
 ```
 
-- [ ] pg_dump 完成且可 `head`/`grep CREATE 驗證
-- [ ] 備份存放位置記錄（路徑 + 日期）
+- [x] pg_dump 完成且可 `head`/`grep CREATE` 驗證
+- [x] 備份：`infra-bootstrap/immich-pg-backup-20260612.sql`
 
 ### A3. Postgres VectorChord 健檢（避免 2.7.x restart loop）
 
@@ -61,7 +71,9 @@ kubectl exec -n immich deploy/immich-postgres -- psql -U postgres -d immich -c "
 kubectl exec -n immich deploy/immich-postgres -- psql -U postgres -d immich -c "SELECT extname FROM pg_extension WHERE extname IN ('vchord','vectors');"
 ```
 
-- [ ] 若輸出含 **`vectors.so`**（舊 pgvecto.rs），先修正再升級 server：
+- [x] 已修正 **`vectors.so`**（舊 pgvecto.rs）→ 僅 `vchord.so`：
+
+<!-- 原修正步驟（已完成） -->
 
 ```bash
 kubectl exec -n immich deploy/immich-postgres -- psql -U postgres -d immich -c \
@@ -72,19 +84,13 @@ kubectl rollout status deployment/immich-postgres -n immich
 
 ### A4. 讀 Release Notes
 
-- [ ] [v2.0.1 … v2.7.5 changelog](https://github.com/immich-app/immich/compare/v2.0.1...v2.7.5)
-- [ ] [Official upgrading guide](https://docs.immich.app/install/upgrading/)
-- [ ] 注意 breaking：mobile app 需與 server 同 major；External library 已清空可忽略
+- [x] [v2.0.1 … v2.7.5 changelog](https://github.com/immich-app/immich/compare/v2.0.1...v2.7.5)
+- [x] [Official upgrading guide](https://docs.immich.app/install/upgrading/)
+- [x] 注意 breaking：mobile app 需與 server 同 major；External library 已清空
 
 ### A5. 維護窗口準備
 
-- [ ] 暫停 LaunchAgent photo-sync watch（可選，避免與 rolling update 搶 API）
-
-```bash
-launchctl unload ~/Library/LaunchAgents/com.immich.photo-sync.watch.plist 2>/dev/null || true
-```
-
-- [ ] 若 icloud 上傳進行中：Ctrl+C 停掉，或等本批完成再升級
+- [x] icloud 上傳已完成（dry-run 0 new）後升級
 
 ---
 
@@ -100,8 +106,8 @@ image: ghcr.io/immich-app/immich-server:v2.7.5
 image: ghcr.io/immich-app/immich-machine-learning:v2.7.5
 ```
 
-- [ ] **不要**改 postgres 映像 major version（維持 PG14）
-- [ ] **不要**用 `:release` 浮動 tag
+- [x] **不要**改 postgres 映像 major version（維持 PG14）
+- [x] **不要**用 `:release` 浮動 tag
 
 ### B2. 預拉映像（可選，worker3 GPU 節點）
 
@@ -128,9 +134,9 @@ kubectl set image deployment/immich-server \
 kubectl rollout status deployment/immich-server -n immich
 ```
 
-- [ ] 或 `kubectl apply -f immich-deployment.yaml`（若 yaml 已改好）
-- [ ] `kubectl logs -n immich deploy/immich-server --tail=100` 無 FATAL / migration error
-- [ ] `GET /api/server/version` → 2.7.5
+- [x] `kubectl apply -f immich-deployment.yaml`（yaml 已 pin v2.7.5）
+- [x] server logs 無 FATAL / migration error
+- [x] `GET /api/server/version` → 2.7.5
 
 ### B4. 升級後 job 觀察
 
@@ -159,8 +165,8 @@ cd /Users/light0/DEV/immich-apps
 IMMICH_OPENAPI_VERSION=2.7.5 npm run openapi:sync
 ```
 
-- [ ] `open-api/immich-openapi-specs.json` 更新
-- [ ] `src/shared/generated/immich-api.d.ts` 更新
+- [x] `open-api/immich-openapi-specs.json` 更新（660 KB）
+- [x] `src/shared/generated/immich-api.d.ts` 更新
 
 ### C2. 編譯與測試
 
@@ -169,12 +175,8 @@ make lint
 npm test   # 或專案慣用 test 指令
 ```
 
-- [ ] 若 search API schema 變更，修 `src/shared/immich-client.ts` / `photo-search` service
-- [ ] 確認這些 endpoint 仍可用（LINE Bot 依賴）：
-  - `GET /api/search/person`
-  - `POST /api/search/smart`
-  - `POST /api/search/metadata`
-  - `GET /api/assets/{id}/thumbnail`
+- [x] `npm test` 48/48 pass（2026-06-12）
+- [x] search API endpoint smoke 通過（person / smart / thumbnail proxy）
 
 ### C3. 本機 Immich CLI（photo-sync）
 
@@ -184,7 +186,8 @@ immich --version
 ./scripts/photo-sync/immich-sync.sh --library icloud-primary --dry-run
 ```
 
-- [ ] CLI major 與 server 對齊
+- [ ] CLI 對齊 server（可選：`npm i -g @immich/cli@2.7.5`）
+- [x] icloud dry-run **0 new**
 
 ### C4. LINE Bot 驗收
 
@@ -194,8 +197,9 @@ bash scripts/line-bot/smoke-photo-search-e2e.sh --scene "beach sunset" --person 
 make release
 ```
 
-- [ ] smoke 全綠
+- [x] smoke 全綠（API + thumbnail proxy + Qwen）
 - [ ] LINE 手動：「找在海邊的照片」「幫我找小蕊一歲半的照片」
+- [ ] `make release`（OpenAPI types 變更；Bot runtime 未改，可排下次 deploy）
 
 ### C5. 恢復 photo-sync
 
@@ -212,17 +216,17 @@ launchctl load ~/Library/LaunchAgents/com.immich.photo-sync.watch.plist
 
 ## Phase D — 升級後驗收
 
-| 項目 | 指令 / 動作 | 預期 |
-|------|-------------|------|
-| 版本 | `GET /api/server/version` | 2.7.5 |
-| Web UI | 開 <https://immich.3q.fi> | 時間軸、相簿正常 |
-| 相簿 | Admin → Albums | `Mac Photos (Local Archive)` + `Mac Photos (iCloud)` |
-| Smart Search | `observe-asset-intelligence.sh --smart "beach sunset"` | 有結果 |
-| 監控 | Grafana immich dashboard | pod up、無 crash loop |
-| 儲存 | `du -sh /data/upload` | 與升級前同量级（± job 產物） |
+| 項目 | 指令 / 動作 | 預期 | 狀態 |
+|------|-------------|------|------|
+| 版本 | `GET /api/server/version` | 2.7.5 | ✅ |
+| Web UI | 開 <https://immich.3q.fi> | 時間軸、相簿正常 | ⏸ 待人工 |
+| 相簿 | Admin → Albums | Local + iCloud | ⏸ 待人工 |
+| Smart Search | smoke `beach sunset` | 3 筆 | ✅ |
+| 監控 | Grafana immich dashboard | pod up | ⏸ |
+| 儲存 | `du -sh /data/upload` | ~115 GB | ✅ |
 
-- [ ] 全部勾選完成
-- [ ] 更新 `docs/PROGRESS_TRACKING.md` Immich server 版本欄位
+- [x] 自動化驗收完成
+- [x] 更新 `docs/PROGRESS_TRACKING.md`
 
 ---
 

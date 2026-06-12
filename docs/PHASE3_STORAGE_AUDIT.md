@@ -20,13 +20,13 @@
 
 | 路徑 | 大小 | 檔案數（約） | 說明 |
 |------|------|-------------|------|
-| `/data/upload` | **88 GB** ↑ | ~13300 | 正式 library **原檔**（每 asset 一 blob；hash 相同則共用） |
+| `/data/upload` | **115 GB** | ~14500+ | 正式 library（local + icloud union 完成） |
 | `/data/encoded-video` | **32 GB** | — | 影片轉檔（每支影片一份，非原檔 dup） |
 | `/data/thumbs` | **3 GB** | — | 縮圖 |
 | `/external-library` | **4 KB** | 0 | 已清理 |
 | `/data/external-library` | **4 KB** | 0 | 已清理 |
 
-**合計** ~123 GB（原檔 + 轉檔 + 縮圖）。icloud-primary 上傳中，`/data/upload` 仍會長。
+**合計** ~141 GB（原檔 + 轉檔 + 縮圖）。全量 sync 完成 2026-06-12。
 
 ---
 
@@ -47,12 +47,12 @@
 
 ## Immich DB（API `/server/statistics`）
 
-| 指標 | 2026-06-11 上傳前 | 2026-06-12（icloud 上傳中） |
-|------|-------------------|----------------------------|
-| Photos | ~2731 | **5444** |
-| Videos | ~412 | **834** |
-| **Total assets** | ~3143 | **~6278** |
-| Reported usage | — | ~47 GB（DB 統計；磁碟含 upload+encoded 更大） |
+| 指標 | 2026-06-11 上傳前 | 2026-06-12（全量完成） |
+|------|-------------------|------------------------|
+| Photos | ~2731 | **4518** |
+| Videos | ~412 | **935** |
+| **Total assets** | ~3143 | **~5453** |
+| `/data/upload` | ~44 GB | **~115 GB** |
 
 ---
 
@@ -65,7 +65,7 @@
 | **Hash 重疊（icloud vs DB）** | **1** | — |
 
 **local-archive**（完成）：`0 new / 5023 dup`  
-**icloud-primary**（進行中，2026-06-12 ~22%）：`3511 new / 1 dup`，約 32 GB 待傳
+**icloud-primary**（完成）：`0 new / 3512 dup`（2026-06-12 dry-run）
 
 **Union 預估原檔**：~5023 + 3511 − 1 ≈ **8533 unique blobs** → `/data/upload` 最終 ~**90–95 GB**（加既有 App 上傳重疊修正）。
 
@@ -82,9 +82,10 @@
 ## 後續
 
 1. [x] 清理 external-library 冗餘（~86 GB）
-2. [ ] icloud-primary 全量完成 → dry-run `0 new`
-3. [ ] Admin：停用或移除空的 External library「Migrated photos」
-4. [ ] Phase 5：B2 備份 `/data/upload`
+2. [x] icloud-primary + local-archive 全量完成（icloud 0 new dry-run）
+3. [x] LaunchAgent 增量實測
+4. [x] Admin：移除 External library「Migrated photos」
+5. [x] Immich v2.7.5 升級（2026-06-12）→ Phase 5 B2 可沿用 pg_dump 流程
 
 Runbook: [PHASE3_EXTERNAL_LIBRARY_CLEANUP.md](./PHASE3_EXTERNAL_LIBRARY_CLEANUP.md)
 

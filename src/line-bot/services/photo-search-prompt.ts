@@ -50,6 +50,9 @@ intent 取值：
 使用者「小蕊在吃飯的照片」→
 {"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"吃飯","sceneQueryEn":"eating meal food dining"}
 
+使用者「找在海邊的照片」（純場景，無人物）→
+{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"海邊","sceneQueryEn":"beach ocean seaside"}
+
 使用者「2」且前文在選人物 →
 {"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":2}`;
 }
@@ -204,6 +207,62 @@ function isAgePhrase(text: string): boolean {
 const SEARCH_PREFIX = "(?:幫)?(?:我)?(?:找|搜|查+)+(?:找)?";
 const PHOTO_SUFFIX = "(?:的)?(?:照片|相片|圖)$";
 
+/** 不可當 Immich 人物名的中文片段（介系詞 / 助詞） */
+const PERSON_STOPWORDS = new Set(["在", "有", "是", "於", "的"]);
+
+function isPersonStopword(name: string): boolean {
+  return PERSON_STOPWORDS.has(name.trim());
+}
+
+export function tryParseSceneOnlyPhoto(
+  text: string,
+): { sceneQuery: string } | undefined {
+  const trimmed = text.trim();
+
+  if (tryParsePersonAge(trimmed) || tryParsePersonScenePhoto(trimmed)) {
+    return undefined;
+  }
+
+  const atScene = trimmed.match(
+    new RegExp(`^${SEARCH_PREFIX}在(.+?)${PHOTO_SUFFIX}$`),
+  );
+  if (atScene) {
+    const scene = cleanScenePhrase(atScene[1]);
+    if (scene && !isAgePhrase(scene)) {
+      return { sceneQuery: scene };
+    }
+  }
+
+  return undefined;
+}
+
+export function sanitizeSearchPlan(
+  plan: PhotoSearchPlan,
+  message: string,
+): PhotoSearchPlan {
+  const sceneOnly = tryParseSceneOnlyPhoto(message);
+  if (sceneOnly) {
+    return ensureSceneQueryEn({
+      ...plan,
+      intent: plan.intent === "unknown" ? "search_photos" : plan.intent,
+      personNames: [],
+      sceneQuery: sceneOnly.sceneQuery,
+      sceneQueryEn: undefined,
+    });
+  }
+
+  const names = plan.personNames?.filter(Boolean) ?? [];
+  if (
+    names.length === 1 &&
+    isPersonStopword(names[0]) &&
+    plan.sceneQuery?.trim()
+  ) {
+    return ensureSceneQueryEn({ ...plan, personNames: [] });
+  }
+
+  return plan;
+}
+
 export function tryParsePersonAge(
   text: string,
 ): { personNames: string[]; ageYears: number } | undefined {
@@ -311,7 +370,7 @@ export function tryParsePersonScenePhoto(
     const scene = pattern.source.includes("不在")
       ? `不在${match[2].trim()}`
       : cleanScenePhrase(sceneRaw);
-    if (!person || !scene || isAgePhrase(scene)) {
+    if (!person || isPersonStopword(person) || !scene || isAgePhrase(scene)) {
       continue;
     }
     return { personNames: [person], sceneQuery: scene };
@@ -432,6 +491,21 @@ export function parseSearchPlanFallback(
       plan.dateRangeLabel = rel.label;
     }
     return plan;
+  }
+
+  const sceneOnly = tryParseSceneOnlyPhoto(working);
+  if (sceneOnly) {
+    const plan: PhotoSearchPlan = {
+      intent: "search_photos",
+      personNames: [],
+      sceneQuery: sceneOnly.sceneQuery,
+    };
+    if (rel) {
+      plan.dateFrom = rel.dateFrom;
+      plan.dateTo = rel.dateTo;
+      plan.dateRangeLabel = rel.label;
+    }
+    return ensureSceneQueryEn(plan);
   }
 
   const personScene = tryParsePersonScenePhoto(working);
