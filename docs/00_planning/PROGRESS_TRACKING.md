@@ -5,8 +5,8 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-12（Phase 3 全量 sync ✅ · `/data/upload` 115G）  
-**專案狀態**: ✅ Phase 2 MVP 結案；🚧 Phase 3 收尾（增量實測）  
+**最後更新**: 2026-06-13（Phase 2/3 結案 · docs 二次整理）  
+**專案狀態**: ✅ Phase 2/3 結案 · 🟢 Phase 3.5 Kickoff · P0 E2E 人工驗收並行  
 **負責人**: Infrastructure Team + App Dev Team
 
 ---
@@ -15,11 +15,11 @@
 
 | 指標 | 數值 | 說明 |
 |------|------|------|
-| 🔴 高優先級任務 | 3 | Phase 2 強化（批次/tag）+ Phase 3 啟動 |
-| 🟡 中優先級任務 | 5 | Phase 3 Photo Sync (P1) |
-| 🟢 低優先級任務 | 8 | Phase 4-5 優化項目 (P2) |
-| ✅ 本週完成 | 28+ | local + icloud 全量、external 清理、PR #12 photo-sync runner |
-| 📈 整體進度 | **88%** | Phase 0: 100%, Phase 1: 50%, Phase 2: **95%**, Phase 3: **95%** |
+| 🔴 高優先級任務 | 1 | Sprint P0：E2E 驗收 |
+| 🟡 中優先級任務 | 4 | Phase 3.5 + Phase 5 規劃 |
+| 🟢 低優先級任務 | 6 | Phase 4 SSD · V1.1 · tech debt |
+| ✅ 本週完成 | 30+ | Phase 3 結案、docs 歸檔整理 |
+| 📈 整體進度 | **92%** | Phase 0–3: **100%** MVP · Phase 4/5: 0% |
 
 ---
 
@@ -29,8 +29,9 @@
 |-------|------|--------|------|------|----------|
 | **Phase 0** | Repo 整合 | ✅ 完成 | 100% | ██████████ 100% | 2026-05-27 |
 | **Phase 1** | 基礎設施 | ✅ 已部署 | 50% 完成 | █████░░░░░ 50% | 2025-10-06 |
-| **Phase 2** | LINE Bot | 🔴 P0 最高 | ✅ MVP 結案（Grafana 待建） | █████████░ 95% | 2026-06-12 |
-| **Phase 3** | Photo Sync | 🟡 P1 | 全量 ✅ 增量待驗 | █████████░ 95% | 2026-06-12 |
+| **Phase 2** | LINE Bot | ✅ 結案 | MVP 100% | ██████████ 100% | 2026-06-12 |
+| **Phase 3** | Photo Sync | ✅ 結案 | 100% | ██████████ 100% | 2026-06-13 |
+| **Phase 3.5** | iCloud 分層 | 🟡 P1 | M1 PoC ~80% | ███████░░░ 70% | 2026-06-27 |
 | **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-05 |
 | **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-12 |
 
@@ -128,7 +129,7 @@
 - [x] **P0 中繼資料**：`fileCreatedAt` 用 webhook `event.timestamp`；MIME 自 LINE response
 - [x] `.envrc` + Cursor lint-fix-agent 整合
 - [x] 預設分支 **`main`**（PR #5）
-- [x] Helm deploy + 生產 Webhook（見 [K8S_DEPLOYMENT.md](./infra/K8S_DEPLOYMENT.md)）
+- [x] Helm deploy + 生產 Webhook（見 [K8S_DEPLOYMENT.md](../20_guides/infra/K8S_DEPLOYMENT.md)）
 
 **本機開發**（憑證 + lint + dev）:
 
@@ -178,7 +179,7 @@ npm run dev
 ### 2.5 Kubernetes 部署（Helm + Tekton + BuildKit + HTTPS）
 
 **狀態**: ✅ 完成（2026-06-12）  
-**文檔**: [K8S_DEPLOYMENT.md](./infra/K8S_DEPLOYMENT.md) ⭐  
+**文檔**: [K8S_DEPLOYMENT.md](../20_guides/infra/K8S_DEPLOYMENT.md) ⭐  
 **目前映像**: `registry-internal.3q.fi/immich-line-bot:f906783`（Helm revision 9+）
 
 **目標架構**:
@@ -286,14 +287,14 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 - [x] 更新 `PROGRESS_TRACKING.md`（本文件）
 - [x] 更新 `HOW_TO_PROCEED.md`、`PHASE2_K8S_DEPLOYMENT.md`
 - [x] infra-bootstrap Caddy `immich-bot.3q.fi`（PR #120）
-- [x] [IMMICH_v2.7.5.md](./infra/upgrades/IMMICH_v2.7.5.md) 升級 checklist
+- [x] [IMMICH_v2.7.5.md](../20_guides/infra/upgrades/IMMICH_v2.7.5.md) 升級 checklist
 - [ ] Phase 2 完成報告（可選 `PHASE2_COMPLETION_REPORT.md`）
 
 ---
 
 ## 🟡 P1：中優先級（Phase 3 - Photo Sync）
 
-**狀態**: ✅ **全量完成**（2026-06-12）· 增量實測待驗  
+**狀態**: ✅ **結案**（2026-06-13）  
 **目標**: 多個 Mac `.photoslibrary` → Immich（原檔 + EXIF SSOT）  
 **預估**: 2-3 天（同步）+ Phase 3.5 分層搬移  
 **前置條件**: ✅ Phase 2 核心完成
@@ -304,7 +305,7 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 |----|------|------|
 | Mac | `.photoslibrary` | iCloud + Local 兩個 library |
 | Immich | union + hash dedupe | 兩 library 都 sync，Immich 去重 |
-| 分層 | Phase 3.5 | iCloud 超量→Local 需 osxphotos（規劃中） |
+| 分層 | **Phase 3.5** | iCloud 超量→Local · [tier-policy 規格](./photo-sync/tier-policy/10_REQUIREMENTS.md) 🟢 Kickoff |
 | 備份 | Phase 5 | Immich server + B2 異地（3-2-1） |
 
 **本機 libraries**（light0 Mac）:
@@ -362,7 +363,7 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 ### 3.2.1 伺服器儲存盤點（2026-06-11）
 
 **狀態**: ✅ 完成  
-**文檔**: [STORAGE_AUDIT.md](./photo-sync/runbooks/STORAGE_AUDIT.md)
+**文檔**: [STORAGE_AUDIT.md](../20_guides/photo-sync/runbooks/STORAGE_AUDIT.md)
 
 **結論**:
 
@@ -394,7 +395,7 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 
 **伺服器（2026-06-12）**：`/data/upload` **115 GB** · API stats **4518 photos / 935 videos**（~5453 assets）
 
-**儲存**：external **已清 ~86 GB**；詳見 [STORAGE_AUDIT.md](./photo-sync/runbooks/STORAGE_AUDIT.md)。
+**儲存**：external **已清 ~86 GB**；詳見 [STORAGE_AUDIT.md](../20_guides/photo-sync/runbooks/STORAGE_AUDIT.md)。
 
 **基礎建設修正**（2026-06-11～12）：
 
@@ -419,7 +420,7 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 - [x] LaunchAgent **增量**實測（2026-06-12；fswatch → debounce 30s → icloud 0 new/3512 dup）
 - [x] Admin：移除空 External library「Migrated photos」（DB `library` 表 0 rows）
 - [x] Immich v2.7.5 升級（2026-06-12；A2 pg_dump + A3 vectors.so + B rolling + C openapi/smoke）
-- [ ] local-archive 續傳（增量測試觸發 1894 new；中斷於 ~24%，需重跑）
+- [x] local-archive 續傳（2026-06-13 dry-run **0 new / 5023 dup**；1894 new 為 hash 變更非 binary dup）
 
 **Local 重複驗證（2026-06-12）**：
 
@@ -472,9 +473,52 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 - [x] 觸發 fswatch（touch originals 或新增照片）
 - [x] 等待 debounce 30s + 檢查 `watch.log` / `sync.log`
 - [x] icloud dry-run 等價（0 new）
-- [ ] local 續傳至 `0 new`（`immich-sync.sh --library local-archive`）
+- [x] local 續傳至 `0 new`（2026-06-13 dry-run **0 new / 5023 dup**）
 
-**驗收**: LaunchAgent 增量鏈路正常；local 需釐清 hash 變更後續傳
+**驗收**: LaunchAgent 增量鏈路正常；local + icloud dry-run 皆 **0 new** ✅
+
+---
+
+## 🟡 P1：Phase 3.5 — iCloud tier policy
+
+**狀態**: 🟢 Kickoff（2026-06-13）  
+**規格**: [photo-sync/tier-policy/10_REQUIREMENTS.md](./photo-sync/tier-policy/10_REQUIREMENTS.md)  
+**目標**: `tier_policy` 自動將 eligible 照片 icloud → local-archive
+
+### 3.5.0 M1 PoC
+
+- [x] osxphotos 安裝 · 讀 icloud-primary metadata
+- [x] eligible 數量（`cutoff_date: 2023-01-01` → **2900**）
+- [x] `scripts/photo-sync/tier-policy-poc.sh`（dry-run JSON）
+- [ ] eligible ⊂ Immich spot-check（10 張）
+- [ ] 跨 library 移動方案評估
+
+### 3.5.1 tier-policy.sh
+
+- [ ] 讀 config · dry-run / execute
+- [ ] 小批次搬移 + rollback 文件
+
+### 3.5.2 整合
+
+- [ ] LaunchAgent / cron
+- [ ] runbook `20_guides/photo-sync/runbooks/TIER_POLICY.md`
+
+**已完成**: config `tier_policy` schema · kickoff 規格文件 · tier-policy-poc.sh
+
+---
+
+## 📋 Optional — Photo Edit + AI
+
+**狀態**: 📋 規劃中（P3 · 非 Sprint 主軌）  
+**規格**: [photo-edit/10_REQUIREMENTS.md](./photo-edit/10_REQUIREMENTS.md)
+
+| 階段 | 內容 | 狀態 |
+|------|------|------|
+| A | Sidecar `photo-edit-bff` + rembg / Real-ESRGAN PoC | 📋 |
+| B | ComfyUI workflow + Immich Workflow hook | 📋 |
+| C | Web before/after + 批次 queue | 📋 |
+
+**原則**: 不覆蓋原 blob；Mac Photos SSOT；新 asset + `source:{id}` tag
 
 ---
 
@@ -616,11 +660,11 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 - [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md) - **執行指南**（如何進行）⭐
 - [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md) - 規劃文件導覽
 - [../README.md](../README.md) - docs 總覽
-- [line-bot/10_REQUIREMENTS.md](./line-bot/10_REQUIREMENTS.md) - LINE Bot（P0）
-- [photo-sync/10_REQUIREMENTS.md](./photo-sync/10_REQUIREMENTS.md) - 照片同步（P1）
-- [photo-sync/runbooks/STORAGE_AUDIT.md](./photo-sync/runbooks/STORAGE_AUDIT.md) - 儲存盤點
-- [infra/upgrades/IMMICH_v2.7.5.md](./infra/upgrades/IMMICH_v2.7.5.md) - Server 升級 checklist
-- [infra/GPU_CONFIGURATION.md](./infra/GPU_CONFIGURATION.md) - GPU 配置詳解
+- [line-bot/10_REQUIREMENTS.md](./line-bot/10_REQUIREMENTS.md) - LINE Bot V1.1（MVP 已歸檔）
+- [60_completed/phase3-photo-sync-bulk/](../60_completed/phase3-photo-sync-bulk/) - Photo Sync 結案
+- [20_guides/photo-sync/runbooks/STORAGE_AUDIT.md](../20_guides/photo-sync/runbooks/STORAGE_AUDIT.md) - 儲存盤點
+- [20_guides/infra/upgrades/IMMICH_v2.7.5.md](../20_guides/infra/upgrades/IMMICH_v2.7.5.md) - Server 升級 checklist
+- [20_guides/infra/GPU_CONFIGURATION.md](../20_guides/infra/GPU_CONFIGURATION.md) - GPU 配置詳解
 - [../60_completed/](../60_completed/) - 已結案專案歸檔
 
 ### 外部資源
@@ -686,15 +730,16 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 - [x] icloud-primary 全量同步完成
 - [x] dry-run 驗收（0 new / 3512 dup icloud；0 new / 5023 dup local）
 - [x] Launchd 服務安裝
-- [ ] 增量同步測試通過（< 5 分鐘）
+- [x] 增量同步測試通過（< 5 分鐘）（2026-06-12 LaunchAgent）
 - [x] 日誌 + stats JSON 記錄
 
 ---
 
-**專案狀態**: 🚧 Phase 3 收尾 — LaunchAgent 增量實測  
-**當前重點**: local-archive 續傳 → Web UI/LINE 手動 E2E → Phase 3.5/4/5  
-**下一里程碑**: Phase 3 結案（2026-06-13）
+**專案狀態**: ✅ Phase 2/3 結案 · Sprint = E2E 驗收 + Phase 3.5  
+**當前重點**: Web UI/LINE 手動 E2E → Phase 3.5 跨 library 移動 → Phase 5 備份  
+**下一里程碑**: Phase 3.5 M1 spot-check + M2 tier-policy.sh（2026-06-20）  
+**Optional**: [photo-edit/](./photo-edit/) AI 修圖整合（P3）
 
-**最後更新**: 2026-06-12  
+**最後更新**: 2026-06-13  
 **維護者**: Infrastructure Team + App Dev Team  
 **更新頻率**: Phase 里程碑或全量 sync 階段變更時

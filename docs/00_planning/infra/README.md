@@ -1,17 +1,5 @@
-# Infra — K8s / GPU / 升級
+# Moved
 
-**SSOT**: [PROGRESS_TRACKING](../PROGRESS_TRACKING.md)
+Infra 維運指南已移至 [20_guides/infra/](../../20_guides/infra/)。
 
-## 文件
-
-| 文件 | 用途 |
-|------|------|
-| [K8S_DEPLOYMENT.md](./K8S_DEPLOYMENT.md) | Tekton CI、Helm、HTTPS |
-| [GPU_CONFIGURATION.md](./GPU_CONFIGURATION.md) | lama / worker3 GPU 分配 |
-| [PORT_RANGE_PLAN.md](./PORT_RANGE_PLAN.md) | 30450–30479 |
-| [upgrades/IMMICH_v2.7.5.md](./upgrades/IMMICH_v2.7.5.md) | Server v2.7.5 checklist |
-
-## 外部
-
-- Manifest: `infra-bootstrap/60_apps/immich/immich-deployment.yaml`
-- Tekton: `ci/tekton/`
+`00_planning/` 僅保留**進行中專案需求**（line-bot V1.1、Phase 3.5+）。

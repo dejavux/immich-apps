@@ -1,8 +1,9 @@
 # Phase 3: 照片同步與上傳
 
-**狀態**: ✅ **全量完成**（2026-06-12）· 增量待驗  
-**預估時間**: local 收尾 + icloud 增量；Phase 3.5 分層另計  
-**優先級**: **P1 — 當前主軌**（原檔 + EXIF SSOT）  
+**狀態**: ✅ **結案**（2026-06-13）  
+**歸檔日期**: 2026-06-13  
+**後續**: Phase 3.5 見 [BACKLOG](../../00_planning/BACKLOG.md)  
+**優先級**: ~~P1~~ → 已結案  
 **負責人**: Infrastructure Team
 
 **前置條件**: ✅ Phase 2 LINE Bot 核心 MVP 上線（2026-06-11）
@@ -535,16 +536,15 @@ ls -la ~/Pictures/Photos\ Library.photoslibrary/originals/
 
 - [x] Immich CLI 煙霧測試（單張 HEIC 上傳成功）
 - [x] 多 library config + sync 腳本
-- [x] dry-run local-archive（5023 new / 0 dup）
-- [ ] local-archive 全量（🚧 進行中 ~44 GB）
-- [ ] icloud-primary 全量
-- [x] LaunchAgent 安裝
-- [ ] 增量同步實測
-- [ ] external-library 磁碟清理
+- [x] dry-run local-archive（0 new / 5023 dup）
+- [x] local-archive 全量（5023/5023）
+- [x] icloud-primary 全量（3512/3512 · dry-run 0 new）
+- [x] LaunchAgent 安裝 + 增量實測（2026-06-12）
+- [x] external-library 磁碟清理（~86 GB）
 
 ---
 
-**最後更新**: 2026-06-11
+**最後更新**: 2026-06-13（歸檔）
 
 ---
 
@@ -569,5 +569,5 @@ ls -la ~/Pictures/Photos\ Library.photoslibrary/originals/
 
 ---
 
-**優先級**: **P1 — 當前主軌**  
+**優先級**: ~~P1~~ → ✅ 已結案（2026-06-13）  
 **負責人**: Infrastructure Team

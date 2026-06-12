@@ -38,8 +38,8 @@ tier_policy:
   target_library_id: local-archive
   # 二擇一或同時（超出任一條件即 eligible）
   max_size_gb: 50
-  # cutoff_date: "2023-01-01"   # 此日期之前移出 iCloud library
-  # dry_run: true
+  cutoff_date: "2023-01-01"   # PoC: tier-policy-poc.sh 預設讀此欄位
+  dry_run: true
 
 sync:
   recursive: true

@@ -70,7 +70,7 @@ tail -f ~/Library/Logs/immich-photo-sync/sync.log
 
 ## 儲存盤點
 
-Immich 磁碟組成與 duplicate 分析（2026-06-12 更新）→ [STORAGE_AUDIT.md](../../docs/00_planning/photo-sync/runbooks/STORAGE_AUDIT.md)
+Immich 磁碟組成與 duplicate 分析 → [STORAGE_AUDIT.md](../../docs/20_guides/photo-sync/runbooks/STORAGE_AUDIT.md)
 
 Local library hash / 時間戳抽查：
 
@@ -79,9 +79,27 @@ Local library hash / 時間戳抽查：
 # 報告：~/Library/Logs/immich-photo-sync/audit-local-duplicates.json
 ```
 
+## Phase 3.5 tier policy（PoC）
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"   # osxphotos via pip3 install --user
+./scripts/photo-sync/tier-policy-poc.sh [--cutoff-date YYYY-MM-DD]
+```
+
+Dry-run JSON → `~/Library/Logs/immich-photo-sync/tier/tier-poc-*.json`  
+規格：[tier-policy/10_REQUIREMENTS.md](../../docs/00_planning/photo-sync/tier-policy/10_REQUIREMENTS.md)
+
+Install osxphotos（無 Homebrew formula）：
+
+```bash
+pip3 install --user osxphotos
+```
+
 ## iCloud 分層（Phase 3.5）
 
-`tier_policy` 規劃中；需 osxphotos。目前手動搬移 + 兩 library 都 sync。
+規格：[tier-policy/10_REQUIREMENTS.md](../../docs/00_planning/photo-sync/tier-policy/10_REQUIREMENTS.md)
+
+`tier_policy` 已寫入 config（`enabled: false`）；PoC 進行中（osxphotos）。
 
 ## 備份
 
