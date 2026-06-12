@@ -1,6 +1,6 @@
 # Phase 3: 照片同步與上傳
 
-**狀態**: 🚧 **local-archive ✅** · **icloud-primary ~22%**（3511 new / 1 dup）  
+**狀態**: ✅ **全量完成**（2026-06-12）· 增量待驗  
 **預估時間**: local 收尾 + icloud 增量；Phase 3.5 分層另計  
 **優先級**: **P1 — 當前主軌**（原檔 + EXIF SSOT）  
 **負責人**: Infrastructure Team

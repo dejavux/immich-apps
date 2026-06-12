@@ -20,6 +20,7 @@ import {
   ensureSceneQueryEn,
   parseLlmSearchResponse,
   parseSearchPlanFallback,
+  sanitizeSearchPlan,
   summarizeSessionForPrompt,
   type RawLlmSearchResponse,
 } from "./photo-search-prompt";
@@ -105,11 +106,17 @@ export class PhotoSearchService {
     plan: PhotoSearchPlan,
     message: string,
   ): PhotoSearchPlan {
-    return ensureSceneQueryEn(
-      ensureActivityFromText(
-        ensureAgeFromText(ensureRelativeDatesFromText(plan, message), message),
-        message,
+    return sanitizeSearchPlan(
+      ensureSceneQueryEn(
+        ensureActivityFromText(
+          ensureAgeFromText(
+            ensureRelativeDatesFromText(plan, message),
+            message,
+          ),
+          message,
+        ),
       ),
+      message,
     );
   }
 

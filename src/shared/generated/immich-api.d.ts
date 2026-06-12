@@ -11,10 +11,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `activity.read` permission. */
+    /**
+     * List all activities
+     * @description Returns a list of activities for the selected asset or album. The activities are returned in sorted order, with the oldest activities appearing first.
+     */
     get: operations["getActivities"];
     put?: never;
-    /** @description This endpoint requires the `activity.create` permission. */
+    /**
+     * Create an activity
+     * @description Create a like or a comment for an album, or an asset in an album.
+     */
     post: operations["createActivity"];
     delete?: never;
     options?: never;
@@ -29,7 +35,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `activity.statistics` permission. */
+    /**
+     * Retrieve activity statistics
+     * @description Returns the number of likes and comments for a given album or asset in an album.
+     */
     get: operations["getActivityStatistics"];
     put?: never;
     post?: never;
@@ -49,7 +58,10 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** @description This endpoint requires the `activity.delete` permission. */
+    /**
+     * Delete an activity
+     * @description Removes a like or comment from a given album or asset in an album.
+     */
     delete: operations["deleteActivity"];
     options?: never;
     head?: never;
@@ -65,8 +77,175 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint is an admin-only route, and requires the `adminAuth.unlinkAll` permission. */
+    /**
+     * Unlink all OAuth accounts
+     * @description Unlinks all OAuth accounts associated with user accounts in the system.
+     */
     post: operations["unlinkAllOAuthAccountsAdmin"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/database-backups": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List database backups
+     * @description Get the list of the successful and failed backups
+     */
+    get: operations["listDatabaseBackups"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete database backup
+     * @description Delete a backup by its filename
+     */
+    delete: operations["deleteDatabaseBackup"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/database-backups/start-restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start database backup restore flow
+     * @description Put Immich into maintenance mode to restore a backup (Immich must not be configured)
+     */
+    post: operations["startDatabaseRestoreFlow"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/database-backups/upload": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upload database backup
+     * @description Uploads .sql/.sql.gz file to restore backup from
+     */
+    post: operations["uploadDatabaseBackup"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/database-backups/{filename}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download database backup
+     * @description Downloads the database backup file
+     */
+    get: operations["downloadDatabaseBackup"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/maintenance": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Set maintenance mode
+     * @description Put Immich into or take it out of maintenance mode
+     */
+    post: operations["setMaintenanceMode"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/maintenance/detect-install": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Detect existing install
+     * @description Collect integrity checks and other heuristics about local data.
+     */
+    get: operations["detectPriorInstall"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/maintenance/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Log into maintenance mode
+     * @description Login with maintenance token or cookie to receive current information and perform further actions.
+     */
+    post: operations["maintenanceLogin"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/maintenance/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get maintenance mode status
+     * @description Fetch information about the currently running maintenance action.
+     */
+    get: operations["getMaintenanceStatus"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -82,6 +261,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Create a notification
+     * @description Create a new notification for a specific user.
+     */
     post: operations["createNotification"];
     delete?: never;
     options?: never;
@@ -98,6 +281,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Render email template
+     * @description Retrieve a preview of the provided email template.
+     */
     post: operations["getNotificationTemplateAdmin"];
     delete?: never;
     options?: never;
@@ -114,6 +301,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Send test email
+     * @description Send a test email using the provided SMTP configuration.
+     */
     post: operations["sendTestEmailAdmin"];
     delete?: never;
     options?: never;
@@ -128,10 +319,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `adminUser.read` permission. */
+    /**
+     * Search users
+     * @description Search for users.
+     */
     get: operations["searchUsersAdmin"];
     put?: never;
-    /** @description This endpoint is an admin-only route, and requires the `adminUser.create` permission. */
+    /**
+     * Create a user
+     * @description Create a new user.
+     */
     post: operations["createUserAdmin"];
     delete?: never;
     options?: never;
@@ -146,12 +343,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `adminUser.read` permission. */
+    /**
+     * Retrieve a user
+     * @description Retrieve  a specific user by their ID.
+     */
     get: operations["getUserAdmin"];
-    /** @description This endpoint is an admin-only route, and requires the `adminUser.update` permission. */
+    /**
+     * Update a user
+     * @description Update an existing user.
+     */
     put: operations["updateUserAdmin"];
     post?: never;
-    /** @description This endpoint is an admin-only route, and requires the `adminUser.delete` permission. */
+    /**
+     * Delete a user
+     * @description Delete a user.
+     */
     delete: operations["deleteUserAdmin"];
     options?: never;
     head?: never;
@@ -165,9 +371,15 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `adminUser.read` permission. */
+    /**
+     * Retrieve user preferences
+     * @description Retrieve the preferences of a specific user.
+     */
     get: operations["getUserPreferencesAdmin"];
-    /** @description This endpoint is an admin-only route, and requires the `adminUser.update` permission. */
+    /**
+     * Update user preferences
+     * @description Update the preferences of a specific user.
+     */
     put: operations["updateUserPreferencesAdmin"];
     post?: never;
     delete?: never;
@@ -185,8 +397,31 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint is an admin-only route, and requires the `adminUser.delete` permission. */
+    /**
+     * Restore a deleted user
+     * @description Restore a previously deleted user.
+     */
     post: operations["restoreUserAdmin"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/users/{id}/sessions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve user sessions
+     * @description Retrieve all sessions for a specific user.
+     */
+    get: operations["getUserSessionsAdmin"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -200,7 +435,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `adminUser.read` permission. */
+    /**
+     * Retrieve user statistics
+     * @description Retrieve asset statistics for a specific user.
+     */
     get: operations["getUserStatisticsAdmin"];
     put?: never;
     post?: never;
@@ -217,10 +455,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `album.read` permission. */
+    /**
+     * List all albums
+     * @description Retrieve a list of albums available to the authenticated user.
+     */
     get: operations["getAllAlbums"];
     put?: never;
-    /** @description This endpoint requires the `album.create` permission. */
+    /**
+     * Create an album
+     * @description Create a new album. The album can also be created with initial users and assets.
+     */
     post: operations["createAlbum"];
     delete?: never;
     options?: never;
@@ -236,7 +480,10 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `albumAsset.create` permission. */
+    /**
+     * Add assets to albums
+     * @description Send a list of asset IDs and album IDs to add each asset to each album.
+     */
     put: operations["addAssetsToAlbums"];
     post?: never;
     delete?: never;
@@ -252,7 +499,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `album.statistics` permission. */
+    /**
+     * Retrieve album statistics
+     * @description Returns statistics about the albums available to the authenticated user.
+     */
     get: operations["getAlbumStatistics"];
     put?: never;
     post?: never;
@@ -269,15 +519,24 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `album.read` permission. */
+    /**
+     * Retrieve an album
+     * @description Retrieve information about a specific album by its ID.
+     */
     get: operations["getAlbumInfo"];
     put?: never;
     post?: never;
-    /** @description This endpoint requires the `album.delete` permission. */
+    /**
+     * Delete an album
+     * @description Delete a specific album by its ID. Note the album is initially trashed and then immediately scheduled for deletion, but relies on a background job to complete the process.
+     */
     delete: operations["deleteAlbum"];
     options?: never;
     head?: never;
-    /** @description This endpoint requires the `album.update` permission. */
+    /**
+     * Update an album
+     * @description Update the information of a specific album by its ID. This endpoint can be used to update the album name, description, sort order, etc. However, it is not used to add or remove assets or users from the album.
+     */
     patch: operations["updateAlbumInfo"];
     trace?: never;
   };
@@ -289,10 +548,16 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `albumAsset.create` permission. */
+    /**
+     * Add assets to an album
+     * @description Add multiple assets to a specific album by its ID.
+     */
     put: operations["addAssetsToAlbum"];
     post?: never;
-    /** @description This endpoint requires the `albumAsset.delete` permission. */
+    /**
+     * Remove assets from an album
+     * @description Remove multiple assets from a specific album by its ID.
+     */
     delete: operations["removeAssetFromAlbum"];
     options?: never;
     head?: never;
@@ -307,10 +572,16 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `albumUser.update` permission. */
+    /**
+     * Update user role
+     * @description Change the role for a specific user in a specific album.
+     */
     put: operations["updateAlbumUser"];
     post?: never;
-    /** @description This endpoint requires the `albumUser.delete` permission. */
+    /**
+     * Remove user from album
+     * @description Remove a user from an album. Use an ID of "me" to leave a shared album.
+     */
     delete: operations["removeUserFromAlbum"];
     options?: never;
     head?: never;
@@ -325,7 +596,10 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `albumUser.create` permission. */
+    /**
+     * Share album with users
+     * @description Share an album with multiple users. Each user can be given a specific role in the album.
+     */
     put: operations["addUsersToAlbum"];
     post?: never;
     delete?: never;
@@ -341,10 +615,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `apiKey.read` permission. */
+    /**
+     * List all API keys
+     * @description Retrieve all API keys of the current user.
+     */
     get: operations["getApiKeys"];
     put?: never;
-    /** @description This endpoint requires the `apiKey.create` permission. */
+    /**
+     * Create an API key
+     * @description Creates a new API key. It will be limited to the permissions specified.
+     */
     post: operations["createApiKey"];
     delete?: never;
     options?: never;
@@ -359,6 +639,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Retrieve the current API key
+     * @description Retrieve the API key that is used to access this endpoint.
+     */
     get: operations["getMyApiKey"];
     put?: never;
     post?: never;
@@ -375,12 +659,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `apiKey.read` permission. */
+    /**
+     * Retrieve an API key
+     * @description Retrieve an API key by its ID. The current user must own this API key.
+     */
     get: operations["getApiKey"];
-    /** @description This endpoint requires the `apiKey.update` permission. */
+    /**
+     * Update an API key
+     * @description Updates the name and permissions of an API key by its ID. The current user must own this API key.
+     */
     put: operations["updateApiKey"];
     post?: never;
-    /** @description This endpoint requires the `apiKey.delete` permission. */
+    /**
+     * Delete an API key
+     * @description Deletes an API key identified by its ID. The current user must own this API key.
+     */
     delete: operations["deleteApiKey"];
     options?: never;
     head?: never;
@@ -395,11 +688,20 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `asset.update` permission. */
+    /**
+     * Update assets
+     * @description Updates multiple assets at the same time.
+     */
     put: operations["updateAssets"];
-    /** @description This endpoint requires the `asset.upload` permission. */
+    /**
+     * Upload asset
+     * @description Uploads a new asset to the server.
+     */
     post: operations["uploadAsset"];
-    /** @description This endpoint requires the `asset.delete` permission. */
+    /**
+     * Delete assets
+     * @description Deletes multiple assets at the same time.
+     */
     delete: operations["deleteAssets"];
     options?: never;
     head?: never;
@@ -416,10 +718,30 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * checkBulkUpload
-     * @description Checks if assets exist by checksums. This endpoint requires the `asset.upload` permission.
+     * Check bulk upload
+     * @description Determine which assets have already been uploaded to the server based on their SHA1 checksums.
      */
     post: operations["checkBulkUpload"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/assets/copy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Copy asset
+     * @description Copy asset information like albums, tags, etc. from one asset to another.
+     */
+    put: operations["copyAsset"];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -434,7 +756,8 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * getAllUserAssetsByDeviceId
+     * Retrieve assets by device ID
+     * @deprecated
      * @description Get all asset of a device that are in the database, ID only.
      */
     get: operations["getAllUserAssetsByDeviceId"];
@@ -456,7 +779,7 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * checkExistingAssets
+     * Check existing assets
      * @description Checks if multiple assets exist on the server and returns all existing - used by background backup
      */
     post: operations["checkExistingAssets"];
@@ -475,8 +798,36 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Run an asset job
+     * @description Run a specific job on a set of assets.
+     */
     post: operations["runAssetJobs"];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/assets/metadata": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Upsert asset metadata
+     * @description Upsert metadata key-value pairs for multiple assets.
+     */
+    put: operations["updateBulkAssetMetadata"];
+    post?: never;
+    /**
+     * Delete asset metadata
+     * @description Delete metadata key-value pairs for multiple assets.
+     */
+    delete: operations["deleteBulkAssetMetadata"];
     options?: never;
     head?: never;
     patch?: never;
@@ -490,8 +841,9 @@ export interface paths {
       cookie?: never;
     };
     /**
+     * Get random assets
      * @deprecated
-     * @description This property was deprecated in v1.116.0. This endpoint requires the `asset.read` permission.
+     * @description Retrieve a specified number of random assets for the authenticated user.
      */
     get: operations["getRandom"];
     put?: never;
@@ -509,7 +861,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.statistics` permission. */
+    /**
+     * Get asset statistics
+     * @description Retrieve various statistics about the assets owned by the authenticated user.
+     */
     get: operations["getAssetStatistics"];
     put?: never;
     post?: never;
@@ -526,12 +881,46 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Retrieve an asset
+     * @description Retrieve detailed information about a specific asset.
+     */
     get: operations["getAssetInfo"];
-    /** @description This endpoint requires the `asset.update` permission. */
+    /**
+     * Update an asset
+     * @description Update information of a specific asset.
+     */
     put: operations["updateAsset"];
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/assets/{id}/edits": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve edits for an existing asset
+     * @description Retrieve a series of edit actions (crop, rotate, mirror) associated with the specified asset.
+     */
+    get: operations["getAssetEdits"];
+    /**
+     * Apply edits to an existing asset
+     * @description Apply a series of edit actions (crop, rotate, mirror) to the specified asset.
+     */
+    put: operations["editAsset"];
+    post?: never;
+    /**
+     * Remove edits from an existing asset
+     * @description Removes all edit actions (crop, rotate, mirror) associated with the specified asset.
+     */
+    delete: operations["removeAssetEdits"];
     options?: never;
     head?: never;
     patch?: never;
@@ -544,9 +933,15 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Get asset metadata
+     * @description Retrieve all metadata key-value pairs associated with the specified asset.
+     */
     get: operations["getAssetMetadata"];
-    /** @description This endpoint requires the `asset.update` permission. */
+    /**
+     * Update asset metadata
+     * @description Update or add metadata key-value pairs for the specified asset.
+     */
     put: operations["updateAssetMetadata"];
     post?: never;
     delete?: never;
@@ -562,12 +957,38 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Retrieve asset metadata by key
+     * @description Retrieve the value of a specific metadata key associated with the specified asset.
+     */
     get: operations["getAssetMetadataByKey"];
     put?: never;
     post?: never;
-    /** @description This endpoint requires the `asset.update` permission. */
+    /**
+     * Delete asset metadata by key
+     * @description Delete a specific metadata key-value pair associated with the specified asset.
+     */
     delete: operations["deleteAssetMetadata"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/assets/{id}/ocr": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve asset OCR data
+     * @description Retrieve all OCR (Optical Character Recognition) data associated with the specified asset.
+     */
+    get: operations["getAssetOcr"];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -580,12 +1001,15 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.download` permission. */
+    /**
+     * Download original asset
+     * @description Downloads the original file of the specified asset.
+     */
     get: operations["downloadAsset"];
     /**
-     * Replace the asset with new file, without changing its id
+     * Replace asset
      * @deprecated
-     * @description This property was deprecated in v1.142.0. Replace the asset with new file, without changing its id. This endpoint requires the `asset.replace` permission.
+     * @description Replace the asset with new file, without changing its id.
      */
     put: operations["replaceAsset"];
     post?: never;
@@ -602,7 +1026,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.view` permission. */
+    /**
+     * View asset thumbnail
+     * @description Retrieve the thumbnail image for the specified asset. Viewing the fullsize thumbnail might redirect to downloadAsset, which requires a different permission.
+     */
     get: operations["viewAsset"];
     put?: never;
     post?: never;
@@ -619,7 +1046,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.view` permission. */
+    /**
+     * Play asset video
+     * @description Streams the video file for the specified asset. This endpoint also supports byte range requests.
+     */
     get: operations["playAssetVideo"];
     put?: never;
     post?: never;
@@ -638,6 +1068,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Register admin
+     * @description Create the first admin user in the system.
+     */
     post: operations["signUpAdmin"];
     delete?: never;
     options?: never;
@@ -654,7 +1088,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `auth.changePassword` permission. */
+    /**
+     * Change password
+     * @description Change the password of the current user.
+     */
     post: operations["changePassword"];
     delete?: never;
     options?: never;
@@ -671,6 +1108,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Login
+     * @description Login with username and password and receive a session token.
+     */
     post: operations["login"];
     delete?: never;
     options?: never;
@@ -687,6 +1128,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Logout
+     * @description Logout the current user and invalidate the session token.
+     */
     post: operations["logout"];
     delete?: never;
     options?: never;
@@ -702,11 +1147,20 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `pinCode.update` permission. */
+    /**
+     * Change pin code
+     * @description Change the pin code for the current user.
+     */
     put: operations["changePinCode"];
-    /** @description This endpoint requires the `pinCode.create` permission. */
+    /**
+     * Setup pin code
+     * @description Setup a new pin code for the current user.
+     */
     post: operations["setupPinCode"];
-    /** @description This endpoint requires the `pinCode.delete` permission. */
+    /**
+     * Reset pin code
+     * @description Reset the pin code for the current user by providing the account password
+     */
     delete: operations["resetPinCode"];
     options?: never;
     head?: never;
@@ -722,6 +1176,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Lock auth session
+     * @description Remove elevated access to locked assets from the current session.
+     */
     post: operations["lockAuthSession"];
     delete?: never;
     options?: never;
@@ -738,6 +1196,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Unlock auth session
+     * @description Temporarily grant the session elevated access to locked assets by providing the correct PIN code.
+     */
     post: operations["unlockAuthSession"];
     delete?: never;
     options?: never;
@@ -752,6 +1214,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Retrieve auth status
+     * @description Get information about the current session, including whether the user has a password, and if the session can access locked assets.
+     */
     get: operations["getAuthStatus"];
     put?: never;
     post?: never;
@@ -770,6 +1236,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Validate access token
+     * @description Validate the current authorization method is still valid.
+     */
     post: operations["validateAccessToken"];
     delete?: never;
     options?: never;
@@ -786,7 +1256,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `asset.download` permission. */
+    /**
+     * Download asset archive
+     * @description Download a ZIP archive containing the specified assets. The assets must have been previously requested via the "getDownloadInfo" endpoint.
+     */
     post: operations["downloadArchive"];
     delete?: never;
     options?: never;
@@ -803,7 +1276,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `asset.download` permission. */
+    /**
+     * Retrieve download information
+     * @description Retrieve information about how to request a download for the specified assets or album. The response includes groups of assets that can be downloaded together.
+     */
     post: operations["getDownloadInfo"];
     delete?: never;
     options?: never;
@@ -818,12 +1294,38 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `duplicate.read` permission. */
+    /**
+     * Retrieve duplicates
+     * @description Retrieve a list of duplicate assets available to the authenticated user.
+     */
     get: operations["getAssetDuplicates"];
     put?: never;
     post?: never;
-    /** @description This endpoint requires the `duplicate.delete` permission. */
+    /**
+     * Delete duplicates
+     * @description Delete multiple duplicate assets specified by their IDs.
+     */
     delete: operations["deleteDuplicates"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/duplicates/resolve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resolve duplicate groups
+     * @description Resolve duplicate groups by synchronizing metadata across assets and deleting/trashing duplicates.
+     */
+    post: operations["resolveDuplicates"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -839,7 +1341,10 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** @description This endpoint requires the `duplicate.delete` permission. */
+    /**
+     * Delete a duplicate
+     * @description Delete a single duplicate asset specified by its ID.
+     */
     delete: operations["deleteDuplicate"];
     options?: never;
     head?: never;
@@ -853,10 +1358,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `face.read` permission. */
+    /**
+     * Retrieve faces for asset
+     * @description Retrieve all faces belonging to an asset.
+     */
     get: operations["getFaces"];
     put?: never;
-    /** @description This endpoint requires the `face.create` permission. */
+    /**
+     * Create a face
+     * @description Create a new face that has not been discovered by facial recognition. The content of the bounding box is considered a face.
+     */
     post: operations["createFace"];
     delete?: never;
     options?: never;
@@ -872,10 +1383,16 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `face.update` permission. */
+    /**
+     * Re-assign a face to another person
+     * @description Re-assign the face provided in the body to the person identified by the id in the path parameter.
+     */
     put: operations["reassignFacesById"];
     post?: never;
-    /** @description This endpoint requires the `face.delete` permission. */
+    /**
+     * Delete a face
+     * @description Delete a face identified by the id. Optionally can be force deleted.
+     */
     delete: operations["deleteFace"];
     options?: never;
     head?: never;
@@ -889,10 +1406,17 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `job.read` permission. */
-    get: operations["getAllJobsStatus"];
+    /**
+     * Retrieve queue counts and status
+     * @deprecated
+     * @description Retrieve the counts of the current queue, as well as the current status.
+     */
+    get: operations["getQueuesLegacy"];
     put?: never;
-    /** @description This endpoint is an admin-only route, and requires the `job.create` permission. */
+    /**
+     * Create a manual job
+     * @description Run a specific job. Most jobs are queued automatically, but this endpoint allows for manual creation of a handful of jobs, including various cleanup tasks, as well as creating a new database backup.
+     */
     post: operations["createJob"];
     delete?: never;
     options?: never;
@@ -900,7 +1424,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/jobs/{id}": {
+  "/jobs/{name}": {
     parameters: {
       query?: never;
       header?: never;
@@ -908,8 +1432,12 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint is an admin-only route, and requires the `job.create` permission. */
-    put: operations["sendJobCommand"];
+    /**
+     * Run jobs
+     * @deprecated
+     * @description Queue all assets for a specific job type. Defaults to only queueing assets that have not yet been processed, but the force command can be used to re-process all assets.
+     */
+    put: operations["runQueueCommandLegacy"];
     post?: never;
     delete?: never;
     options?: never;
@@ -924,10 +1452,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `library.read` permission. */
+    /**
+     * Retrieve libraries
+     * @description Retrieve a list of external libraries.
+     */
     get: operations["getAllLibraries"];
     put?: never;
-    /** @description This endpoint is an admin-only route, and requires the `library.create` permission. */
+    /**
+     * Create a library
+     * @description Create a new external library.
+     */
     post: operations["createLibrary"];
     delete?: never;
     options?: never;
@@ -942,12 +1476,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `library.read` permission. */
+    /**
+     * Retrieve a library
+     * @description Retrieve an external library by its ID.
+     */
     get: operations["getLibrary"];
-    /** @description This endpoint is an admin-only route, and requires the `library.update` permission. */
+    /**
+     * Update a library
+     * @description Update an existing external library.
+     */
     put: operations["updateLibrary"];
     post?: never;
-    /** @description This endpoint is an admin-only route, and requires the `library.delete` permission. */
+    /**
+     * Delete a library
+     * @description Delete an external library by its ID.
+     */
     delete: operations["deleteLibrary"];
     options?: never;
     head?: never;
@@ -963,7 +1506,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint is an admin-only route, and requires the `library.update` permission. */
+    /**
+     * Scan a library
+     * @description Queue a scan for the external library to find and import new assets.
+     */
     post: operations["scanLibrary"];
     delete?: never;
     options?: never;
@@ -978,7 +1524,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `library.statistics` permission. */
+    /**
+     * Retrieve library statistics
+     * @description Retrieve statistics for a specific external library, including number of videos, images, and storage usage.
+     */
     get: operations["getLibraryStatistics"];
     put?: never;
     post?: never;
@@ -997,6 +1546,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Validate library settings
+     * @description Validate the settings of an external library.
+     */
     post: operations["validate"];
     delete?: never;
     options?: never;
@@ -1011,6 +1564,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Retrieve map markers
+     * @description Retrieve a list of latitude and longitude coordinates for every asset with location data.
+     */
     get: operations["getMapMarkers"];
     put?: never;
     post?: never;
@@ -1027,6 +1584,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Reverse geocode coordinates
+     * @description Retrieve location information (e.g., city, country) for given latitude and longitude coordinates.
+     */
     get: operations["reverseGeocode"];
     put?: never;
     post?: never;
@@ -1043,10 +1604,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `memory.read` permission. */
+    /**
+     * Retrieve memories
+     * @description Retrieve a list of memories. Memories are sorted descending by creation date by default, although they can also be sorted in ascending order, or randomly.
+     */
     get: operations["searchMemories"];
     put?: never;
-    /** @description This endpoint requires the `memory.create` permission. */
+    /**
+     * Create a memory
+     * @description Create a new memory by providing a name, description, and a list of asset IDs to include in the memory.
+     */
     post: operations["createMemory"];
     delete?: never;
     options?: never;
@@ -1061,7 +1628,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `memory.statistics` permission. */
+    /**
+     * Retrieve memories statistics
+     * @description Retrieve statistics about memories, such as total count and other relevant metrics.
+     */
     get: operations["memoriesStatistics"];
     put?: never;
     post?: never;
@@ -1078,12 +1648,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `memory.read` permission. */
+    /**
+     * Retrieve a memory
+     * @description Retrieve a specific memory by its ID.
+     */
     get: operations["getMemory"];
-    /** @description This endpoint requires the `memory.update` permission. */
+    /**
+     * Update a memory
+     * @description Update an existing memory by its ID.
+     */
     put: operations["updateMemory"];
     post?: never;
-    /** @description This endpoint requires the `memory.delete` permission. */
+    /**
+     * Delete a memory
+     * @description Delete a specific memory by its ID.
+     */
     delete: operations["deleteMemory"];
     options?: never;
     head?: never;
@@ -1098,10 +1677,16 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `memoryAsset.create` permission. */
+    /**
+     * Add assets to a memory
+     * @description Add a list of asset IDs to a specific memory.
+     */
     put: operations["addMemoryAssets"];
     post?: never;
-    /** @description This endpoint requires the `memoryAsset.delete` permission. */
+    /**
+     * Remove assets from a memory
+     * @description Remove a list of asset IDs from a specific memory.
+     */
     delete: operations["removeMemoryAssets"];
     options?: never;
     head?: never;
@@ -1115,12 +1700,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `notification.read` permission. */
+    /**
+     * Retrieve notifications
+     * @description Retrieve a list of notifications.
+     */
     get: operations["getNotifications"];
-    /** @description This endpoint requires the `notification.update` permission. */
+    /**
+     * Update notifications
+     * @description Update a list of notifications. Allows to bulk-set the read status of notifications.
+     */
     put: operations["updateNotifications"];
     post?: never;
-    /** @description This endpoint requires the `notification.delete` permission. */
+    /**
+     * Delete notifications
+     * @description Delete a list of notifications at once.
+     */
     delete: operations["deleteNotifications"];
     options?: never;
     head?: never;
@@ -1134,12 +1728,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `notification.read` permission. */
+    /**
+     * Get a notification
+     * @description Retrieve a specific notification identified by id.
+     */
     get: operations["getNotification"];
-    /** @description This endpoint requires the `notification.update` permission. */
+    /**
+     * Update a notification
+     * @description Update a specific notification to set its read status.
+     */
     put: operations["updateNotification"];
     post?: never;
-    /** @description This endpoint requires the `notification.delete` permission. */
+    /**
+     * Delete a notification
+     * @description Delete a specific notification.
+     */
     delete: operations["deleteNotification"];
     options?: never;
     head?: never;
@@ -1155,6 +1758,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Start OAuth
+     * @description Initiate the OAuth authorization process.
+     */
     post: operations["startOAuth"];
     delete?: never;
     options?: never;
@@ -1171,6 +1778,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Finish OAuth
+     * @description Complete the OAuth authorization process by exchanging the authorization code for a session token.
+     */
     post: operations["finishOAuth"];
     delete?: never;
     options?: never;
@@ -1187,6 +1798,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Link OAuth account
+     * @description Link an OAuth account to the authenticated user.
+     */
     post: operations["linkOAuthAccount"];
     delete?: never;
     options?: never;
@@ -1201,6 +1816,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Redirect OAuth to mobile
+     * @description Requests to this URL are automatically forwarded to the mobile app, and is used in some cases for OAuth redirecting.
+     */
     get: operations["redirectOAuthToMobile"];
     put?: never;
     post?: never;
@@ -1219,6 +1838,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Unlink OAuth account
+     * @description Unlink the OAuth account from the authenticated user.
+     */
     post: operations["unlinkOAuthAccount"];
     delete?: never;
     options?: never;
@@ -1233,10 +1856,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `partner.read` permission. */
+    /**
+     * Retrieve partners
+     * @description Retrieve a list of partners with whom assets are shared.
+     */
     get: operations["getPartners"];
     put?: never;
-    /** @description This endpoint requires the `partner.create` permission. */
+    /**
+     * Create a partner
+     * @description Create a new partner to share assets with.
+     */
     post: operations["createPartner"];
     delete?: never;
     options?: never;
@@ -1252,14 +1881,21 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `partner.update` permission. */
+    /**
+     * Update a partner
+     * @description Specify whether a partner's assets should appear in the user's timeline.
+     */
     put: operations["updatePartner"];
     /**
+     * Create a partner
      * @deprecated
-     * @description This property was deprecated in v1.141.0. This endpoint requires the `partner.create` permission.
+     * @description Create a new partner to share assets with.
      */
     post: operations["createPartnerDeprecated"];
-    /** @description This endpoint requires the `partner.delete` permission. */
+    /**
+     * Remove a partner
+     * @description Stop sharing assets with a partner.
+     */
     delete: operations["removePartner"];
     options?: never;
     head?: never;
@@ -1273,13 +1909,25 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `person.read` permission. */
+    /**
+     * Get all people
+     * @description Retrieve a list of all people.
+     */
     get: operations["getAllPeople"];
-    /** @description This endpoint requires the `person.update` permission. */
+    /**
+     * Update people
+     * @description Bulk update multiple people at once.
+     */
     put: operations["updatePeople"];
-    /** @description This endpoint requires the `person.create` permission. */
+    /**
+     * Create a person
+     * @description Create a new person that can have multiple faces assigned to them.
+     */
     post: operations["createPerson"];
-    /** @description This endpoint requires the `person.delete` permission. */
+    /**
+     * Delete people
+     * @description Bulk delete a list of people at once.
+     */
     delete: operations["deletePeople"];
     options?: never;
     head?: never;
@@ -1293,12 +1941,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `person.read` permission. */
+    /**
+     * Get a person
+     * @description Retrieve a person by id.
+     */
     get: operations["getPerson"];
-    /** @description This endpoint requires the `person.update` permission. */
+    /**
+     * Update person
+     * @description Update an individual person.
+     */
     put: operations["updatePerson"];
     post?: never;
-    /** @description This endpoint requires the `person.delete` permission. */
+    /**
+     * Delete person
+     * @description Delete an individual person.
+     */
     delete: operations["deletePerson"];
     options?: never;
     head?: never;
@@ -1314,7 +1971,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `person.merge` permission. */
+    /**
+     * Merge people
+     * @description Merge a list of people into the person specified in the path parameter.
+     */
     post: operations["mergePerson"];
     delete?: never;
     options?: never;
@@ -1330,7 +1990,10 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `person.reassign` permission. */
+    /**
+     * Reassign faces
+     * @description Bulk reassign a list of faces to a different person.
+     */
     put: operations["reassignFaces"];
     post?: never;
     delete?: never;
@@ -1346,7 +2009,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `person.statistics` permission. */
+    /**
+     * Get person statistics
+     * @description Retrieve statistics about a specific person.
+     */
     get: operations["getPersonStatistics"];
     put?: never;
     post?: never;
@@ -1363,11 +2029,142 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `person.read` permission. */
+    /**
+     * Get person thumbnail
+     * @description Retrieve the thumbnail file for a person.
+     */
     get: operations["getPersonThumbnail"];
     put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/plugins": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List all plugins
+     * @description Retrieve a list of plugins available to the authenticated user.
+     */
+    get: operations["getPlugins"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/plugins/triggers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List all plugin triggers
+     * @description Retrieve a list of all available plugin triggers.
+     */
+    get: operations["getPluginTriggers"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/plugins/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve a plugin
+     * @description Retrieve information about a specific plugin by its ID.
+     */
+    get: operations["getPlugin"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/queues": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List all queues
+     * @description Retrieves a list of queues.
+     */
+    get: operations["getQueues"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/queues/{name}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve a queue
+     * @description Retrieves a specific queue by its name.
+     */
+    get: operations["getQueue"];
+    /**
+     * Update a queue
+     * @description Change the paused status of a specific queue.
+     */
+    put: operations["updateQueue"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/queues/{name}/jobs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve queue jobs
+     * @description Retrieves a list of queue jobs from the specified queue.
+     */
+    get: operations["getQueueJobs"];
+    put?: never;
+    post?: never;
+    /**
+     * Empty a queue
+     * @description Removes all jobs from the specified queue.
+     */
+    delete: operations["emptyQueue"];
     options?: never;
     head?: never;
     patch?: never;
@@ -1380,7 +2177,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Retrieve assets by city
+     * @description Retrieve a list of assets with each asset belonging to a different city. This endpoint is used on the places pages to show a single thumbnail for each city the user has assets in.
+     */
     get: operations["getAssetsByCity"];
     put?: never;
     post?: never;
@@ -1397,7 +2197,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Retrieve explore data
+     * @description Retrieve data for the explore section, such as popular people and places.
+     */
     get: operations["getExploreData"];
     put?: never;
     post?: never;
@@ -1416,7 +2219,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Search large assets
+     * @description Search for assets that are considered large based on specified criteria.
+     */
     post: operations["searchLargeAssets"];
     delete?: never;
     options?: never;
@@ -1433,7 +2239,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Search assets by metadata
+     * @description Search for assets based on various metadata criteria.
+     */
     post: operations["searchAssets"];
     delete?: never;
     options?: never;
@@ -1448,7 +2257,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `person.read` permission. */
+    /**
+     * Search people
+     * @description Search for people by name.
+     */
     get: operations["searchPerson"];
     put?: never;
     post?: never;
@@ -1465,7 +2277,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Search places
+     * @description Search for places by name.
+     */
     get: operations["searchPlaces"];
     put?: never;
     post?: never;
@@ -1484,7 +2299,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Search random assets
+     * @description Retrieve a random selection of assets based on the provided criteria.
+     */
     post: operations["searchRandom"];
     delete?: never;
     options?: never;
@@ -1501,7 +2319,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Smart asset search
+     * @description Perform a smart search for assets by using machine learning vectors to determine relevance.
+     */
     post: operations["searchSmart"];
     delete?: never;
     options?: never;
@@ -1518,7 +2339,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `asset.statistics` permission. */
+    /**
+     * Search asset statistics
+     * @description Retrieve statistical data about assets based on search criteria, such as the total matching count.
+     */
     post: operations["searchAssetStatistics"];
     delete?: never;
     options?: never;
@@ -1533,7 +2357,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Retrieve search suggestions
+     * @description Retrieve search suggestions based on partial input. This endpoint is used for typeahead search features.
+     */
     get: operations["getSearchSuggestions"];
     put?: never;
     post?: never;
@@ -1550,7 +2377,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `server.about` permission. */
+    /**
+     * Get server information
+     * @description Retrieve a list of information about the server.
+     */
     get: operations["getAboutInfo"];
     put?: never;
     post?: never;
@@ -1567,7 +2397,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `server.apkLinks` permission. */
+    /**
+     * Get APK links
+     * @description Retrieve links to the APKs for the current server version.
+     */
     get: operations["getApkLinks"];
     put?: never;
     post?: never;
@@ -1584,6 +2417,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get config
+     * @description Retrieve the current server configuration.
+     */
     get: operations["getServerConfig"];
     put?: never;
     post?: never;
@@ -1600,6 +2437,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get features
+     * @description Retrieve available features supported by this server.
+     */
     get: operations["getServerFeatures"];
     put?: never;
     post?: never;
@@ -1616,12 +2457,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `serverLicense.read` permission. */
+    /**
+     * Get product key
+     * @description Retrieve information about whether the server currently has a product key registered.
+     */
     get: operations["getServerLicense"];
-    /** @description This endpoint is an admin-only route, and requires the `serverLicense.update` permission. */
+    /**
+     * Set server product key
+     * @description Validate and set the server product key if successful.
+     */
     put: operations["setServerLicense"];
     post?: never;
-    /** @description This endpoint is an admin-only route, and requires the `serverLicense.delete` permission. */
+    /**
+     * Delete server product key
+     * @description Delete the currently set server product key.
+     */
     delete: operations["deleteServerLicense"];
     options?: never;
     head?: never;
@@ -1635,6 +2485,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get supported media types
+     * @description Retrieve all media types supported by the server.
+     */
     get: operations["getSupportedMediaTypes"];
     put?: never;
     post?: never;
@@ -1651,6 +2505,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Ping
+     * @description Pong
+     */
     get: operations["pingServer"];
     put?: never;
     post?: never;
@@ -1667,7 +2525,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `server.statistics` permission. */
+    /**
+     * Get statistics
+     * @description Retrieve statistics about the entire Immich instance such as asset counts.
+     */
     get: operations["getServerStatistics"];
     put?: never;
     post?: never;
@@ -1684,7 +2545,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `server.storage` permission. */
+    /**
+     * Get storage
+     * @description Retrieve the current storage utilization information of the server.
+     */
     get: operations["getStorage"];
     put?: never;
     post?: never;
@@ -1701,6 +2565,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get theme
+     * @description Retrieve the custom CSS, if existent.
+     */
     get: operations["getTheme"];
     put?: never;
     post?: never;
@@ -1717,6 +2585,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get server version
+     * @description Retrieve the current server version in semantic versioning (semver) format.
+     */
     get: operations["getServerVersion"];
     put?: never;
     post?: never;
@@ -1733,7 +2605,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `server.versionCheck` permission. */
+    /**
+     * Get version check status
+     * @description Retrieve information about the last time the version check ran.
+     */
     get: operations["getVersionCheck"];
     put?: never;
     post?: never;
@@ -1750,6 +2625,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get version history
+     * @description Retrieve a list of past versions the server has been on.
+     */
     get: operations["getVersionHistory"];
     put?: never;
     post?: never;
@@ -1766,12 +2645,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `session.read` permission. */
+    /**
+     * Retrieve sessions
+     * @description Retrieve a list of sessions for the user.
+     */
     get: operations["getSessions"];
     put?: never;
-    /** @description This endpoint requires the `session.create` permission. */
+    /**
+     * Create a session
+     * @description Create a session as a child to the current session. This endpoint is used for casting.
+     */
     post: operations["createSession"];
-    /** @description This endpoint requires the `session.delete` permission. */
+    /**
+     * Delete all sessions
+     * @description Delete all sessions for the user. This will not delete the current session.
+     */
     delete: operations["deleteAllSessions"];
     options?: never;
     head?: never;
@@ -1786,10 +2674,16 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `session.update` permission. */
+    /**
+     * Update a session
+     * @description Update a specific session identified by id.
+     */
     put: operations["updateSession"];
     post?: never;
-    /** @description This endpoint requires the `session.delete` permission. */
+    /**
+     * Delete a session
+     * @description Delete a specific session by id.
+     */
     delete: operations["deleteSession"];
     options?: never;
     head?: never;
@@ -1805,7 +2699,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `session.lock` permission. */
+    /**
+     * Lock a session
+     * @description Lock a specific session by id.
+     */
     post: operations["lockSession"];
     delete?: never;
     options?: never;
@@ -1820,11 +2717,37 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `sharedLink.read` permission. */
+    /**
+     * Retrieve all shared links
+     * @description Retrieve a list of all shared links.
+     */
     get: operations["getAllSharedLinks"];
     put?: never;
-    /** @description This endpoint requires the `sharedLink.create` permission. */
+    /**
+     * Create a shared link
+     * @description Create a new shared link.
+     */
     post: operations["createSharedLink"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/shared-links/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Shared link login
+     * @description Login to a password protected shared link
+     */
+    post: operations["sharedLinkLogin"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1838,6 +2761,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Retrieve current shared link
+     * @description Retrieve the current shared link associated with authentication method.
+     */
     get: operations["getMySharedLink"];
     put?: never;
     post?: never;
@@ -1854,15 +2781,24 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `sharedLink.read` permission. */
+    /**
+     * Retrieve a shared link
+     * @description Retrieve a specific shared link by its ID.
+     */
     get: operations["getSharedLinkById"];
     put?: never;
     post?: never;
-    /** @description This endpoint requires the `sharedLink.delete` permission. */
+    /**
+     * Delete a shared link
+     * @description Delete a specific shared link by its ID.
+     */
     delete: operations["removeSharedLink"];
     options?: never;
     head?: never;
-    /** @description This endpoint requires the `sharedLink.update` permission. */
+    /**
+     * Update a shared link
+     * @description Update an existing shared link by its ID.
+     */
     patch: operations["updateSharedLink"];
     trace?: never;
   };
@@ -1874,8 +2810,16 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
+    /**
+     * Add assets to a shared link
+     * @description Add assets to a specific shared link by its ID. This endpoint is only relevant for shared link of type individual.
+     */
     put: operations["addSharedLinkAssets"];
     post?: never;
+    /**
+     * Remove assets from a shared link
+     * @description Remove assets from a specific shared link by its ID. This endpoint is only relevant for shared link of type individual.
+     */
     delete: operations["removeSharedLinkAssets"];
     options?: never;
     head?: never;
@@ -1889,12 +2833,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `stack.read` permission. */
+    /**
+     * Retrieve stacks
+     * @description Retrieve a list of stacks.
+     */
     get: operations["searchStacks"];
     put?: never;
-    /** @description This endpoint requires the `stack.create` permission. */
+    /**
+     * Create a stack
+     * @description Create a new stack by providing a name and a list of asset IDs to include in the stack. If any of the provided asset IDs are primary assets of an existing stack, the existing stack will be merged into the newly created stack.
+     */
     post: operations["createStack"];
-    /** @description This endpoint requires the `stack.delete` permission. */
+    /**
+     * Delete stacks
+     * @description Delete multiple stacks by providing a list of stack IDs.
+     */
     delete: operations["deleteStacks"];
     options?: never;
     head?: never;
@@ -1908,12 +2861,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `stack.read` permission. */
+    /**
+     * Retrieve a stack
+     * @description Retrieve a specific stack by its ID.
+     */
     get: operations["getStack"];
-    /** @description This endpoint requires the `stack.update` permission. */
+    /**
+     * Update a stack
+     * @description Update an existing stack by its ID.
+     */
     put: operations["updateStack"];
     post?: never;
-    /** @description This endpoint requires the `stack.delete` permission. */
+    /**
+     * Delete a stack
+     * @description Delete a specific stack by its ID.
+     */
     delete: operations["deleteStack"];
     options?: never;
     head?: never;
@@ -1930,7 +2892,10 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** @description This endpoint requires the `stack.update` permission. */
+    /**
+     * Remove an asset from a stack
+     * @description Remove a specific asset from a stack by providing the stack ID and asset ID.
+     */
     delete: operations["removeAssetFromStack"];
     options?: never;
     head?: never;
@@ -1944,12 +2909,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `syncCheckpoint.read` permission. */
+    /**
+     * Retrieve acknowledgements
+     * @description Retrieve the synchronization acknowledgments for the current session.
+     */
     get: operations["getSyncAck"];
     put?: never;
-    /** @description This endpoint requires the `syncCheckpoint.update` permission. */
+    /**
+     * Acknowledge changes
+     * @description Send a list of synchronization acknowledgements to confirm that the latest changes have been received.
+     */
     post: operations["sendSyncAck"];
-    /** @description This endpoint requires the `syncCheckpoint.delete` permission. */
+    /**
+     * Delete acknowledgements
+     * @description Delete specific synchronization acknowledgments.
+     */
     delete: operations["deleteSyncAck"];
     options?: never;
     head?: never;
@@ -1965,6 +2939,11 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Get delta sync for user
+     * @deprecated
+     * @description Retrieve changed assets since the last sync for the authenticated user.
+     */
     post: operations["getDeltaSync"];
     delete?: never;
     options?: never;
@@ -1981,6 +2960,11 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Get full sync for user
+     * @deprecated
+     * @description Retrieve all assets for a full synchronization for the authenticated user.
+     */
     post: operations["getFullSyncForUser"];
     delete?: never;
     options?: never;
@@ -1997,7 +2981,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `sync.stream` permission. */
+    /**
+     * Stream sync changes
+     * @description Retrieve a JSON lines streamed response of changes for synchronization. This endpoint is used by the mobile app to efficiently stay up to date with changes.
+     */
     post: operations["getSyncStream"];
     delete?: never;
     options?: never;
@@ -2012,9 +2999,15 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `systemConfig.read` permission. */
+    /**
+     * Get system configuration
+     * @description Retrieve the current system configuration.
+     */
     get: operations["getConfig"];
-    /** @description This endpoint is an admin-only route, and requires the `systemConfig.update` permission. */
+    /**
+     * Update system configuration
+     * @description Update the system configuration with a new system configuration.
+     */
     put: operations["updateConfig"];
     post?: never;
     delete?: never;
@@ -2030,7 +3023,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `systemConfig.read` permission. */
+    /**
+     * Get system configuration defaults
+     * @description Retrieve the default values for the system configuration.
+     */
     get: operations["getConfigDefaults"];
     put?: never;
     post?: never;
@@ -2047,7 +3043,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `systemConfig.read` permission. */
+    /**
+     * Get storage template options
+     * @description Retrieve exemplary storage template options.
+     */
     get: operations["getStorageTemplateOptions"];
     put?: never;
     post?: never;
@@ -2064,10 +3063,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `systemMetadata.read` permission. */
+    /**
+     * Retrieve admin onboarding
+     * @description Retrieve the current admin onboarding status.
+     */
     get: operations["getAdminOnboarding"];
     put?: never;
-    /** @description This endpoint is an admin-only route, and requires the `systemMetadata.update` permission. */
+    /**
+     * Update admin onboarding
+     * @description Update the admin onboarding status.
+     */
     post: operations["updateAdminOnboarding"];
     delete?: never;
     options?: never;
@@ -2082,7 +3087,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `systemMetadata.read` permission. */
+    /**
+     * Retrieve reverse geocoding state
+     * @description Retrieve the current state of the reverse geocoding import.
+     */
     get: operations["getReverseGeocodingState"];
     put?: never;
     post?: never;
@@ -2099,7 +3107,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint is an admin-only route, and requires the `systemMetadata.read` permission. */
+    /**
+     * Retrieve version check state
+     * @description Retrieve the current state of the version check process.
+     */
     get: operations["getVersionCheckState"];
     put?: never;
     post?: never;
@@ -2116,11 +3127,20 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `tag.read` permission. */
+    /**
+     * Retrieve tags
+     * @description Retrieve a list of all tags.
+     */
     get: operations["getAllTags"];
-    /** @description This endpoint requires the `tag.create` permission. */
+    /**
+     * Upsert tags
+     * @description Create or update multiple tags in a single request.
+     */
     put: operations["upsertTags"];
-    /** @description This endpoint requires the `tag.create` permission. */
+    /**
+     * Create a tag
+     * @description Create a new tag by providing a name and optional color.
+     */
     post: operations["createTag"];
     delete?: never;
     options?: never;
@@ -2136,7 +3156,10 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `tag.asset` permission. */
+    /**
+     * Tag assets
+     * @description Add multiple tags to multiple assets in a single request.
+     */
     put: operations["bulkTagAssets"];
     post?: never;
     delete?: never;
@@ -2152,12 +3175,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `tag.read` permission. */
+    /**
+     * Retrieve a tag
+     * @description Retrieve a specific tag by its ID.
+     */
     get: operations["getTagById"];
-    /** @description This endpoint requires the `tag.update` permission. */
+    /**
+     * Update a tag
+     * @description Update an existing tag identified by its ID.
+     */
     put: operations["updateTag"];
     post?: never;
-    /** @description This endpoint requires the `tag.delete` permission. */
+    /**
+     * Delete a tag
+     * @description Delete a specific tag by its ID.
+     */
     delete: operations["deleteTag"];
     options?: never;
     head?: never;
@@ -2172,10 +3204,16 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** @description This endpoint requires the `tag.asset` permission. */
+    /**
+     * Tag assets
+     * @description Add a tag to all the specified assets.
+     */
     put: operations["tagAssets"];
     post?: never;
-    /** @description This endpoint requires the `tag.asset` permission. */
+    /**
+     * Untag assets
+     * @description Remove a tag from all the specified assets.
+     */
     delete: operations["untagAssets"];
     options?: never;
     head?: never;
@@ -2189,7 +3227,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Get time bucket
+     * @description Retrieve a string of all asset ids in a given time bucket.
+     */
     get: operations["getTimeBucket"];
     put?: never;
     post?: never;
@@ -2206,7 +3247,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `asset.read` permission. */
+    /**
+     * Get time buckets
+     * @description Retrieve a list of all minimal time buckets.
+     */
     get: operations["getTimeBuckets"];
     put?: never;
     post?: never;
@@ -2225,7 +3269,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `asset.delete` permission. */
+    /**
+     * Empty trash
+     * @description Permanently delete all items in the trash.
+     */
     post: operations["emptyTrash"];
     delete?: never;
     options?: never;
@@ -2242,7 +3289,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `asset.delete` permission. */
+    /**
+     * Restore trash
+     * @description Restore all items in the trash.
+     */
     post: operations["restoreTrash"];
     delete?: never;
     options?: never;
@@ -2259,7 +3309,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `asset.delete` permission. */
+    /**
+     * Restore assets
+     * @description Restore specific assets from the trash.
+     */
     post: operations["restoreAssets"];
     delete?: never;
     options?: never;
@@ -2274,7 +3327,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `user.read` permission. */
+    /**
+     * Get all users
+     * @description Retrieve a list of all users on the server.
+     */
     get: operations["searchUsers"];
     put?: never;
     post?: never;
@@ -2291,9 +3347,15 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `user.read` permission. */
+    /**
+     * Get current user
+     * @description Retrieve information about the user making the API request.
+     */
     get: operations["getMyUser"];
-    /** @description This endpoint requires the `user.update` permission. */
+    /**
+     * Update current user
+     * @description Update the current user making teh API request.
+     */
     put: operations["updateMyUser"];
     post?: never;
     delete?: never;
@@ -2309,12 +3371,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `userLicense.read` permission. */
+    /**
+     * Retrieve user product key
+     * @description Retrieve information about whether the current user has a registered product key.
+     */
     get: operations["getUserLicense"];
-    /** @description This endpoint requires the `userLicense.update` permission. */
+    /**
+     * Set user product key
+     * @description Register a product key for the current user.
+     */
     put: operations["setUserLicense"];
     post?: never;
-    /** @description This endpoint requires the `userLicense.delete` permission. */
+    /**
+     * Delete user product key
+     * @description Delete the registered product key for the current user.
+     */
     delete: operations["deleteUserLicense"];
     options?: never;
     head?: never;
@@ -2328,12 +3399,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `userOnboarding.read` permission. */
+    /**
+     * Retrieve user onboarding
+     * @description Retrieve the onboarding status of the current user.
+     */
     get: operations["getUserOnboarding"];
-    /** @description This endpoint requires the `userOnboarding.update` permission. */
+    /**
+     * Update user onboarding
+     * @description Update the onboarding status of the current user.
+     */
     put: operations["setUserOnboarding"];
     post?: never;
-    /** @description This endpoint requires the `userOnboarding.delete` permission. */
+    /**
+     * Delete user onboarding
+     * @description Delete the onboarding status of the current user.
+     */
     delete: operations["deleteUserOnboarding"];
     options?: never;
     head?: never;
@@ -2347,9 +3427,15 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `userPreference.read` permission. */
+    /**
+     * Get my preferences
+     * @description Retrieve the preferences for the current user.
+     */
     get: operations["getMyPreferences"];
-    /** @description This endpoint requires the `userPreference.update` permission. */
+    /**
+     * Update my preferences
+     * @description Update the preferences of the current user.
+     */
     put: operations["updateMyPreferences"];
     post?: never;
     delete?: never;
@@ -2367,9 +3453,15 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description This endpoint requires the `userProfileImage.update` permission. */
+    /**
+     * Create user profile image
+     * @description Upload and set a new profile image for the current user.
+     */
     post: operations["createProfileImage"];
-    /** @description This endpoint requires the `userProfileImage.delete` permission. */
+    /**
+     * Delete user profile image
+     * @description Delete the profile image of the current user.
+     */
     delete: operations["deleteProfileImage"];
     options?: never;
     head?: never;
@@ -2383,7 +3475,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `user.read` permission. */
+    /**
+     * Retrieve a user
+     * @description Retrieve a specific user by their ID.
+     */
     get: operations["getUser"];
     put?: never;
     post?: never;
@@ -2400,7 +3495,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description This endpoint requires the `userProfileImage.read` permission. */
+    /**
+     * Retrieve user profile image
+     * @description Retrieve the profile image file for a user.
+     */
     get: operations["getProfileImage"];
     put?: never;
     post?: never;
@@ -2417,6 +3515,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Retrieve assets by original path
+     * @description Retrieve assets that are children of a specific folder.
+     */
     get: operations["getAssetsByOriginalPath"];
     put?: never;
     post?: never;
@@ -2433,10 +3535,66 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Retrieve unique paths
+     * @description Retrieve a list of unique folder paths from asset original paths.
+     */
     get: operations["getUniqueOriginalPaths"];
     put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/workflows": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List all workflows
+     * @description Retrieve a list of workflows available to the authenticated user.
+     */
+    get: operations["getWorkflows"];
+    put?: never;
+    /**
+     * Create a workflow
+     * @description Create a new workflow, the workflow can also be created with empty filters and actions.
+     */
+    post: operations["createWorkflow"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/workflows/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve a workflow
+     * @description Retrieve information about a specific workflow by its ID.
+     */
+    get: operations["getWorkflow"];
+    /**
+     * Update a workflow
+     * @description Update the information of a specific workflow by its ID. This endpoint can be used to update the workflow name, description, trigger type, filters and actions order, etc.
+     */
+    put: operations["updateWorkflow"];
+    post?: never;
+    /**
+     * Delete a workflow
+     * @description Delete a workflow by its ID.
+     */
+    delete: operations["deleteWorkflow"];
     options?: never;
     head?: never;
     patch?: never;
@@ -2447,312 +3605,697 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     APIKeyCreateDto: {
+      /** @description API key name */
       name?: string;
+      /** @description List of permissions */
       permissions: components["schemas"]["Permission"][];
     };
     APIKeyCreateResponseDto: {
       apiKey: components["schemas"]["APIKeyResponseDto"];
+      /** @description API key secret (only shown once) */
       secret: string;
     };
     APIKeyResponseDto: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Creation date
+       */
       createdAt: string;
+      /** @description API key ID */
       id: string;
+      /** @description API key name */
       name: string;
+      /** @description List of permissions */
       permissions: components["schemas"]["Permission"][];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Last update date
+       */
       updatedAt: string;
     };
     APIKeyUpdateDto: {
+      /** @description API key name */
       name?: string;
+      /** @description List of permissions */
       permissions?: components["schemas"]["Permission"][];
     };
     ActivityCreateDto: {
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Album ID
+       */
       albumId: string;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Asset ID (if activity is for an asset)
+       */
       assetId?: string;
+      /** @description Comment text (required if type is comment) */
       comment?: string;
+      /** @description Activity type (like or comment) */
       type: components["schemas"]["ReactionType"];
     };
     ActivityResponseDto: {
+      /** @description Asset ID (if activity is for an asset) */
       assetId: string | null;
+      /** @description Comment text (for comment activities) */
       comment?: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Creation date
+       */
       createdAt: string;
+      /** @description Activity ID */
       id: string;
+      /** @description Activity type */
       type: components["schemas"]["ReactionType"];
       user: components["schemas"]["UserResponseDto"];
     };
     ActivityStatisticsResponseDto: {
+      /** @description Number of comments */
       comments: number;
+      /** @description Number of likes */
       likes: number;
     };
     AddUsersDto: {
+      /** @description Album users to add */
       albumUsers: components["schemas"]["AlbumUserAddDto"][];
     };
     AdminOnboardingUpdateDto: {
+      /** @description Is admin onboarded */
       isOnboarded: boolean;
     };
     AlbumResponseDto: {
+      /** @description Album name */
       albumName: string;
+      /** @description Thumbnail asset ID */
       albumThumbnailAssetId: string | null;
       albumUsers: components["schemas"]["AlbumUserResponseDto"][];
+      /** @description Number of assets */
       assetCount: number;
       assets: components["schemas"]["AssetResponseDto"][];
-      /** Format: date-time */
+      contributorCounts?: components["schemas"]["ContributorCountResponseDto"][];
+      /**
+       * Format: date-time
+       * @description Creation date
+       */
       createdAt: string;
+      /** @description Album description */
       description: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description End date (latest asset)
+       */
       endDate?: string;
+      /** @description Has shared link */
       hasSharedLink: boolean;
+      /** @description Album ID */
       id: string;
+      /** @description Activity feed enabled */
       isActivityEnabled: boolean;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Last modified asset timestamp
+       */
       lastModifiedAssetTimestamp?: string;
+      /** @description Asset sort order */
       order?: components["schemas"]["AssetOrder"];
       owner: components["schemas"]["UserResponseDto"];
+      /** @description Owner user ID */
       ownerId: string;
+      /** @description Is shared album */
       shared: boolean;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Start date (earliest asset)
+       */
       startDate?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Last update date
+       */
       updatedAt: string;
     };
     AlbumStatisticsResponseDto: {
+      /** @description Number of non-shared albums */
       notShared: number;
+      /** @description Number of owned albums */
       owned: number;
+      /** @description Number of shared albums */
       shared: number;
     };
     AlbumUserAddDto: {
-      /** @default editor */
+      /**
+       * @description Album user role
+       * @default editor
+       */
       role: components["schemas"]["AlbumUserRole"];
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description User ID
+       */
       userId: string;
     };
     AlbumUserCreateDto: {
+      /** @description Album user role */
       role: components["schemas"]["AlbumUserRole"];
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description User ID
+       */
       userId: string;
     };
     AlbumUserResponseDto: {
+      /** @description Album user role */
       role: components["schemas"]["AlbumUserRole"];
       user: components["schemas"]["UserResponseDto"];
     };
-    /** @enum {string} */
+    /**
+     * @description Album user role
+     * @enum {string}
+     */
     AlbumUserRole: "editor" | "viewer";
     AlbumsAddAssetsDto: {
+      /** @description Album IDs */
       albumIds: string[];
+      /** @description Asset IDs */
       assetIds: string[];
     };
     AlbumsAddAssetsResponseDto: {
+      /** @description Error reason */
       error?: components["schemas"]["BulkIdErrorReason"];
+      /** @description Operation success */
       success: boolean;
     };
     AlbumsResponse: {
-      /** @default desc */
+      /**
+       * @description Default asset order for albums
+       * @default desc
+       */
       defaultAssetOrder: components["schemas"]["AssetOrder"];
     };
+    /** @description Album preferences */
     AlbumsUpdate: {
+      /** @description Default asset order for albums */
       defaultAssetOrder?: components["schemas"]["AssetOrder"];
     };
-    AllJobStatusResponseDto: {
-      backgroundTask: components["schemas"]["JobStatusDto"];
-      backupDatabase: components["schemas"]["JobStatusDto"];
-      duplicateDetection: components["schemas"]["JobStatusDto"];
-      faceDetection: components["schemas"]["JobStatusDto"];
-      facialRecognition: components["schemas"]["JobStatusDto"];
-      library: components["schemas"]["JobStatusDto"];
-      metadataExtraction: components["schemas"]["JobStatusDto"];
-      migration: components["schemas"]["JobStatusDto"];
-      notifications: components["schemas"]["JobStatusDto"];
-      search: components["schemas"]["JobStatusDto"];
-      sidecar: components["schemas"]["JobStatusDto"];
-      smartSearch: components["schemas"]["JobStatusDto"];
-      storageTemplateMigration: components["schemas"]["JobStatusDto"];
-      thumbnailGeneration: components["schemas"]["JobStatusDto"];
-      videoConversion: components["schemas"]["JobStatusDto"];
-    };
     AssetBulkDeleteDto: {
+      /** @description Force delete even if in use */
       force?: boolean;
+      /** @description IDs to process */
       ids: string[];
     };
     AssetBulkUpdateDto: {
+      /** @description Original date and time */
       dateTimeOriginal?: string;
+      /** @description Relative time offset in seconds */
       dateTimeRelative?: number;
+      /** @description Asset description */
       description?: string;
+      /** @description Duplicate ID */
       duplicateId?: string | null;
+      /** @description Asset IDs to update */
       ids: string[];
+      /** @description Mark as favorite */
       isFavorite?: boolean;
+      /** @description Latitude coordinate */
       latitude?: number;
+      /** @description Longitude coordinate */
       longitude?: number;
-      rating?: number;
+      /** @description Rating in range [1-5], or null for unrated */
+      rating?: number | null;
+      /** @description Time zone (IANA timezone) */
       timeZone?: string;
+      /** @description Asset visibility */
       visibility?: components["schemas"]["AssetVisibility"];
     };
     AssetBulkUploadCheckDto: {
+      /** @description Assets to check */
       assets: components["schemas"]["AssetBulkUploadCheckItem"][];
     };
     AssetBulkUploadCheckItem: {
-      /** @description base64 or hex encoded sha1 hash */
+      /** @description Base64 or hex encoded SHA1 hash */
       checksum: string;
+      /** @description Asset ID */
       id: string;
     };
     AssetBulkUploadCheckResponseDto: {
+      /** @description Upload check results */
       results: components["schemas"]["AssetBulkUploadCheckResult"][];
     };
     AssetBulkUploadCheckResult: {
-      /** @enum {string} */
+      /**
+       * @description Upload action
+       * @enum {string}
+       */
       action: "accept" | "reject";
+      /** @description Existing asset ID if duplicate */
       assetId?: string;
+      /** @description Asset ID */
       id: string;
+      /** @description Whether existing asset is trashed */
       isTrashed?: boolean;
-      /** @enum {string} */
+      /**
+       * @description Rejection reason if rejected
+       * @enum {string}
+       */
       reason?: "duplicate" | "unsupported-format";
     };
+    AssetCopyDto: {
+      /**
+       * @description Copy album associations
+       * @default true
+       */
+      albums: boolean;
+      /**
+       * @description Copy favorite status
+       * @default true
+       */
+      favorite: boolean;
+      /**
+       * @description Copy shared links
+       * @default true
+       */
+      sharedLinks: boolean;
+      /**
+       * @description Copy sidecar file
+       * @default true
+       */
+      sidecar: boolean;
+      /**
+       * Format: uuid
+       * @description Source asset ID
+       */
+      sourceId: string;
+      /**
+       * @description Copy stack association
+       * @default true
+       */
+      stack: boolean;
+      /**
+       * Format: uuid
+       * @description Target asset ID
+       */
+      targetId: string;
+    };
     AssetDeltaSyncDto: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Sync assets updated after this date
+       */
       updatedAfter: string;
+      /** @description User IDs to sync */
       userIds: string[];
     };
     AssetDeltaSyncResponseDto: {
+      /** @description Deleted asset IDs */
       deleted: string[];
+      /** @description Whether full sync is needed */
       needsFullSync: boolean;
+      /** @description Upserted assets */
       upserted: components["schemas"]["AssetResponseDto"][];
     };
-    AssetFaceCreateDto: {
+    /**
+     * @description Type of edit action to perform
+     * @enum {string}
+     */
+    AssetEditAction: "crop" | "rotate" | "mirror";
+    AssetEditActionItemDto: {
+      /** @description Type of edit action to perform */
+      action: components["schemas"]["AssetEditAction"];
+      /** @description List of edit actions to apply (crop, rotate, or mirror) */
+      parameters:
+        | components["schemas"]["CropParameters"]
+        | components["schemas"]["RotateParameters"]
+        | components["schemas"]["MirrorParameters"];
+    };
+    AssetEditActionItemResponseDto: {
+      /** @description Type of edit action to perform */
+      action: components["schemas"]["AssetEditAction"];
       /** Format: uuid */
+      id: string;
+      /** @description List of edit actions to apply (crop, rotate, or mirror) */
+      parameters:
+        | components["schemas"]["CropParameters"]
+        | components["schemas"]["RotateParameters"]
+        | components["schemas"]["MirrorParameters"];
+    };
+    AssetEditsCreateDto: {
+      /** @description List of edit actions to apply (crop, rotate, or mirror) */
+      edits: components["schemas"]["AssetEditActionItemDto"][];
+    };
+    AssetEditsResponseDto: {
+      /**
+       * Format: uuid
+       * @description Asset ID these edits belong to
+       */
       assetId: string;
+      /** @description List of edit actions applied to the asset */
+      edits: components["schemas"]["AssetEditActionItemResponseDto"][];
+    };
+    AssetFaceCreateDto: {
+      /**
+       * Format: uuid
+       * @description Asset ID
+       */
+      assetId: string;
+      /** @description Face bounding box height */
       height: number;
+      /** @description Image height in pixels */
       imageHeight: number;
+      /** @description Image width in pixels */
       imageWidth: number;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Person ID
+       */
       personId: string;
+      /** @description Face bounding box width */
       width: number;
+      /** @description Face bounding box X coordinate */
       x: number;
+      /** @description Face bounding box Y coordinate */
       y: number;
     };
     AssetFaceDeleteDto: {
+      /** @description Force delete even if person has other faces */
       force: boolean;
     };
     AssetFaceResponseDto: {
+      /** @description Bounding box X1 coordinate */
       boundingBoxX1: number;
+      /** @description Bounding box X2 coordinate */
       boundingBoxX2: number;
+      /** @description Bounding box Y1 coordinate */
       boundingBoxY1: number;
+      /** @description Bounding box Y2 coordinate */
       boundingBoxY2: number;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Face ID
+       */
       id: string;
+      /** @description Image height in pixels */
       imageHeight: number;
+      /** @description Image width in pixels */
       imageWidth: number;
+      /** @description Person associated with face */
       person: components["schemas"]["PersonResponseDto"] | null;
+      /** @description Face detection source type */
       sourceType?: components["schemas"]["SourceType"];
     };
     AssetFaceUpdateDto: {
+      /** @description Face update items */
       data: components["schemas"]["AssetFaceUpdateItem"][];
     };
     AssetFaceUpdateItem: {
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Asset ID
+       */
       assetId: string;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Person ID
+       */
       personId: string;
     };
     AssetFaceWithoutPersonResponseDto: {
+      /** @description Bounding box X1 coordinate */
       boundingBoxX1: number;
+      /** @description Bounding box X2 coordinate */
       boundingBoxX2: number;
+      /** @description Bounding box Y1 coordinate */
       boundingBoxY1: number;
+      /** @description Bounding box Y2 coordinate */
       boundingBoxY2: number;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Face ID
+       */
       id: string;
+      /** @description Image height in pixels */
       imageHeight: number;
+      /** @description Image width in pixels */
       imageWidth: number;
+      /** @description Face detection source type */
       sourceType?: components["schemas"]["SourceType"];
     };
     AssetFullSyncDto: {
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Last asset ID (pagination)
+       */
       lastId?: string;
+      /** @description Maximum number of assets to return */
       limit: number;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Sync assets updated until this date
+       */
       updatedUntil: string;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Filter by user ID
+       */
       userId?: string;
     };
     AssetIdsDto: {
+      /** @description Asset IDs */
       assetIds: string[];
     };
     AssetIdsResponseDto: {
+      /** @description Asset ID */
       assetId: string;
-      /** @enum {string} */
+      /**
+       * @description Error reason if failed
+       * @enum {string}
+       */
       error?: "duplicate" | "no_permission" | "not_found";
+      /** @description Whether operation succeeded */
       success: boolean;
     };
-    /** @enum {string} */
+    /**
+     * @description Job name
+     * @enum {string}
+     */
     AssetJobName:
       | "refresh-faces"
       | "refresh-metadata"
       | "regenerate-thumbnail"
       | "transcode-video";
     AssetJobsDto: {
+      /** @description Asset IDs */
       assetIds: string[];
+      /** @description Job name */
       name: components["schemas"]["AssetJobName"];
     };
     AssetMediaCreateDto: {
-      /** Format: binary */
+      /**
+       * Format: binary
+       * @description Asset file data
+       */
       assetData: string;
+      /** @description Device asset ID */
       deviceAssetId: string;
+      /** @description Device ID */
       deviceId: string;
+      /** @description Duration (for videos) */
       duration?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description File creation date
+       */
       fileCreatedAt: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description File modification date
+       */
       fileModifiedAt: string;
+      /** @description Filename */
       filename?: string;
+      /** @description Mark as favorite */
       isFavorite?: boolean;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Live photo video ID
+       */
       livePhotoVideoId?: string;
-      metadata: components["schemas"]["AssetMetadataUpsertItemDto"][];
-      /** Format: binary */
+      /** @description Asset metadata items */
+      metadata?: components["schemas"]["AssetMetadataUpsertItemDto"][];
+      /**
+       * Format: binary
+       * @description Sidecar file data
+       */
       sidecarData?: string;
+      /** @description Asset visibility */
       visibility?: components["schemas"]["AssetVisibility"];
     };
     AssetMediaReplaceDto: {
-      /** Format: binary */
+      /**
+       * Format: binary
+       * @description Asset file data
+       */
       assetData: string;
+      /** @description Device asset ID */
       deviceAssetId: string;
+      /** @description Device ID */
       deviceId: string;
+      /** @description Duration (for videos) */
       duration?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description File creation date
+       */
       fileCreatedAt: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description File modification date
+       */
       fileModifiedAt: string;
+      /** @description Filename */
       filename?: string;
     };
     AssetMediaResponseDto: {
+      /** @description Asset media ID */
       id: string;
+      /** @description Upload status */
       status: components["schemas"]["AssetMediaStatus"];
     };
     /** @enum {string} */
-    AssetMediaSize: "fullsize" | "preview" | "thumbnail";
-    /** @enum {string} */
+    AssetMediaSize: "original" | "fullsize" | "preview" | "thumbnail";
+    /**
+     * @description Upload status
+     * @enum {string}
+     */
     AssetMediaStatus: "created" | "replaced" | "duplicate";
-    /** @enum {string} */
-    AssetMetadataKey: "mobile-app";
-    AssetMetadataResponseDto: {
-      key: components["schemas"]["AssetMetadataKey"];
-      /** Format: date-time */
+    AssetMetadataBulkDeleteDto: {
+      /** @description Metadata items to delete */
+      items: components["schemas"]["AssetMetadataBulkDeleteItemDto"][];
+    };
+    AssetMetadataBulkDeleteItemDto: {
+      /**
+       * Format: uuid
+       * @description Asset ID
+       */
+      assetId: string;
+      /** @description Metadata key */
+      key: string;
+    };
+    AssetMetadataBulkResponseDto: {
+      /** @description Asset ID */
+      assetId: string;
+      /** @description Metadata key */
+      key: string;
+      /**
+       * Format: date-time
+       * @description Last update date
+       */
       updatedAt: string;
+      /** @description Metadata value (object) */
+      value: Record<string, never>;
+    };
+    AssetMetadataBulkUpsertDto: {
+      /** @description Metadata items to upsert */
+      items: components["schemas"]["AssetMetadataBulkUpsertItemDto"][];
+    };
+    AssetMetadataBulkUpsertItemDto: {
+      /**
+       * Format: uuid
+       * @description Asset ID
+       */
+      assetId: string;
+      /** @description Metadata key */
+      key: string;
+      /** @description Metadata value (object) */
+      value: Record<string, never>;
+    };
+    AssetMetadataResponseDto: {
+      /** @description Metadata key */
+      key: string;
+      /**
+       * Format: date-time
+       * @description Last update date
+       */
+      updatedAt: string;
+      /** @description Metadata value (object) */
       value: Record<string, never>;
     };
     AssetMetadataUpsertDto: {
+      /** @description Metadata items to upsert */
       items: components["schemas"]["AssetMetadataUpsertItemDto"][];
     };
     AssetMetadataUpsertItemDto: {
-      key: components["schemas"]["AssetMetadataKey"];
+      /** @description Metadata key */
+      key: string;
+      /** @description Metadata value (object) */
       value: Record<string, never>;
     };
-    /** @enum {string} */
+    AssetOcrResponseDto: {
+      /** Format: uuid */
+      assetId: string;
+      /**
+       * Format: double
+       * @description Confidence score for text detection box
+       */
+      boxScore: number;
+      /** Format: uuid */
+      id: string;
+      /** @description Recognized text */
+      text: string;
+      /**
+       * Format: double
+       * @description Confidence score for text recognition
+       */
+      textScore: number;
+      /**
+       * Format: double
+       * @description Normalized x coordinate of box corner 1 (0-1)
+       */
+      x1: number;
+      /**
+       * Format: double
+       * @description Normalized x coordinate of box corner 2 (0-1)
+       */
+      x2: number;
+      /**
+       * Format: double
+       * @description Normalized x coordinate of box corner 3 (0-1)
+       */
+      x3: number;
+      /**
+       * Format: double
+       * @description Normalized x coordinate of box corner 4 (0-1)
+       */
+      x4: number;
+      /**
+       * Format: double
+       * @description Normalized y coordinate of box corner 1 (0-1)
+       */
+      y1: number;
+      /**
+       * Format: double
+       * @description Normalized y coordinate of box corner 2 (0-1)
+       */
+      y2: number;
+      /**
+       * Format: double
+       * @description Normalized y coordinate of box corner 3 (0-1)
+       */
+      y3: number;
+      /**
+       * Format: double
+       * @description Normalized y coordinate of box corner 4 (0-1)
+       */
+      y4: number;
+    };
+    /**
+     * @description Asset sort order
+     * @enum {string}
+     */
     AssetOrder: "asc" | "desc";
     AssetResponseDto: {
-      /** @description base64 encoded sha1 hash */
+      /** @description Base64 encoded SHA1 hash */
       checksum: string;
       /**
        * Format: date-time
@@ -2760,9 +4303,13 @@ export interface components {
        * @example 2024-01-15T20:30:00.000Z
        */
       createdAt: string;
+      /** @description Device asset ID */
       deviceAssetId: string;
+      /** @description Device ID */
       deviceId: string;
+      /** @description Duplicate group ID */
       duplicateId?: string | null;
+      /** @description Video duration (for videos) */
       duration: string;
       exifInfo?: components["schemas"]["ExifResponseDto"];
       /**
@@ -2777,17 +4324,29 @@ export interface components {
        * @example 2024-01-16T10:15:00.000Z
        */
       fileModifiedAt: string;
+      /** @description Whether asset has metadata */
       hasMetadata: boolean;
+      /** @description Asset height */
+      height: number | null;
+      /** @description Asset ID */
       id: string;
+      /** @description Is archived */
       isArchived: boolean;
+      /** @description Is edited */
+      isEdited: boolean;
+      /** @description Is favorite */
       isFavorite: boolean;
+      /** @description Is offline */
       isOffline: boolean;
+      /** @description Is trashed */
       isTrashed: boolean;
       /**
+       * Format: uuid
        * @deprecated
-       * @description This property was deprecated in v1.106.0
+       * @description Library ID
        */
       libraryId?: string | null;
+      /** @description Live photo video ID */
       livePhotoVideoId?: string | null;
       /**
        * Format: date-time
@@ -2795,20 +4354,26 @@ export interface components {
        * @example 2024-01-15T14:30:00.000Z
        */
       localDateTime: string;
+      /** @description Original file name */
       originalFileName: string;
+      /** @description Original MIME type */
       originalMimeType?: string;
+      /** @description Original file path */
       originalPath: string;
       owner?: components["schemas"]["UserResponseDto"];
+      /** @description Owner user ID */
       ownerId: string;
       people?: components["schemas"]["PersonWithFacesResponseDto"][];
       /**
        * @deprecated
-       * @description This property was deprecated in v1.113.0
+       * @description Is resized
        */
       resized?: boolean;
       stack?: components["schemas"]["AssetStackResponseDto"] | null;
       tags?: components["schemas"]["TagResponseDto"][];
+      /** @description Thumbhash for thumbnail generation (base64) also used as the c query param for thumbnail cache busting. */
       thumbhash: string | null;
+      /** @description Asset type */
       type: components["schemas"]["AssetTypeEnum"];
       unassignedFaces?: components["schemas"]["AssetFaceWithoutPersonResponseDto"][];
       /**
@@ -2817,301 +4382,616 @@ export interface components {
        * @example 2024-01-16T12:45:30.000Z
        */
       updatedAt: string;
+      /** @description Asset visibility */
       visibility: components["schemas"]["AssetVisibility"];
+      /** @description Asset width */
+      width: number | null;
     };
     AssetStackResponseDto: {
+      /** @description Number of assets in stack */
       assetCount: number;
+      /** @description Stack ID */
       id: string;
+      /** @description Primary asset ID */
       primaryAssetId: string;
     };
     AssetStatsResponseDto: {
+      /** @description Number of images */
       images: number;
+      /** @description Total number of assets */
       total: number;
+      /** @description Number of videos */
       videos: number;
     };
-    /** @enum {string} */
+    /**
+     * @description Asset type
+     * @enum {string}
+     */
     AssetTypeEnum: "IMAGE" | "VIDEO" | "AUDIO" | "OTHER";
-    /** @enum {string} */
+    /**
+     * @description Asset visibility
+     * @enum {string}
+     */
     AssetVisibility: "archive" | "timeline" | "hidden" | "locked";
-    /** @enum {string} */
-    AudioCodec: "mp3" | "aac" | "libopus" | "pcm_s16le";
+    /**
+     * @description Target audio codec
+     * @enum {string}
+     */
+    AudioCodec: "mp3" | "aac" | "libopus" | "opus" | "pcm_s16le";
     AuthStatusResponseDto: {
+      /** @description Session expiration date */
       expiresAt?: string;
+      /** @description Is elevated session */
       isElevated: boolean;
+      /** @description Has password set */
       password: boolean;
+      /** @description Has PIN code set */
       pinCode: boolean;
+      /** @description PIN expiration date */
       pinExpiresAt?: string;
     };
     AvatarUpdate: {
+      /** @description Avatar color */
       color?: components["schemas"]["UserAvatarColor"];
     };
-    /** @enum {string} */
-    BulkIdErrorReason: "duplicate" | "no_permission" | "not_found" | "unknown";
+    /**
+     * @description Error reason
+     * @enum {string}
+     */
+    BulkIdErrorReason:
+      | "duplicate"
+      | "no_permission"
+      | "not_found"
+      | "unknown"
+      | "validation";
     BulkIdResponseDto: {
-      /** @enum {string} */
-      error?: "duplicate" | "no_permission" | "not_found" | "unknown";
+      /**
+       * @description Error reason if failed
+       * @enum {string}
+       */
+      error?:
+        | "duplicate"
+        | "no_permission"
+        | "not_found"
+        | "unknown"
+        | "validation";
+      errorMessage?: string;
+      /** @description ID */
       id: string;
+      /** @description Whether operation succeeded */
       success: boolean;
     };
     BulkIdsDto: {
+      /** @description IDs to process */
       ids: string[];
     };
     CLIPConfig: {
+      /** @description Whether the task is enabled */
       enabled: boolean;
+      /** @description Name of the model to use */
       modelName: string;
     };
-    /** @enum {string} */
+    /**
+     * @description CQ mode
+     * @enum {string}
+     */
     CQMode: "auto" | "cqp" | "icq";
     CastResponse: {
-      /** @default false */
+      /**
+       * @description Whether Google Cast is enabled
+       * @default false
+       */
       gCastEnabled: boolean;
     };
     CastUpdate: {
+      /** @description Whether Google Cast is enabled */
       gCastEnabled?: boolean;
     };
     ChangePasswordDto: {
-      /** @example password */
+      /**
+       * @description Invalidate all other sessions
+       * @default false
+       */
+      invalidateSessions: boolean;
+      /**
+       * @description New password (min 8 characters)
+       * @example password
+       */
       newPassword: string;
-      /** @example password */
+      /**
+       * @description Current password
+       * @example password
+       */
       password: string;
     };
     CheckExistingAssetsDto: {
+      /** @description Device asset IDs to check */
       deviceAssetIds: string[];
+      /** @description Device ID */
       deviceId: string;
     };
     CheckExistingAssetsResponseDto: {
+      /** @description Existing asset IDs */
       existingIds: string[];
     };
-    /** @enum {string} */
+    /**
+     * @description Colorspace
+     * @enum {string}
+     */
     Colorspace: "srgb" | "p3";
+    ContributorCountResponseDto: {
+      /** @description Number of assets contributed */
+      assetCount: number;
+      /** @description User ID */
+      userId: string;
+    };
     CreateAlbumDto: {
+      /** @description Album name */
       albumName: string;
+      /** @description Album users */
       albumUsers?: components["schemas"]["AlbumUserCreateDto"][];
+      /** @description Initial asset IDs */
       assetIds?: string[];
+      /** @description Album description */
       description?: string;
     };
     CreateLibraryDto: {
+      /** @description Exclusion patterns (max 128) */
       exclusionPatterns?: string[];
+      /** @description Import paths (max 128) */
       importPaths?: string[];
+      /** @description Library name */
       name?: string;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Owner user ID
+       */
       ownerId: string;
     };
     CreateProfileImageDto: {
-      /** Format: binary */
+      /**
+       * Format: binary
+       * @description Profile image file
+       */
       file: string;
     };
     CreateProfileImageResponseDto: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Profile image change date
+       */
       profileChangedAt: string;
+      /** @description Profile image file path */
       profileImagePath: string;
+      /** @description User ID */
       userId: string;
     };
+    CropParameters: {
+      /** @description Height of the crop */
+      height: number;
+      /** @description Width of the crop */
+      width: number;
+      /** @description Top-Left X coordinate of crop */
+      x: number;
+      /** @description Top-Left Y coordinate of crop */
+      y: number;
+    };
     DatabaseBackupConfig: {
+      /** @description Cron expression */
       cronExpression: string;
+      /** @description Enabled */
       enabled: boolean;
+      /** @description Keep last amount */
       keepLastAmount: number;
     };
-    DownloadArchiveInfo: {
+    DatabaseBackupDeleteDto: {
+      backups: string[];
+    };
+    DatabaseBackupDto: {
+      filename: string;
+      filesize: number;
+      timezone: string;
+    };
+    DatabaseBackupListResponseDto: {
+      backups: components["schemas"]["DatabaseBackupDto"][];
+    };
+    DatabaseBackupUploadDto: {
+      /** Format: binary */
+      file?: string;
+    };
+    DownloadArchiveDto: {
+      /** @description Asset IDs */
       assetIds: string[];
+      /** @description Download edited asset if available */
+      edited?: boolean;
+    };
+    DownloadArchiveInfo: {
+      /** @description Asset IDs in this archive */
+      assetIds: string[];
+      /** @description Archive size in bytes */
       size: number;
     };
     DownloadInfoDto: {
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Album ID to download
+       */
       albumId?: string;
+      /** @description Archive size limit in bytes */
       archiveSize?: number;
+      /** @description Asset IDs to download */
       assetIds?: string[];
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description User ID to download assets from
+       */
       userId?: string;
     };
     DownloadResponse: {
+      /** @description Maximum archive size in bytes */
       archiveSize: number;
-      /** @default false */
+      /**
+       * @description Whether to include embedded videos in downloads
+       * @default false
+       */
       includeEmbeddedVideos: boolean;
     };
     DownloadResponseDto: {
+      /** @description Archive information */
       archives: components["schemas"]["DownloadArchiveInfo"][];
+      /** @description Total size in bytes */
       totalSize: number;
     };
     DownloadUpdate: {
+      /** @description Maximum archive size in bytes */
       archiveSize?: number;
+      /** @description Whether to include embedded videos in downloads */
       includeEmbeddedVideos?: boolean;
     };
     DuplicateDetectionConfig: {
+      /** @description Whether the task is enabled */
       enabled: boolean;
-      /** Format: double */
+      /**
+       * Format: double
+       * @description Maximum distance threshold for duplicate detection
+       */
       maxDistance: number;
     };
-    DuplicateResponseDto: {
-      assets: components["schemas"]["AssetResponseDto"][];
+    DuplicateResolveDto: {
+      /** @description List of duplicate groups to resolve */
+      groups: components["schemas"]["DuplicateResolveGroupDto"][];
+    };
+    DuplicateResolveGroupDto: {
+      /** Format: uuid */
       duplicateId: string;
+      /** @description Asset IDs to keep */
+      keepAssetIds: string[];
+      /** @description Asset IDs to trash or delete */
+      trashAssetIds: string[];
+    };
+    DuplicateResponseDto: {
+      /** @description Duplicate assets */
+      assets: components["schemas"]["AssetResponseDto"][];
+      /** @description Duplicate group ID */
+      duplicateId: string;
+      /** @description Suggested asset IDs to keep based on file size and EXIF data */
+      suggestedKeepAssetIds: string[];
     };
     EmailNotificationsResponse: {
+      /** @description Whether to receive email notifications for album invites */
       albumInvite: boolean;
+      /** @description Whether to receive email notifications for album updates */
       albumUpdate: boolean;
+      /** @description Whether email notifications are enabled */
       enabled: boolean;
     };
     EmailNotificationsUpdate: {
+      /** @description Whether to receive email notifications for album invites */
       albumInvite?: boolean;
+      /** @description Whether to receive email notifications for album updates */
       albumUpdate?: boolean;
+      /** @description Whether email notifications are enabled */
       enabled?: boolean;
     };
     ExifResponseDto: {
-      /** @default null */
+      /**
+       * @description City name
+       * @default null
+       */
       city: string | null;
-      /** @default null */
+      /**
+       * @description Country name
+       * @default null
+       */
       country: string | null;
       /**
        * Format: date-time
+       * @description Original date/time
        * @default null
        */
       dateTimeOriginal: string | null;
-      /** @default null */
+      /**
+       * @description Image description
+       * @default null
+       */
       description: string | null;
-      /** @default null */
+      /**
+       * @description Image height in pixels
+       * @default null
+       */
       exifImageHeight: number | null;
-      /** @default null */
+      /**
+       * @description Image width in pixels
+       * @default null
+       */
       exifImageWidth: number | null;
-      /** @default null */
+      /**
+       * @description Exposure time
+       * @default null
+       */
       exposureTime: string | null;
-      /** @default null */
+      /**
+       * @description F-number (aperture)
+       * @default null
+       */
       fNumber: number | null;
       /**
        * Format: int64
+       * @description File size in bytes
        * @default null
        */
       fileSizeInByte: number | null;
-      /** @default null */
+      /**
+       * @description Focal length in mm
+       * @default null
+       */
       focalLength: number | null;
-      /** @default null */
+      /**
+       * @description ISO sensitivity
+       * @default null
+       */
       iso: number | null;
-      /** @default null */
+      /**
+       * @description GPS latitude
+       * @default null
+       */
       latitude: number | null;
-      /** @default null */
+      /**
+       * @description Lens model
+       * @default null
+       */
       lensModel: string | null;
-      /** @default null */
+      /**
+       * @description GPS longitude
+       * @default null
+       */
       longitude: number | null;
-      /** @default null */
+      /**
+       * @description Camera make
+       * @default null
+       */
       make: string | null;
-      /** @default null */
+      /**
+       * @description Camera model
+       * @default null
+       */
       model: string | null;
       /**
        * Format: date-time
+       * @description Modification date/time
        * @default null
        */
       modifyDate: string | null;
-      /** @default null */
+      /**
+       * @description Image orientation
+       * @default null
+       */
       orientation: string | null;
-      /** @default null */
+      /**
+       * @description Projection type
+       * @default null
+       */
       projectionType: string | null;
-      /** @default null */
+      /**
+       * @description Rating
+       * @default null
+       */
       rating: number | null;
-      /** @default null */
+      /**
+       * @description State/province name
+       * @default null
+       */
       state: string | null;
-      /** @default null */
+      /**
+       * @description Time zone
+       * @default null
+       */
       timeZone: string | null;
     };
     FaceDto: {
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Face ID
+       */
       id: string;
     };
     FacialRecognitionConfig: {
+      /** @description Whether the task is enabled */
       enabled: boolean;
-      /** Format: double */
+      /**
+       * Format: double
+       * @description Maximum distance threshold for face recognition
+       */
       maxDistance: number;
+      /** @description Minimum number of faces required for recognition */
       minFaces: number;
-      /** Format: double */
+      /**
+       * Format: double
+       * @description Minimum confidence score for face detection
+       */
       minScore: number;
+      /** @description Name of the model to use */
       modelName: string;
     };
     FoldersResponse: {
-      /** @default false */
+      /**
+       * @description Whether folders are enabled
+       * @default false
+       */
       enabled: boolean;
-      /** @default false */
+      /**
+       * @description Whether folders appear in web sidebar
+       * @default false
+       */
       sidebarWeb: boolean;
     };
     FoldersUpdate: {
+      /** @description Whether folders are enabled */
       enabled?: boolean;
+      /** @description Whether folders appear in web sidebar */
       sidebarWeb?: boolean;
     };
-    /** @enum {string} */
+    /**
+     * @description Image format
+     * @enum {string}
+     */
     ImageFormat: "jpeg" | "webp";
-    /** @enum {string} */
-    JobCommand: "start" | "pause" | "resume" | "empty" | "clear-failed";
-    JobCommandDto: {
-      command: components["schemas"]["JobCommand"];
-      force?: boolean;
-    };
-    JobCountsDto: {
-      active: number;
-      completed: number;
-      delayed: number;
-      failed: number;
-      paused: number;
-      waiting: number;
-    };
     JobCreateDto: {
+      /** @description Job name */
       name: components["schemas"]["ManualJobName"];
     };
-    /** @enum {string} */
+    /**
+     * @description Job name
+     * @enum {string}
+     */
     JobName:
-      | "thumbnailGeneration"
-      | "metadataExtraction"
-      | "videoConversion"
-      | "faceDetection"
-      | "facialRecognition"
-      | "smartSearch"
-      | "duplicateDetection"
-      | "backgroundTask"
-      | "storageTemplateMigration"
-      | "migration"
-      | "search"
-      | "sidecar"
-      | "library"
-      | "notifications"
-      | "backupDatabase";
+      | "AssetDelete"
+      | "AssetDeleteCheck"
+      | "AssetDetectFacesQueueAll"
+      | "AssetDetectFaces"
+      | "AssetDetectDuplicatesQueueAll"
+      | "AssetDetectDuplicates"
+      | "AssetEditThumbnailGeneration"
+      | "AssetEncodeVideoQueueAll"
+      | "AssetEncodeVideo"
+      | "AssetEmptyTrash"
+      | "AssetExtractMetadataQueueAll"
+      | "AssetExtractMetadata"
+      | "AssetFileMigration"
+      | "AssetGenerateThumbnailsQueueAll"
+      | "AssetGenerateThumbnails"
+      | "AuditLogCleanup"
+      | "AuditTableCleanup"
+      | "DatabaseBackup"
+      | "FacialRecognitionQueueAll"
+      | "FacialRecognition"
+      | "FileDelete"
+      | "FileMigrationQueueAll"
+      | "LibraryDeleteCheck"
+      | "LibraryDelete"
+      | "LibraryRemoveAsset"
+      | "LibraryScanAssetsQueueAll"
+      | "LibrarySyncAssets"
+      | "LibrarySyncFilesQueueAll"
+      | "LibrarySyncFiles"
+      | "LibraryScanQueueAll"
+      | "MemoryCleanup"
+      | "MemoryGenerate"
+      | "NotificationsCleanup"
+      | "NotifyUserSignup"
+      | "NotifyAlbumInvite"
+      | "NotifyAlbumUpdate"
+      | "UserDelete"
+      | "UserDeleteCheck"
+      | "UserSyncUsage"
+      | "PersonCleanup"
+      | "PersonFileMigration"
+      | "PersonGenerateThumbnail"
+      | "SessionCleanup"
+      | "SendMail"
+      | "SidecarQueueAll"
+      | "SidecarCheck"
+      | "SidecarWrite"
+      | "SmartSearchQueueAll"
+      | "SmartSearch"
+      | "StorageTemplateMigration"
+      | "StorageTemplateMigrationSingle"
+      | "TagCleanup"
+      | "VersionCheck"
+      | "OcrQueueAll"
+      | "Ocr"
+      | "WorkflowRun";
     JobSettingsDto: {
+      /** @description Concurrency */
       concurrency: number;
     };
-    JobStatusDto: {
-      jobCounts: components["schemas"]["JobCountsDto"];
-      queueStatus: components["schemas"]["QueueStatusDto"];
-    };
     LibraryResponseDto: {
+      /** @description Number of assets */
       assetCount: number;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Creation date
+       */
       createdAt: string;
+      /** @description Exclusion patterns */
       exclusionPatterns: string[];
+      /** @description Library ID */
       id: string;
+      /** @description Import paths */
       importPaths: string[];
+      /** @description Library name */
       name: string;
+      /** @description Owner user ID */
       ownerId: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Last refresh date
+       */
       refreshedAt: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Last update date
+       */
       updatedAt: string;
     };
     LibraryStatsResponseDto: {
-      /** @default 0 */
+      /**
+       * @description Number of photos
+       * @default 0
+       */
       photos: number;
-      /** @default 0 */
+      /**
+       * @description Total number of assets
+       * @default 0
+       */
       total: number;
       /**
        * Format: int64
+       * @description Storage usage in bytes
        * @default 0
        */
       usage: number;
-      /** @default 0 */
+      /**
+       * @description Number of videos
+       * @default 0
+       */
       videos: number;
     };
     LicenseKeyDto: {
+      /** @description Activation key */
       activationKey: string;
+      /** @description License key (format: IM(SV|CL)(-XXXX){8}) */
       licenseKey: string;
     };
     LicenseResponseDto: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Activation date
+       */
       activatedAt: string;
+      /** @description Activation key */
       activationKey: string;
+      /** @description License key (format: IM(SV|CL)(-XXXX){8}) */
       licenseKey: string;
     };
     /** @enum {string} */
@@ -3119,32 +4999,88 @@ export interface components {
     LoginCredentialDto: {
       /**
        * Format: email
+       * @description User email
        * @example testuser@email.com
        */
       email: string;
-      /** @example password */
+      /**
+       * @description User password
+       * @example password
+       */
       password: string;
     };
     LoginResponseDto: {
+      /** @description Access token */
       accessToken: string;
+      /** @description Is admin user */
       isAdmin: boolean;
+      /** @description Is onboarded */
       isOnboarded: boolean;
+      /** @description User name */
       name: string;
+      /** @description Profile image path */
       profileImagePath: string;
+      /** @description Should change password */
       shouldChangePassword: boolean;
+      /** @description User email */
       userEmail: string;
+      /** @description User ID */
       userId: string;
     };
     LogoutResponseDto: {
+      /** @description Redirect URI */
       redirectUri: string;
+      /** @description Logout successful */
       successful: boolean;
     };
     MachineLearningAvailabilityChecksDto: {
+      /** @description Enabled */
       enabled: boolean;
       interval: number;
       timeout: number;
     };
-    /** @enum {string} */
+    /**
+     * @description Maintenance action
+     * @enum {string}
+     */
+    MaintenanceAction:
+      | "start"
+      | "end"
+      | "select_database_restore"
+      | "restore_database";
+    MaintenanceAuthDto: {
+      /** @description Maintenance username */
+      username: string;
+    };
+    MaintenanceDetectInstallResponseDto: {
+      storage: components["schemas"]["MaintenanceDetectInstallStorageFolderDto"][];
+    };
+    MaintenanceDetectInstallStorageFolderDto: {
+      /** @description Number of files in the folder */
+      files: number;
+      /** @description Storage folder */
+      folder: components["schemas"]["StorageFolder"];
+      /** @description Whether the folder is readable */
+      readable: boolean;
+      /** @description Whether the folder is writable */
+      writable: boolean;
+    };
+    MaintenanceLoginDto: {
+      /** @description Maintenance token */
+      token?: string;
+    };
+    MaintenanceStatusResponseDto: {
+      /** @description Maintenance action */
+      action: components["schemas"]["MaintenanceAction"];
+      active: boolean;
+      error?: string;
+      progress?: number;
+      task?: string;
+    };
+    /**
+     * @description Job name
+     * @enum {string}
+     */
     ManualJobName:
       | "person-cleanup"
       | "tag-cleanup"
@@ -3153,254 +5089,506 @@ export interface components {
       | "memory-create"
       | "backup-database";
     MapMarkerResponseDto: {
+      /** @description City name */
       city: string | null;
+      /** @description Country name */
       country: string | null;
+      /** @description Asset ID */
       id: string;
-      /** Format: double */
+      /**
+       * Format: double
+       * @description Latitude
+       */
       lat: number;
-      /** Format: double */
+      /**
+       * Format: double
+       * @description Longitude
+       */
       lon: number;
+      /** @description State/Province name */
       state: string | null;
     };
     MapReverseGeocodeResponseDto: {
+      /** @description City name */
       city: string | null;
+      /** @description Country name */
       country: string | null;
+      /** @description State/Province name */
       state: string | null;
     };
     MemoriesResponse: {
-      /** @default true */
+      /**
+       * @description Memory duration in seconds
+       * @default 5
+       */
+      duration: number;
+      /**
+       * @description Whether memories are enabled
+       * @default true
+       */
       enabled: boolean;
     };
     MemoriesUpdate: {
+      /** @description Memory duration in seconds */
+      duration?: number;
+      /** @description Whether memories are enabled */
       enabled?: boolean;
     };
     MemoryCreateDto: {
+      /** @description Asset IDs to associate with memory */
       assetIds?: string[];
       data: components["schemas"]["OnThisDayDto"];
+      /**
+       * Format: date-time
+       * @description Date when memory should be hidden
+       */
+      hideAt?: string;
+      /** @description Is memory saved */
       isSaved?: boolean;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Memory date
+       */
       memoryAt: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Date when memory was seen
+       */
       seenAt?: string;
+      /**
+       * Format: date-time
+       * @description Date when memory should be shown
+       */
+      showAt?: string;
+      /** @description Memory type */
       type: components["schemas"]["MemoryType"];
     };
     MemoryResponseDto: {
       assets: components["schemas"]["AssetResponseDto"][];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Creation date
+       */
       createdAt: string;
       data: components["schemas"]["OnThisDayDto"];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Deletion date
+       */
       deletedAt?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Date when memory should be hidden
+       */
       hideAt?: string;
+      /** @description Memory ID */
       id: string;
+      /** @description Is memory saved */
       isSaved: boolean;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Memory date
+       */
       memoryAt: string;
+      /** @description Owner user ID */
       ownerId: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Date when memory was seen
+       */
       seenAt?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Date when memory should be shown
+       */
       showAt?: string;
+      /** @description Memory type */
       type: components["schemas"]["MemoryType"];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Last update date
+       */
       updatedAt: string;
     };
+    /** @enum {string} */
+    MemorySearchOrder: "asc" | "desc" | "random";
     MemoryStatisticsResponseDto: {
+      /** @description Total number of memories */
       total: number;
     };
     /** @enum {string} */
     MemoryType: "on_this_day";
     MemoryUpdateDto: {
+      /** @description Is memory saved */
       isSaved?: boolean;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Memory date
+       */
       memoryAt?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Date when memory was seen
+       */
       seenAt?: string;
     };
     MergePersonDto: {
+      /** @description Person IDs to merge */
       ids: string[];
     };
     MetadataSearchDto: {
+      /** @description Filter by album IDs */
       albumIds?: string[];
+      /** @description Filter by file checksum */
       checksum?: string;
+      /** @description Filter by city name */
       city?: string | null;
+      /** @description Filter by country name */
       country?: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by creation date (after)
+       */
       createdAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by creation date (before)
+       */
       createdBefore?: string;
+      /** @description Filter by description text */
       description?: string;
+      /** @description Filter by device asset ID */
       deviceAssetId?: string;
+      /** @description Device ID to filter by */
       deviceId?: string;
+      /** @description Filter by encoded video file path */
       encodedVideoPath?: string;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Filter by asset ID
+       */
       id?: string;
+      /** @description Filter by encoded status */
       isEncoded?: boolean;
+      /** @description Filter by favorite status */
       isFavorite?: boolean;
+      /** @description Filter by motion photo status */
       isMotion?: boolean;
+      /** @description Filter assets not in any album */
       isNotInAlbum?: boolean;
+      /** @description Filter by offline status */
       isOffline?: boolean;
+      /** @description Filter by lens model */
       lensModel?: string | null;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Library ID to filter by
+       */
       libraryId?: string | null;
+      /** @description Filter by camera make */
       make?: string;
+      /** @description Filter by camera model */
       model?: string | null;
-      /** @default desc */
+      /** @description Filter by OCR text content */
+      ocr?: string;
+      /**
+       * @description Sort order
+       * @default desc
+       */
       order: components["schemas"]["AssetOrder"];
+      /** @description Filter by original file name */
       originalFileName?: string;
+      /** @description Filter by original file path */
       originalPath?: string;
+      /** @description Page number */
       page?: number;
+      /** @description Filter by person IDs */
       personIds?: string[];
+      /** @description Filter by preview file path */
       previewPath?: string;
-      rating?: number;
+      /** @description Filter by rating [1-5], or null for unrated */
+      rating?: number | null;
+      /** @description Number of results to return */
       size?: number;
+      /** @description Filter by state/province name */
       state?: string | null;
+      /** @description Filter by tag IDs */
       tagIds?: string[] | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by taken date (after)
+       */
       takenAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by taken date (before)
+       */
       takenBefore?: string;
+      /** @description Filter by thumbnail file path */
       thumbnailPath?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by trash date (after)
+       */
       trashedAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by trash date (before)
+       */
       trashedBefore?: string;
+      /** @description Asset type filter */
       type?: components["schemas"]["AssetTypeEnum"];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by update date (after)
+       */
       updatedAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by update date (before)
+       */
       updatedBefore?: string;
+      /** @description Filter by visibility */
       visibility?: components["schemas"]["AssetVisibility"];
+      /** @description Include deleted assets */
       withDeleted?: boolean;
+      /** @description Include EXIF data in response */
       withExif?: boolean;
+      /** @description Include people data in response */
       withPeople?: boolean;
+      /** @description Include stacked assets */
       withStacked?: boolean;
     };
+    /**
+     * @description Axis to mirror along
+     * @enum {string}
+     */
+    MirrorAxis: "horizontal" | "vertical";
+    MirrorParameters: {
+      /** @description Axis to mirror along */
+      axis: components["schemas"]["MirrorAxis"];
+    };
     NotificationCreateDto: {
+      /** @description Additional notification data */
       data?: Record<string, never>;
+      /** @description Notification description */
       description?: string | null;
+      /** @description Notification level */
       level?: components["schemas"]["NotificationLevel"];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Date when notification was read
+       */
       readAt?: string | null;
+      /** @description Notification title */
       title: string;
+      /** @description Notification type */
       type?: components["schemas"]["NotificationType"];
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description User ID to send notification to
+       */
       userId: string;
     };
     NotificationDeleteAllDto: {
+      /** @description Notification IDs to delete */
       ids: string[];
     };
     NotificationDto: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Creation date
+       */
       createdAt: string;
+      /** @description Additional notification data */
       data?: Record<string, never>;
+      /** @description Notification description */
       description?: string;
+      /** @description Notification ID */
       id: string;
+      /** @description Notification level */
       level: components["schemas"]["NotificationLevel"];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Date when notification was read
+       */
       readAt?: string;
+      /** @description Notification title */
       title: string;
+      /** @description Notification type */
       type: components["schemas"]["NotificationType"];
     };
     /** @enum {string} */
     NotificationLevel: "success" | "error" | "warning" | "info";
     /** @enum {string} */
-    NotificationType: "JobFailed" | "BackupFailed" | "SystemMessage" | "Custom";
+    NotificationType:
+      | "JobFailed"
+      | "BackupFailed"
+      | "SystemMessage"
+      | "AlbumInvite"
+      | "AlbumUpdate"
+      | "Custom";
     NotificationUpdateAllDto: {
+      /** @description Notification IDs to update */
       ids: string[];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Date when notifications were read
+       */
       readAt?: string | null;
     };
     NotificationUpdateDto: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Date when notification was read
+       */
       readAt?: string | null;
     };
     OAuthAuthorizeResponseDto: {
+      /** @description OAuth authorization URL */
       url: string;
     };
     OAuthCallbackDto: {
+      /** @description OAuth code verifier (PKCE) */
       codeVerifier?: string;
+      /** @description OAuth state parameter */
       state?: string;
+      /** @description OAuth callback URL */
       url: string;
     };
     OAuthConfigDto: {
+      /** @description OAuth code challenge (PKCE) */
       codeChallenge?: string;
+      /** @description OAuth redirect URI */
       redirectUri: string;
+      /** @description OAuth state parameter */
       state?: string;
     };
-    /** @enum {string} */
+    /**
+     * @description Token endpoint auth method
+     * @enum {string}
+     */
     OAuthTokenEndpointAuthMethod: "client_secret_post" | "client_secret_basic";
+    OcrConfig: {
+      /** @description Whether the task is enabled */
+      enabled: boolean;
+      /** @description Maximum resolution for OCR processing */
+      maxResolution: number;
+      /**
+       * Format: double
+       * @description Minimum confidence score for text detection
+       */
+      minDetectionScore: number;
+      /**
+       * Format: double
+       * @description Minimum confidence score for text recognition
+       */
+      minRecognitionScore: number;
+      /** @description Name of the model to use */
+      modelName: string;
+    };
     OnThisDayDto: {
+      /** @description Year for on this day memory */
       year: number;
     };
     OnboardingDto: {
+      /** @description Is user onboarded */
       isOnboarded: boolean;
     };
     OnboardingResponseDto: {
+      /** @description Is user onboarded */
       isOnboarded: boolean;
     };
     PartnerCreateDto: {
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description User ID to share with
+       */
       sharedWithId: string;
     };
     /** @enum {string} */
     PartnerDirection: "shared-by" | "shared-with";
     PartnerResponseDto: {
+      /** @description Avatar color */
       avatarColor: components["schemas"]["UserAvatarColor"];
+      /** @description User email */
       email: string;
+      /** @description User ID */
       id: string;
+      /** @description Show in timeline */
       inTimeline?: boolean;
+      /** @description User name */
       name: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Profile change date
+       */
       profileChangedAt: string;
+      /** @description Profile image path */
       profileImagePath: string;
     };
     PartnerUpdateDto: {
+      /** @description Show partner assets in timeline */
       inTimeline: boolean;
     };
     PeopleResponse: {
-      /** @default true */
+      /**
+       * @description Whether people are enabled
+       * @default true
+       */
       enabled: boolean;
-      /** @default false */
+      /**
+       * @description Whether people appear in web sidebar
+       * @default false
+       */
       sidebarWeb: boolean;
     };
     PeopleResponseDto: {
-      /** @description This property was added in v1.110.0 */
+      /** @description Whether there are more pages */
       hasNextPage?: boolean;
+      /** @description Number of hidden people */
       hidden: number;
+      /** @description List of people */
       people: components["schemas"]["PersonResponseDto"][];
+      /** @description Total number of people */
       total: number;
     };
     PeopleUpdate: {
+      /** @description Whether people are enabled */
       enabled?: boolean;
+      /** @description Whether people appear in web sidebar */
       sidebarWeb?: boolean;
     };
     PeopleUpdateDto: {
+      /** @description People to update */
       people: components["schemas"]["PeopleUpdateItem"][];
     };
     PeopleUpdateItem: {
       /**
        * Format: date
-       * @description Person date of birth.
-       *     Note: the mobile app cannot currently set the birth date to null.
+       * @description Person date of birth
        */
       birthDate?: string | null;
+      /** @description Person color (hex) */
       color?: string | null;
       /**
        * Format: uuid
-       * @description Asset is used to get the feature face thumbnail.
+       * @description Asset ID used for feature face thumbnail
        */
       featureFaceAssetId?: string;
-      /** @description Person id. */
+      /** @description Person ID */
       id: string;
+      /** @description Mark as favorite */
       isFavorite?: boolean;
-      /** @description Person visibility */
+      /** @description Person visibility (hidden) */
       isHidden?: boolean;
-      /** @description Person name. */
+      /** @description Person name */
       name?: string;
     };
-    /** @enum {string} */
+    /**
+     * @description List of permissions
+     * @enum {string}
+     */
     Permission:
       | "all"
       | "activity.create"
@@ -3421,6 +5609,11 @@ export interface components {
       | "asset.download"
       | "asset.upload"
       | "asset.replace"
+      | "asset.copy"
+      | "asset.derive"
+      | "asset.edit.get"
+      | "asset.edit.create"
+      | "asset.edit.delete"
       | "album.create"
       | "album.read"
       | "album.update"
@@ -3436,12 +5629,17 @@ export interface components {
       | "auth.changePassword"
       | "authDevice.delete"
       | "archive.read"
+      | "backup.list"
+      | "backup.download"
+      | "backup.upload"
+      | "backup.delete"
       | "duplicate.read"
       | "duplicate.delete"
       | "face.create"
       | "face.read"
       | "face.update"
       | "face.delete"
+      | "folder.read"
       | "job.create"
       | "job.read"
       | "library.create"
@@ -3451,6 +5649,9 @@ export interface components {
       | "library.statistics"
       | "timeline.read"
       | "timeline.download"
+      | "maintenance"
+      | "map.read"
+      | "map.search"
       | "memory.create"
       | "memory.read"
       | "memory.update"
@@ -3476,6 +5677,10 @@ export interface components {
       | "pinCode.create"
       | "pinCode.update"
       | "pinCode.delete"
+      | "plugin.create"
+      | "plugin.read"
+      | "plugin.update"
+      | "plugin.delete"
       | "server.about"
       | "server.apkLinks"
       | "server.storage"
@@ -3525,165 +5730,447 @@ export interface components {
       | "userProfileImage.read"
       | "userProfileImage.update"
       | "userProfileImage.delete"
+      | "queue.read"
+      | "queue.update"
+      | "queueJob.create"
+      | "queueJob.read"
+      | "queueJob.update"
+      | "queueJob.delete"
+      | "workflow.create"
+      | "workflow.read"
+      | "workflow.update"
+      | "workflow.delete"
       | "adminUser.create"
       | "adminUser.read"
       | "adminUser.update"
       | "adminUser.delete"
+      | "adminSession.read"
       | "adminAuth.unlinkAll";
     PersonCreateDto: {
       /**
        * Format: date
-       * @description Person date of birth.
-       *     Note: the mobile app cannot currently set the birth date to null.
+       * @description Person date of birth
        */
       birthDate?: string | null;
+      /** @description Person color (hex) */
       color?: string | null;
+      /** @description Mark as favorite */
       isFavorite?: boolean;
-      /** @description Person visibility */
+      /** @description Person visibility (hidden) */
       isHidden?: boolean;
-      /** @description Person name. */
+      /** @description Person name */
       name?: string;
     };
     PersonResponseDto: {
-      /** Format: date */
+      /**
+       * Format: date
+       * @description Person date of birth
+       */
       birthDate: string | null;
-      /** @description This property was added in v1.126.0 */
+      /** @description Person color (hex) */
       color?: string;
+      /** @description Person ID */
       id: string;
-      /** @description This property was added in v1.126.0 */
+      /** @description Is favorite */
       isFavorite?: boolean;
+      /** @description Is hidden */
       isHidden: boolean;
+      /** @description Person name */
       name: string;
+      /** @description Thumbnail path */
       thumbnailPath: string;
       /**
        * Format: date-time
-       * @description This property was added in v1.107.0
+       * @description Last update date
        */
       updatedAt?: string;
     };
     PersonStatisticsResponseDto: {
+      /** @description Number of assets */
       assets: number;
     };
     PersonUpdateDto: {
       /**
        * Format: date
-       * @description Person date of birth.
-       *     Note: the mobile app cannot currently set the birth date to null.
+       * @description Person date of birth
        */
       birthDate?: string | null;
+      /** @description Person color (hex) */
       color?: string | null;
       /**
        * Format: uuid
-       * @description Asset is used to get the feature face thumbnail.
+       * @description Asset ID used for feature face thumbnail
        */
       featureFaceAssetId?: string;
+      /** @description Mark as favorite */
       isFavorite?: boolean;
-      /** @description Person visibility */
+      /** @description Person visibility (hidden) */
       isHidden?: boolean;
-      /** @description Person name. */
+      /** @description Person name */
       name?: string;
     };
     PersonWithFacesResponseDto: {
-      /** Format: date */
+      /**
+       * Format: date
+       * @description Person date of birth
+       */
       birthDate: string | null;
-      /** @description This property was added in v1.126.0 */
+      /** @description Person color (hex) */
       color?: string;
+      /** @description Face detections */
       faces: components["schemas"]["AssetFaceWithoutPersonResponseDto"][];
+      /** @description Person ID */
       id: string;
-      /** @description This property was added in v1.126.0 */
+      /** @description Is favorite */
       isFavorite?: boolean;
+      /** @description Is hidden */
       isHidden: boolean;
+      /** @description Person name */
       name: string;
+      /** @description Thumbnail path */
       thumbnailPath: string;
       /**
        * Format: date-time
-       * @description This property was added in v1.107.0
+       * @description Last update date
        */
       updatedAt?: string;
     };
     PinCodeChangeDto: {
-      /** @example 123456 */
+      /**
+       * @description New PIN code (4-6 digits)
+       * @example 123456
+       */
       newPinCode: string;
+      /** @description User password (required if PIN code is not provided) */
       password?: string;
-      /** @example 123456 */
+      /**
+       * @description New PIN code (4-6 digits)
+       * @example 123456
+       */
       pinCode?: string;
     };
     PinCodeResetDto: {
+      /** @description User password (required if PIN code is not provided) */
       password?: string;
-      /** @example 123456 */
+      /**
+       * @description New PIN code (4-6 digits)
+       * @example 123456
+       */
       pinCode?: string;
     };
     PinCodeSetupDto: {
-      /** @example 123456 */
+      /**
+       * @description PIN code (4-6 digits)
+       * @example 123456
+       */
       pinCode: string;
     };
     PlacesResponseDto: {
+      /** @description Administrative level 1 name (state/province) */
       admin1name?: string;
+      /** @description Administrative level 2 name (county/district) */
       admin2name?: string;
+      /** @description Latitude coordinate */
       latitude: number;
+      /** @description Longitude coordinate */
       longitude: number;
+      /** @description Place name */
       name: string;
     };
+    PluginActionResponseDto: {
+      /** @description Action description */
+      description: string;
+      /** @description Action ID */
+      id: string;
+      /** @description Method name */
+      methodName: string;
+      /** @description Plugin ID */
+      pluginId: string;
+      /** @description Action schema */
+      schema: Record<string, never> | null;
+      /** @description Supported contexts */
+      supportedContexts: components["schemas"]["PluginContextType"][];
+      /** @description Action title */
+      title: string;
+    };
+    /**
+     * @description Context type
+     * @enum {string}
+     */
+    PluginContextType: "asset" | "album" | "person";
+    PluginFilterResponseDto: {
+      /** @description Filter description */
+      description: string;
+      /** @description Filter ID */
+      id: string;
+      /** @description Method name */
+      methodName: string;
+      /** @description Plugin ID */
+      pluginId: string;
+      /** @description Filter schema */
+      schema: Record<string, never> | null;
+      /** @description Supported contexts */
+      supportedContexts: components["schemas"]["PluginContextType"][];
+      /** @description Filter title */
+      title: string;
+    };
+    PluginResponseDto: {
+      /** @description Plugin actions */
+      actions: components["schemas"]["PluginActionResponseDto"][];
+      /** @description Plugin author */
+      author: string;
+      /** @description Creation date */
+      createdAt: string;
+      /** @description Plugin description */
+      description: string;
+      /** @description Plugin filters */
+      filters: components["schemas"]["PluginFilterResponseDto"][];
+      /** @description Plugin ID */
+      id: string;
+      /** @description Plugin name */
+      name: string;
+      /** @description Plugin title */
+      title: string;
+      /** @description Last update date */
+      updatedAt: string;
+      /** @description Plugin version */
+      version: string;
+    };
+    PluginTriggerResponseDto: {
+      /** @description Context type */
+      contextType: components["schemas"]["PluginContextType"];
+      /** @description Trigger type */
+      type: components["schemas"]["PluginTriggerType"];
+    };
+    /**
+     * @description Trigger type
+     * @enum {string}
+     */
+    PluginTriggerType: "AssetCreate" | "PersonRecognized";
     PurchaseResponse: {
+      /** @description Date until which to hide buy button */
       hideBuyButtonUntil: string;
+      /** @description Whether to show support badge */
       showSupportBadge: boolean;
     };
     PurchaseUpdate: {
+      /** @description Date until which to hide buy button */
       hideBuyButtonUntil?: string;
+      /** @description Whether to show support badge */
       showSupportBadge?: boolean;
     };
-    QueueStatusDto: {
+    /**
+     * @description Queue command to execute
+     * @enum {string}
+     */
+    QueueCommand: "start" | "pause" | "resume" | "empty" | "clear-failed";
+    QueueCommandDto: {
+      /** @description Queue command to execute */
+      command: components["schemas"]["QueueCommand"];
+      /** @description Force the command execution (if applicable) */
+      force?: boolean;
+    };
+    QueueDeleteDto: {
+      /** @description If true, will also remove failed jobs from the queue. */
+      failed?: boolean;
+    };
+    QueueJobResponseDto: {
+      /** @description Job data payload */
+      data: Record<string, never>;
+      /** @description Job ID */
+      id?: string;
+      /** @description Job name */
+      name: components["schemas"]["JobName"];
+      /** @description Job creation timestamp */
+      timestamp: number;
+    };
+    /** @enum {string} */
+    QueueJobStatus:
+      | "active"
+      | "failed"
+      | "completed"
+      | "delayed"
+      | "waiting"
+      | "paused";
+    /** @enum {string} */
+    QueueName:
+      | "thumbnailGeneration"
+      | "metadataExtraction"
+      | "videoConversion"
+      | "faceDetection"
+      | "facialRecognition"
+      | "smartSearch"
+      | "duplicateDetection"
+      | "backgroundTask"
+      | "storageTemplateMigration"
+      | "migration"
+      | "search"
+      | "sidecar"
+      | "library"
+      | "notifications"
+      | "backupDatabase"
+      | "ocr"
+      | "workflow"
+      | "editor";
+    QueueResponseDto: {
+      /** @description Whether the queue is paused */
+      isPaused: boolean;
+      /** @description Queue name */
+      name: components["schemas"]["QueueName"];
+      statistics: components["schemas"]["QueueStatisticsDto"];
+    };
+    QueueResponseLegacyDto: {
+      jobCounts: components["schemas"]["QueueStatisticsDto"];
+      queueStatus: components["schemas"]["QueueStatusLegacyDto"];
+    };
+    QueueStatisticsDto: {
+      /** @description Number of active jobs */
+      active: number;
+      /** @description Number of completed jobs */
+      completed: number;
+      /** @description Number of delayed jobs */
+      delayed: number;
+      /** @description Number of failed jobs */
+      failed: number;
+      /** @description Number of paused jobs */
+      paused: number;
+      /** @description Number of waiting jobs */
+      waiting: number;
+    };
+    QueueStatusLegacyDto: {
+      /** @description Whether the queue is currently active (has running jobs) */
       isActive: boolean;
+      /** @description Whether the queue is paused */
       isPaused: boolean;
     };
+    QueueUpdateDto: {
+      /** @description Whether to pause the queue */
+      isPaused?: boolean;
+    };
+    QueuesResponseLegacyDto: {
+      backgroundTask: components["schemas"]["QueueResponseLegacyDto"];
+      backupDatabase: components["schemas"]["QueueResponseLegacyDto"];
+      duplicateDetection: components["schemas"]["QueueResponseLegacyDto"];
+      editor: components["schemas"]["QueueResponseLegacyDto"];
+      faceDetection: components["schemas"]["QueueResponseLegacyDto"];
+      facialRecognition: components["schemas"]["QueueResponseLegacyDto"];
+      library: components["schemas"]["QueueResponseLegacyDto"];
+      metadataExtraction: components["schemas"]["QueueResponseLegacyDto"];
+      migration: components["schemas"]["QueueResponseLegacyDto"];
+      notifications: components["schemas"]["QueueResponseLegacyDto"];
+      ocr: components["schemas"]["QueueResponseLegacyDto"];
+      search: components["schemas"]["QueueResponseLegacyDto"];
+      sidecar: components["schemas"]["QueueResponseLegacyDto"];
+      smartSearch: components["schemas"]["QueueResponseLegacyDto"];
+      storageTemplateMigration: components["schemas"]["QueueResponseLegacyDto"];
+      thumbnailGeneration: components["schemas"]["QueueResponseLegacyDto"];
+      videoConversion: components["schemas"]["QueueResponseLegacyDto"];
+      workflow: components["schemas"]["QueueResponseLegacyDto"];
+    };
     RandomSearchDto: {
+      /** @description Filter by album IDs */
       albumIds?: string[];
+      /** @description Filter by city name */
       city?: string | null;
+      /** @description Filter by country name */
       country?: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by creation date (after)
+       */
       createdAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by creation date (before)
+       */
       createdBefore?: string;
+      /** @description Device ID to filter by */
       deviceId?: string;
+      /** @description Filter by encoded status */
       isEncoded?: boolean;
+      /** @description Filter by favorite status */
       isFavorite?: boolean;
+      /** @description Filter by motion photo status */
       isMotion?: boolean;
+      /** @description Filter assets not in any album */
       isNotInAlbum?: boolean;
+      /** @description Filter by offline status */
       isOffline?: boolean;
+      /** @description Filter by lens model */
       lensModel?: string | null;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Library ID to filter by
+       */
       libraryId?: string | null;
+      /** @description Filter by camera make */
       make?: string;
+      /** @description Filter by camera model */
       model?: string | null;
+      /** @description Filter by OCR text content */
+      ocr?: string;
+      /** @description Filter by person IDs */
       personIds?: string[];
-      rating?: number;
+      /** @description Filter by rating [1-5], or null for unrated */
+      rating?: number | null;
+      /** @description Number of results to return */
       size?: number;
+      /** @description Filter by state/province name */
       state?: string | null;
+      /** @description Filter by tag IDs */
       tagIds?: string[] | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by taken date (after)
+       */
       takenAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by taken date (before)
+       */
       takenBefore?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by trash date (after)
+       */
       trashedAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by trash date (before)
+       */
       trashedBefore?: string;
+      /** @description Asset type filter */
       type?: components["schemas"]["AssetTypeEnum"];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by update date (after)
+       */
       updatedAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by update date (before)
+       */
       updatedBefore?: string;
+      /** @description Filter by visibility */
       visibility?: components["schemas"]["AssetVisibility"];
+      /** @description Include deleted assets */
       withDeleted?: boolean;
+      /** @description Include EXIF data in response */
       withExif?: boolean;
+      /** @description Include people data in response */
       withPeople?: boolean;
+      /** @description Include stacked assets */
       withStacked?: boolean;
     };
     RatingsResponse: {
-      /** @default false */
+      /**
+       * @description Whether ratings are enabled
+       * @default false
+       */
       enabled: boolean;
     };
     RatingsUpdate: {
+      /** @description Whether ratings are enabled */
       enabled?: boolean;
     };
     /** @enum {string} */
@@ -3691,36 +6178,53 @@ export interface components {
     /** @enum {string} */
     ReactionType: "comment" | "like";
     ReverseGeocodingStateResponseDto: {
+      /** @description Last import file name */
       lastImportFileName: string | null;
+      /** @description Last update timestamp */
       lastUpdate: string | null;
     };
+    RotateParameters: {
+      /** @description Rotation angle in degrees */
+      angle: number;
+    };
     SearchAlbumResponseDto: {
+      /** @description Number of albums in this page */
       count: number;
       facets: components["schemas"]["SearchFacetResponseDto"][];
       items: components["schemas"]["AlbumResponseDto"][];
+      /** @description Total number of matching albums */
       total: number;
     };
     SearchAssetResponseDto: {
+      /** @description Number of assets in this page */
       count: number;
       facets: components["schemas"]["SearchFacetResponseDto"][];
       items: components["schemas"]["AssetResponseDto"][];
+      /** @description Next page token */
       nextPage: string | null;
+      /** @description Total number of matching assets */
       total: number;
     };
     SearchExploreItem: {
       data: components["schemas"]["AssetResponseDto"];
+      /** @description Explore value */
       value: string;
     };
     SearchExploreResponseDto: {
+      /** @description Explore field name */
       fieldName: string;
       items: components["schemas"]["SearchExploreItem"][];
     };
     SearchFacetCountResponseDto: {
+      /** @description Number of assets with this facet value */
       count: number;
+      /** @description Facet value */
       value: string;
     };
     SearchFacetResponseDto: {
+      /** @description Facet counts */
       counts: components["schemas"]["SearchFacetCountResponseDto"][];
+      /** @description Facet field name */
       fieldName: string;
     };
     SearchResponseDto: {
@@ -3728,6 +6232,7 @@ export interface components {
       assets: components["schemas"]["SearchAssetResponseDto"];
     };
     SearchStatisticsResponseDto: {
+      /** @description Total number of matching assets */
       total: number;
     };
     /** @enum {string} */
@@ -3736,67 +6241,124 @@ export interface components {
       | "state"
       | "city"
       | "camera-make"
-      | "camera-model";
+      | "camera-model"
+      | "camera-lens-model";
     ServerAboutResponseDto: {
+      /** @description Build identifier */
       build?: string;
+      /** @description Build image name */
       buildImage?: string;
+      /** @description Build image URL */
       buildImageUrl?: string;
+      /** @description Build URL */
       buildUrl?: string;
+      /** @description ExifTool version */
       exiftool?: string;
+      /** @description FFmpeg version */
       ffmpeg?: string;
+      /** @description ImageMagick version */
       imagemagick?: string;
+      /** @description libvips version */
       libvips?: string;
+      /** @description Whether the server is licensed */
       licensed: boolean;
+      /** @description Node.js version */
       nodejs?: string;
+      /** @description Repository name */
       repository?: string;
+      /** @description Repository URL */
       repositoryUrl?: string;
+      /** @description Source commit hash */
       sourceCommit?: string;
+      /** @description Source reference (branch/tag) */
       sourceRef?: string;
+      /** @description Source URL */
       sourceUrl?: string;
+      /** @description Third-party bug/feature URL */
       thirdPartyBugFeatureUrl?: string;
+      /** @description Third-party documentation URL */
       thirdPartyDocumentationUrl?: string;
+      /** @description Third-party source URL */
       thirdPartySourceUrl?: string;
+      /** @description Third-party support URL */
       thirdPartySupportUrl?: string;
+      /** @description Server version */
       version: string;
+      /** @description URL to version information */
       versionUrl: string;
     };
     ServerApkLinksDto: {
+      /** @description APK download link for ARM64 v8a architecture */
       arm64v8a: string;
+      /** @description APK download link for ARM EABI v7a architecture */
       armeabiv7a: string;
+      /** @description APK download link for universal architecture */
       universal: string;
+      /** @description APK download link for x86_64 architecture */
       x86_64: string;
     };
     ServerConfigDto: {
+      /** @description External domain URL */
       externalDomain: string;
+      /** @description Whether the server has been initialized */
       isInitialized: boolean;
+      /** @description Whether the admin has completed onboarding */
       isOnboarded: boolean;
+      /** @description Login page message */
       loginPageMessage: string;
+      /** @description Whether maintenance mode is active */
+      maintenanceMode: boolean;
+      /** @description Map dark style URL */
       mapDarkStyleUrl: string;
+      /** @description Map light style URL */
       mapLightStyleUrl: string;
+      /** @description OAuth button text */
       oauthButtonText: string;
+      /** @description Whether public user registration is enabled */
       publicUsers: boolean;
+      /** @description Number of days before trashed assets are permanently deleted */
       trashDays: number;
+      /** @description Delay in days before deleted users are permanently removed */
       userDeleteDelay: number;
     };
     ServerFeaturesDto: {
+      /** @description Whether config file is available */
       configFile: boolean;
+      /** @description Whether duplicate detection is enabled */
       duplicateDetection: boolean;
+      /** @description Whether email notifications are enabled */
       email: boolean;
+      /** @description Whether facial recognition is enabled */
       facialRecognition: boolean;
+      /** @description Whether face import is enabled */
       importFaces: boolean;
+      /** @description Whether map feature is enabled */
       map: boolean;
+      /** @description Whether OAuth is enabled */
       oauth: boolean;
+      /** @description Whether OAuth auto-launch is enabled */
       oauthAutoLaunch: boolean;
+      /** @description Whether OCR is enabled */
+      ocr: boolean;
+      /** @description Whether password login is enabled */
       passwordLogin: boolean;
+      /** @description Whether reverse geocoding is enabled */
       reverseGeocoding: boolean;
+      /** @description Whether search is enabled */
       search: boolean;
+      /** @description Whether sidecar files are supported */
       sidecar: boolean;
+      /** @description Whether smart search is enabled */
       smartSearch: boolean;
+      /** @description Whether trash feature is enabled */
       trash: boolean;
     };
     ServerMediaTypesResponseDto: {
+      /** @description Supported image MIME types */
       image: string[];
+      /** @description Supported sidecar MIME types */
       sidecar: string[];
+      /** @description Supported video MIME types */
       video: string[];
     };
     ServerPingResponse: {
@@ -3804,10 +6366,14 @@ export interface components {
       readonly res: string;
     };
     ServerStatsResponseDto: {
-      /** @default 0 */
+      /**
+       * @description Total number of photos
+       * @default 0
+       */
       photos: number;
       /**
        * Format: int64
+       * @description Total storage usage in bytes
        * @default 0
        */
       usage: number;
@@ -3827,402 +6393,812 @@ export interface components {
       usageByUser: components["schemas"]["UsageByUserDto"][];
       /**
        * Format: int64
+       * @description Storage usage for photos in bytes
        * @default 0
        */
       usagePhotos: number;
       /**
        * Format: int64
+       * @description Storage usage for videos in bytes
        * @default 0
        */
       usageVideos: number;
-      /** @default 0 */
+      /**
+       * @description Total number of videos
+       * @default 0
+       */
       videos: number;
     };
     ServerStorageResponseDto: {
+      /** @description Available disk space (human-readable format) */
       diskAvailable: string;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description Available disk space in bytes
+       */
       diskAvailableRaw: number;
+      /** @description Total disk size (human-readable format) */
       diskSize: string;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description Total disk size in bytes
+       */
       diskSizeRaw: number;
-      /** Format: double */
+      /**
+       * Format: double
+       * @description Disk usage percentage (0-100)
+       */
       diskUsagePercentage: number;
+      /** @description Used disk space (human-readable format) */
       diskUse: string;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description Used disk space in bytes
+       */
       diskUseRaw: number;
     };
     ServerThemeDto: {
+      /** @description Custom CSS for theming */
       customCss: string;
     };
     ServerVersionHistoryResponseDto: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description When this version was first seen
+       */
       createdAt: string;
+      /** @description Version history entry ID */
       id: string;
+      /** @description Version string */
       version: string;
     };
     ServerVersionResponseDto: {
+      /** @description Major version number */
       major: number;
+      /** @description Minor version number */
       minor: number;
+      /** @description Patch version number */
       patch: number;
     };
     SessionCreateDto: {
+      /** @description Device OS */
       deviceOS?: string;
+      /** @description Device type */
       deviceType?: string;
-      /** @description session duration, in seconds */
+      /** @description Session duration in seconds */
       duration?: number;
     };
     SessionCreateResponseDto: {
+      /** @description App version */
+      appVersion: string | null;
+      /** @description Creation date */
       createdAt: string;
+      /** @description Is current session */
       current: boolean;
+      /** @description Device OS */
       deviceOS: string;
+      /** @description Device type */
       deviceType: string;
+      /** @description Expiration date */
       expiresAt?: string;
+      /** @description Session ID */
       id: string;
+      /** @description Is pending sync reset */
       isPendingSyncReset: boolean;
+      /** @description Session token */
       token: string;
+      /** @description Last update date */
       updatedAt: string;
     };
     SessionResponseDto: {
+      /** @description App version */
+      appVersion: string | null;
+      /** @description Creation date */
       createdAt: string;
+      /** @description Is current session */
       current: boolean;
+      /** @description Device OS */
       deviceOS: string;
+      /** @description Device type */
       deviceType: string;
+      /** @description Expiration date */
       expiresAt?: string;
+      /** @description Session ID */
       id: string;
+      /** @description Is pending sync reset */
       isPendingSyncReset: boolean;
+      /** @description Last update date */
       updatedAt: string;
     };
     SessionUnlockDto: {
+      /** @description User password (required if PIN code is not provided) */
       password?: string;
-      /** @example 123456 */
+      /**
+       * @description New PIN code (4-6 digits)
+       * @example 123456
+       */
       pinCode?: string;
     };
     SessionUpdateDto: {
+      /** @description Reset pending sync state */
       isPendingSyncReset?: boolean;
     };
+    SetMaintenanceModeDto: {
+      /** @description Maintenance action */
+      action: components["schemas"]["MaintenanceAction"];
+      /** @description Restore backup filename */
+      restoreBackupFilename?: string;
+    };
     SharedLinkCreateDto: {
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Album ID (for album sharing)
+       */
       albumId?: string;
-      /** @default true */
+      /**
+       * @description Allow downloads
+       * @default true
+       */
       allowDownload: boolean;
+      /** @description Allow uploads */
       allowUpload?: boolean;
+      /** @description Asset IDs (for individual assets) */
       assetIds?: string[];
+      /** @description Link description */
       description?: string | null;
       /**
        * Format: date-time
+       * @description Expiration date
        * @default null
        */
       expiresAt: string | null;
+      /** @description Link password */
       password?: string | null;
-      /** @default true */
+      /**
+       * @description Show metadata
+       * @default true
+       */
       showMetadata: boolean;
+      /** @description Custom URL slug */
       slug?: string | null;
+      /** @description Shared link type */
       type: components["schemas"]["SharedLinkType"];
     };
     SharedLinkEditDto: {
+      /** @description Allow downloads */
       allowDownload?: boolean;
+      /** @description Allow uploads */
       allowUpload?: boolean;
-      /**
-       * @description Few clients cannot send null to set the expiryTime to never.
-       *     Setting this flag and not sending expiryAt is considered as null instead.
-       *     Clients that can send null values can ignore this.
-       */
+      /** @description Whether to change the expiry time. Few clients cannot send null to set the expiryTime to never. Setting this flag and not sending expiryAt is considered as null instead. Clients that can send null values can ignore this. */
       changeExpiryTime?: boolean;
+      /** @description Link description */
       description?: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Expiration date
+       */
       expiresAt?: string | null;
+      /** @description Link password */
       password?: string | null;
+      /** @description Show metadata */
       showMetadata?: boolean;
+      /** @description Custom URL slug */
       slug?: string | null;
+    };
+    SharedLinkLoginDto: {
+      /**
+       * @description Shared link password
+       * @example password
+       */
+      password: string;
     };
     SharedLinkResponseDto: {
       album?: components["schemas"]["AlbumResponseDto"];
+      /** @description Allow downloads */
       allowDownload: boolean;
+      /** @description Allow uploads */
       allowUpload: boolean;
       assets: components["schemas"]["AssetResponseDto"][];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Creation date
+       */
       createdAt: string;
+      /** @description Link description */
       description: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Expiration date
+       */
       expiresAt: string | null;
+      /** @description Shared link ID */
       id: string;
+      /** @description Encryption key (base64url) */
       key: string;
+      /** @description Has password */
       password: string | null;
+      /** @description Show metadata */
       showMetadata: boolean;
+      /** @description Custom URL slug */
       slug: string | null;
+      /**
+       * @deprecated
+       * @description Access token
+       */
       token?: string | null;
+      /** @description Shared link type */
       type: components["schemas"]["SharedLinkType"];
+      /** @description Owner user ID */
       userId: string;
     };
-    /** @enum {string} */
+    /**
+     * @description Shared link type
+     * @enum {string}
+     */
     SharedLinkType: "ALBUM" | "INDIVIDUAL";
     SharedLinksResponse: {
-      /** @default true */
+      /**
+       * @description Whether shared links are enabled
+       * @default true
+       */
       enabled: boolean;
-      /** @default false */
+      /**
+       * @description Whether shared links appear in web sidebar
+       * @default false
+       */
       sidebarWeb: boolean;
     };
     SharedLinksUpdate: {
+      /** @description Whether shared links are enabled */
       enabled?: boolean;
+      /** @description Whether shared links appear in web sidebar */
       sidebarWeb?: boolean;
     };
     SignUpDto: {
       /**
        * Format: email
+       * @description User email
        * @example testuser@email.com
        */
       email: string;
-      /** @example Admin */
+      /**
+       * @description User name
+       * @example Admin
+       */
       name: string;
-      /** @example password */
+      /**
+       * @description User password
+       * @example password
+       */
       password: string;
     };
     SmartSearchDto: {
+      /** @description Filter by album IDs */
       albumIds?: string[];
+      /** @description Filter by city name */
       city?: string | null;
+      /** @description Filter by country name */
       country?: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by creation date (after)
+       */
       createdAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by creation date (before)
+       */
       createdBefore?: string;
+      /** @description Device ID to filter by */
       deviceId?: string;
+      /** @description Filter by encoded status */
       isEncoded?: boolean;
+      /** @description Filter by favorite status */
       isFavorite?: boolean;
+      /** @description Filter by motion photo status */
       isMotion?: boolean;
+      /** @description Filter assets not in any album */
       isNotInAlbum?: boolean;
+      /** @description Filter by offline status */
       isOffline?: boolean;
+      /** @description Search language code */
       language?: string;
+      /** @description Filter by lens model */
       lensModel?: string | null;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Library ID to filter by
+       */
       libraryId?: string | null;
+      /** @description Filter by camera make */
       make?: string;
+      /** @description Filter by camera model */
       model?: string | null;
+      /** @description Filter by OCR text content */
+      ocr?: string;
+      /** @description Page number */
       page?: number;
+      /** @description Filter by person IDs */
       personIds?: string[];
+      /** @description Natural language search query */
       query?: string;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Asset ID to use as search reference
+       */
       queryAssetId?: string;
-      rating?: number;
+      /** @description Filter by rating [1-5], or null for unrated */
+      rating?: number | null;
+      /** @description Number of results to return */
       size?: number;
+      /** @description Filter by state/province name */
       state?: string | null;
+      /** @description Filter by tag IDs */
       tagIds?: string[] | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by taken date (after)
+       */
       takenAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by taken date (before)
+       */
       takenBefore?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by trash date (after)
+       */
       trashedAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by trash date (before)
+       */
       trashedBefore?: string;
+      /** @description Asset type filter */
       type?: components["schemas"]["AssetTypeEnum"];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by update date (after)
+       */
       updatedAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by update date (before)
+       */
       updatedBefore?: string;
+      /** @description Filter by visibility */
       visibility?: components["schemas"]["AssetVisibility"];
+      /** @description Include deleted assets */
       withDeleted?: boolean;
+      /** @description Include EXIF data in response */
       withExif?: boolean;
     };
-    /** @enum {string} */
+    /**
+     * @description Face detection source type
+     * @enum {string}
+     */
     SourceType: "machine-learning" | "exif" | "manual";
     StackCreateDto: {
-      /** @description first asset becomes the primary */
+      /** @description Asset IDs (first becomes primary, min 2) */
       assetIds: string[];
     };
     StackResponseDto: {
+      /** @description Stack assets */
       assets: components["schemas"]["AssetResponseDto"][];
+      /** @description Stack ID */
       id: string;
+      /** @description Primary asset ID */
       primaryAssetId: string;
     };
     StackUpdateDto: {
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Primary asset ID
+       */
       primaryAssetId?: string;
     };
     StatisticsSearchDto: {
+      /** @description Filter by album IDs */
       albumIds?: string[];
+      /** @description Filter by city name */
       city?: string | null;
+      /** @description Filter by country name */
       country?: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by creation date (after)
+       */
       createdAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by creation date (before)
+       */
       createdBefore?: string;
+      /** @description Filter by description text */
       description?: string;
+      /** @description Device ID to filter by */
       deviceId?: string;
+      /** @description Filter by encoded status */
       isEncoded?: boolean;
+      /** @description Filter by favorite status */
       isFavorite?: boolean;
+      /** @description Filter by motion photo status */
       isMotion?: boolean;
+      /** @description Filter assets not in any album */
       isNotInAlbum?: boolean;
+      /** @description Filter by offline status */
       isOffline?: boolean;
+      /** @description Filter by lens model */
       lensModel?: string | null;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Library ID to filter by
+       */
       libraryId?: string | null;
+      /** @description Filter by camera make */
       make?: string;
+      /** @description Filter by camera model */
       model?: string | null;
+      /** @description Filter by OCR text content */
+      ocr?: string;
+      /** @description Filter by person IDs */
       personIds?: string[];
-      rating?: number;
+      /** @description Filter by rating [1-5], or null for unrated */
+      rating?: number | null;
+      /** @description Filter by state/province name */
       state?: string | null;
+      /** @description Filter by tag IDs */
       tagIds?: string[] | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by taken date (after)
+       */
       takenAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by taken date (before)
+       */
       takenBefore?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by trash date (after)
+       */
       trashedAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by trash date (before)
+       */
       trashedBefore?: string;
+      /** @description Asset type filter */
       type?: components["schemas"]["AssetTypeEnum"];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by update date (after)
+       */
       updatedAfter?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Filter by update date (before)
+       */
       updatedBefore?: string;
+      /** @description Filter by visibility */
       visibility?: components["schemas"]["AssetVisibility"];
     };
+    /**
+     * @description Storage folder
+     * @enum {string}
+     */
+    StorageFolder:
+      | "encoded-video"
+      | "library"
+      | "upload"
+      | "profile"
+      | "thumbs"
+      | "backups";
     SyncAckDeleteDto: {
+      /** @description Sync entity types to delete acks for */
       types?: components["schemas"]["SyncEntityType"][];
     };
     SyncAckDto: {
+      /** @description Acknowledgment ID */
       ack: string;
+      /** @description Sync entity type */
       type: components["schemas"]["SyncEntityType"];
     };
     SyncAckSetDto: {
+      /** @description Acknowledgment IDs (max 1000) */
       acks: string[];
     };
     SyncAckV1: Record<string, never>;
     SyncAlbumDeleteV1: {
+      /** @description Album ID */
       albumId: string;
     };
     SyncAlbumToAssetDeleteV1: {
+      /** @description Album ID */
       albumId: string;
+      /** @description Asset ID */
       assetId: string;
     };
     SyncAlbumToAssetV1: {
+      /** @description Album ID */
       albumId: string;
+      /** @description Asset ID */
       assetId: string;
     };
     SyncAlbumUserDeleteV1: {
+      /** @description Album ID */
       albumId: string;
+      /** @description User ID */
       userId: string;
     };
     SyncAlbumUserV1: {
+      /** @description Album ID */
       albumId: string;
+      /** @description Album user role */
       role: components["schemas"]["AlbumUserRole"];
+      /** @description User ID */
       userId: string;
     };
     SyncAlbumV1: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Created at
+       */
       createdAt: string;
+      /** @description Album description */
       description: string;
+      /** @description Album ID */
       id: string;
+      /** @description Is activity enabled */
       isActivityEnabled: boolean;
+      /** @description Album name */
       name: string;
       order: components["schemas"]["AssetOrder"];
+      /** @description Owner ID */
       ownerId: string;
+      /** @description Thumbnail asset ID */
       thumbnailAssetId: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Updated at
+       */
       updatedAt: string;
     };
     SyncAssetDeleteV1: {
+      /** @description Asset ID */
       assetId: string;
     };
-    SyncAssetExifV1: {
+    SyncAssetEditDeleteV1: {
+      editId: string;
+    };
+    SyncAssetEditV1: {
+      action: components["schemas"]["AssetEditAction"];
       assetId: string;
+      id: string;
+      parameters: Record<string, never>;
+      sequence: number;
+    };
+    SyncAssetExifV1: {
+      /** @description Asset ID */
+      assetId: string;
+      /** @description City */
       city: string | null;
+      /** @description Country */
       country: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Date time original
+       */
       dateTimeOriginal: string | null;
+      /** @description Description */
       description: string | null;
+      /** @description Exif image height */
       exifImageHeight: number | null;
+      /** @description Exif image width */
       exifImageWidth: number | null;
+      /** @description Exposure time */
       exposureTime: string | null;
-      /** Format: double */
+      /**
+       * Format: double
+       * @description F number
+       */
       fNumber: number | null;
+      /** @description File size in byte */
       fileSizeInByte: number | null;
-      /** Format: double */
+      /**
+       * Format: double
+       * @description Focal length
+       */
       focalLength: number | null;
-      /** Format: double */
+      /**
+       * Format: double
+       * @description FPS
+       */
       fps: number | null;
+      /** @description ISO */
       iso: number | null;
-      /** Format: double */
+      /**
+       * Format: double
+       * @description Latitude
+       */
       latitude: number | null;
+      /** @description Lens model */
       lensModel: string | null;
-      /** Format: double */
+      /**
+       * Format: double
+       * @description Longitude
+       */
       longitude: number | null;
+      /** @description Make */
       make: string | null;
+      /** @description Model */
       model: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Modify date
+       */
       modifyDate: string | null;
+      /** @description Orientation */
       orientation: string | null;
+      /** @description Profile description */
       profileDescription: string | null;
+      /** @description Projection type */
       projectionType: string | null;
+      /** @description Rating */
       rating: number | null;
+      /** @description State */
       state: string | null;
+      /** @description Time zone */
       timeZone: string | null;
     };
     SyncAssetFaceDeleteV1: {
+      /** @description Asset face ID */
       assetFaceId: string;
     };
     SyncAssetFaceV1: {
+      /** @description Asset ID */
       assetId: string;
       boundingBoxX1: number;
       boundingBoxX2: number;
       boundingBoxY1: number;
       boundingBoxY2: number;
+      /** @description Asset face ID */
       id: string;
       imageHeight: number;
       imageWidth: number;
+      /** @description Person ID */
       personId: string | null;
+      /** @description Source type */
+      sourceType: string;
+    };
+    SyncAssetFaceV2: {
+      /** @description Asset ID */
+      assetId: string;
+      boundingBoxX1: number;
+      boundingBoxX2: number;
+      boundingBoxY1: number;
+      boundingBoxY2: number;
+      /**
+       * Format: date-time
+       * @description Face deleted at
+       */
+      deletedAt: string | null;
+      /** @description Asset face ID */
+      id: string;
+      imageHeight: number;
+      imageWidth: number;
+      /** @description Is the face visible in the asset */
+      isVisible: boolean;
+      /** @description Person ID */
+      personId: string | null;
+      /** @description Source type */
       sourceType: string;
     };
     SyncAssetMetadataDeleteV1: {
+      /** @description Asset ID */
       assetId: string;
-      key: components["schemas"]["AssetMetadataKey"];
+      /** @description Key */
+      key: string;
     };
     SyncAssetMetadataV1: {
+      /** @description Asset ID */
       assetId: string;
-      key: components["schemas"]["AssetMetadataKey"];
+      /** @description Key */
+      key: string;
+      /** @description Value */
       value: Record<string, never>;
     };
     SyncAssetV1: {
+      /** @description Checksum */
       checksum: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Deleted at
+       */
       deletedAt: string | null;
+      /** @description Duration */
       duration: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description File created at
+       */
       fileCreatedAt: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description File modified at
+       */
       fileModifiedAt: string | null;
+      /** @description Asset height */
+      height: number | null;
+      /** @description Asset ID */
       id: string;
+      /** @description Is edited */
+      isEdited: boolean;
+      /** @description Is favorite */
       isFavorite: boolean;
+      /** @description Library ID */
       libraryId: string | null;
+      /** @description Live photo video ID */
       livePhotoVideoId: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Local date time
+       */
       localDateTime: string | null;
+      /** @description Original file name */
       originalFileName: string;
+      /** @description Owner ID */
       ownerId: string;
+      /** @description Stack ID */
       stackId: string | null;
+      /** @description Thumbhash */
       thumbhash: string | null;
+      /** @description Asset type */
       type: components["schemas"]["AssetTypeEnum"];
+      /** @description Asset visibility */
       visibility: components["schemas"]["AssetVisibility"];
+      /** @description Asset width */
+      width: number | null;
     };
     SyncAuthUserV1: {
+      /** @description User avatar color */
       avatarColor: components["schemas"]["UserAvatarColor"] | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description User deleted at
+       */
       deletedAt: string | null;
+      /** @description User email */
       email: string;
+      /** @description User has profile image */
       hasProfileImage: boolean;
+      /** @description User ID */
       id: string;
+      /** @description User is admin */
       isAdmin: boolean;
+      /** @description User name */
       name: string;
+      /** @description User OAuth ID */
       oauthId: string;
+      /** @description User pin code */
       pinCode: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description User profile changed at
+       */
       profileChangedAt: string;
       quotaSizeInBytes: number | null;
       quotaUsageInBytes: number;
+      /** @description User storage label */
       storageLabel: string | null;
     };
     SyncCompleteV1: Record<string, never>;
-    /** @enum {string} */
+    /**
+     * @description Sync entity type
+     * @enum {string}
+     */
     SyncEntityType:
       | "AuthUserV1"
       | "UserV1"
@@ -4230,6 +7206,8 @@ export interface components {
       | "AssetV1"
       | "AssetDeleteV1"
       | "AssetExifV1"
+      | "AssetEditV1"
+      | "AssetEditDeleteV1"
       | "AssetMetadataV1"
       | "AssetMetadataDeleteV1"
       | "PartnerV1"
@@ -4265,6 +7243,7 @@ export interface components {
       | "PersonV1"
       | "PersonDeleteV1"
       | "AssetFaceV1"
+      | "AssetFaceV2"
       | "AssetFaceDeleteV1"
       | "UserMetadataV1"
       | "UserMetadataDeleteV1"
@@ -4272,65 +7251,121 @@ export interface components {
       | "SyncResetV1"
       | "SyncCompleteV1";
     SyncMemoryAssetDeleteV1: {
+      /** @description Asset ID */
       assetId: string;
+      /** @description Memory ID */
       memoryId: string;
     };
     SyncMemoryAssetV1: {
+      /** @description Asset ID */
       assetId: string;
+      /** @description Memory ID */
       memoryId: string;
     };
     SyncMemoryDeleteV1: {
+      /** @description Memory ID */
       memoryId: string;
     };
     SyncMemoryV1: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Created at
+       */
       createdAt: string;
+      /** @description Data */
       data: Record<string, never>;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Deleted at
+       */
       deletedAt: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Hide at
+       */
       hideAt: string | null;
+      /** @description Memory ID */
       id: string;
+      /** @description Is saved */
       isSaved: boolean;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Memory at
+       */
       memoryAt: string;
+      /** @description Owner ID */
       ownerId: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Seen at
+       */
       seenAt: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Show at
+       */
       showAt: string | null;
+      /** @description Memory type */
       type: components["schemas"]["MemoryType"];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Updated at
+       */
       updatedAt: string;
     };
     SyncPartnerDeleteV1: {
+      /** @description Shared by ID */
       sharedById: string;
+      /** @description Shared with ID */
       sharedWithId: string;
     };
     SyncPartnerV1: {
+      /** @description In timeline */
       inTimeline: boolean;
+      /** @description Shared by ID */
       sharedById: string;
+      /** @description Shared with ID */
       sharedWithId: string;
     };
     SyncPersonDeleteV1: {
+      /** @description Person ID */
       personId: string;
     };
     SyncPersonV1: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Birth date
+       */
       birthDate: string | null;
+      /** @description Color */
       color: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Created at
+       */
       createdAt: string;
+      /** @description Face asset ID */
       faceAssetId: string | null;
+      /** @description Person ID */
       id: string;
+      /** @description Is favorite */
       isFavorite: boolean;
+      /** @description Is hidden */
       isHidden: boolean;
+      /** @description Person name */
       name: string;
+      /** @description Owner ID */
       ownerId: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Updated at
+       */
       updatedAt: string;
     };
-    /** @enum {string} */
+    /**
+     * @description Sync request types
+     * @enum {string}
+     */
     SyncRequestType:
       | "AlbumsV1"
       | "AlbumUsersV1"
@@ -4339,6 +7374,7 @@ export interface components {
       | "AlbumAssetExifsV1"
       | "AssetsV1"
       | "AssetExifsV1"
+      | "AssetEditsV1"
       | "AssetMetadataV1"
       | "AuthUsersV1"
       | "MemoriesV1"
@@ -4351,45 +7387,75 @@ export interface components {
       | "UsersV1"
       | "PeopleV1"
       | "AssetFacesV1"
+      | "AssetFacesV2"
       | "UserMetadataV1";
     SyncResetV1: Record<string, never>;
     SyncStackDeleteV1: {
+      /** @description Stack ID */
       stackId: string;
     };
     SyncStackV1: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Created at
+       */
       createdAt: string;
+      /** @description Stack ID */
       id: string;
+      /** @description Owner ID */
       ownerId: string;
+      /** @description Primary asset ID */
       primaryAssetId: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Updated at
+       */
       updatedAt: string;
     };
     SyncStreamDto: {
+      /** @description Reset sync state */
       reset?: boolean;
+      /** @description Sync request types */
       types: components["schemas"]["SyncRequestType"][];
     };
     SyncUserDeleteV1: {
+      /** @description User ID */
       userId: string;
     };
     SyncUserMetadataDeleteV1: {
+      /** @description User metadata key */
       key: components["schemas"]["UserMetadataKey"];
+      /** @description User ID */
       userId: string;
     };
     SyncUserMetadataV1: {
+      /** @description User metadata key */
       key: components["schemas"]["UserMetadataKey"];
+      /** @description User ID */
       userId: string;
+      /** @description User metadata value */
       value: Record<string, never>;
     };
     SyncUserV1: {
+      /** @description User avatar color */
       avatarColor: components["schemas"]["UserAvatarColor"] | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description User deleted at
+       */
       deletedAt: string | null;
+      /** @description User email */
       email: string;
+      /** @description User has profile image */
       hasProfileImage: boolean;
+      /** @description User ID */
       id: string;
+      /** @description User name */
       name: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description User profile changed at
+       */
       profileChangedAt: string;
     };
     SystemConfigBackupsDto: {
@@ -4419,43 +7485,80 @@ export interface components {
       user: components["schemas"]["SystemConfigUserDto"];
     };
     SystemConfigFFmpegDto: {
+      /** @description Transcode hardware acceleration */
       accel: components["schemas"]["TranscodeHWAccel"];
+      /** @description Accelerated decode */
       accelDecode: boolean;
+      /** @description Accepted audio codecs */
       acceptedAudioCodecs: components["schemas"]["AudioCodec"][];
+      /** @description Accepted containers */
       acceptedContainers: components["schemas"]["VideoContainer"][];
+      /** @description Accepted video codecs */
       acceptedVideoCodecs: components["schemas"]["VideoCodec"][];
+      /** @description B-frames */
       bframes: number;
+      /** @description CQ mode */
       cqMode: components["schemas"]["CQMode"];
+      /** @description CRF */
       crf: number;
+      /** @description GOP size */
       gopSize: number;
+      /** @description Max bitrate */
       maxBitrate: string;
+      /** @description Preferred hardware device */
       preferredHwDevice: string;
+      /** @description Preset */
       preset: string;
+      /** @description References */
       refs: number;
+      /** @description Target audio codec */
       targetAudioCodec: components["schemas"]["AudioCodec"];
+      /** @description Target resolution */
       targetResolution: string;
+      /** @description Target video codec */
       targetVideoCodec: components["schemas"]["VideoCodec"];
+      /** @description Temporal AQ */
       temporalAQ: boolean;
+      /** @description Threads */
       threads: number;
+      /** @description Tone mapping */
       tonemap: components["schemas"]["ToneMapping"];
+      /** @description Transcode policy */
       transcode: components["schemas"]["TranscodePolicy"];
+      /** @description Two pass */
       twoPass: boolean;
     };
     SystemConfigFacesDto: {
+      /** @description Import */
       import: boolean;
     };
     SystemConfigGeneratedFullsizeImageDto: {
+      /** @description Enabled */
       enabled: boolean;
+      /** @description Image format */
       format: components["schemas"]["ImageFormat"];
+      /**
+       * @description Progressive
+       * @default false
+       */
+      progressive: boolean;
+      /** @description Quality */
       quality: number;
     };
     SystemConfigGeneratedImageDto: {
+      /** @description Image format */
       format: components["schemas"]["ImageFormat"];
+      /** @default false */
+      progressive: boolean;
+      /** @description Quality */
       quality: number;
+      /** @description Size */
       size: number;
     };
     SystemConfigImageDto: {
+      /** @description Colorspace */
       colorspace: components["schemas"]["Colorspace"];
+      /** @description Extract embedded */
       extractEmbedded: boolean;
       fullsize: components["schemas"]["SystemConfigGeneratedFullsizeImageDto"];
       preview: components["schemas"]["SystemConfigGeneratedImageDto"];
@@ -4463,16 +7566,19 @@ export interface components {
     };
     SystemConfigJobDto: {
       backgroundTask: components["schemas"]["JobSettingsDto"];
+      editor: components["schemas"]["JobSettingsDto"];
       faceDetection: components["schemas"]["JobSettingsDto"];
       library: components["schemas"]["JobSettingsDto"];
       metadataExtraction: components["schemas"]["JobSettingsDto"];
       migration: components["schemas"]["JobSettingsDto"];
       notifications: components["schemas"]["JobSettingsDto"];
+      ocr: components["schemas"]["JobSettingsDto"];
       search: components["schemas"]["JobSettingsDto"];
       sidecar: components["schemas"]["JobSettingsDto"];
       smartSearch: components["schemas"]["JobSettingsDto"];
       thumbnailGeneration: components["schemas"]["JobSettingsDto"];
       videoConversion: components["schemas"]["JobSettingsDto"];
+      workflow: components["schemas"]["JobSettingsDto"];
     };
     SystemConfigLibraryDto: {
       scan: components["schemas"]["SystemConfigLibraryScanDto"];
@@ -4480,12 +7586,15 @@ export interface components {
     };
     SystemConfigLibraryScanDto: {
       cronExpression: string;
+      /** @description Enabled */
       enabled: boolean;
     };
     SystemConfigLibraryWatchDto: {
+      /** @description Enabled */
       enabled: boolean;
     };
     SystemConfigLoggingDto: {
+      /** @description Enabled */
       enabled: boolean;
       level: components["schemas"]["LogLevel"];
     };
@@ -4493,14 +7602,17 @@ export interface components {
       availabilityChecks: components["schemas"]["MachineLearningAvailabilityChecksDto"];
       clip: components["schemas"]["CLIPConfig"];
       duplicateDetection: components["schemas"]["DuplicateDetectionConfig"];
+      /** @description Enabled */
       enabled: boolean;
       facialRecognition: components["schemas"]["FacialRecognitionConfig"];
+      ocr: components["schemas"]["OcrConfig"];
       /** Format: uri */
       urls: string[];
     };
     SystemConfigMapDto: {
       /** Format: uri */
       darkStyle: string;
+      /** @description Enabled */
       enabled: boolean;
       /** Format: uri */
       lightStyle: string;
@@ -4509,69 +7621,116 @@ export interface components {
       faces: components["schemas"]["SystemConfigFacesDto"];
     };
     SystemConfigNewVersionCheckDto: {
+      /** @description Enabled */
       enabled: boolean;
     };
     SystemConfigNightlyTasksDto: {
+      /** @description Cluster new faces */
       clusterNewFaces: boolean;
+      /** @description Database cleanup */
       databaseCleanup: boolean;
+      /** @description Generate memories */
       generateMemories: boolean;
+      /** @description Missing thumbnails */
       missingThumbnails: boolean;
       startTime: string;
+      /** @description Sync quota usage */
       syncQuotaUsage: boolean;
     };
     SystemConfigNotificationsDto: {
       smtp: components["schemas"]["SystemConfigSmtpDto"];
     };
     SystemConfigOAuthDto: {
+      /** @description Auto launch */
       autoLaunch: boolean;
+      /** @description Auto register */
       autoRegister: boolean;
+      /** @description Button text */
       buttonText: string;
+      /** @description Client ID */
       clientId: string;
+      /** @description Client secret */
       clientSecret: string;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description Default storage quota
+       */
       defaultStorageQuota: number | null;
+      /** @description Enabled */
       enabled: boolean;
+      /** @description Issuer URL */
       issuerUrl: string;
+      /** @description Mobile override enabled */
       mobileOverrideEnabled: boolean;
-      /** Format: uri */
+      /**
+       * Format: uri
+       * @description Mobile redirect URI
+       */
       mobileRedirectUri: string;
+      /** @description Profile signing algorithm */
       profileSigningAlgorithm: string;
+      /** @description Role claim */
       roleClaim: string;
+      /** @description Scope */
       scope: string;
       signingAlgorithm: string;
+      /** @description Storage label claim */
       storageLabelClaim: string;
+      /** @description Storage quota claim */
       storageQuotaClaim: string;
+      /** @description Timeout */
       timeout: number;
+      /** @description Token endpoint auth method */
       tokenEndpointAuthMethod: components["schemas"]["OAuthTokenEndpointAuthMethod"];
     };
     SystemConfigPasswordLoginDto: {
+      /** @description Enabled */
       enabled: boolean;
     };
     SystemConfigReverseGeocodingDto: {
+      /** @description Enabled */
       enabled: boolean;
     };
     SystemConfigServerDto: {
-      /** Format: uri */
+      /**
+       * Format: uri
+       * @description External domain
+       */
       externalDomain: string;
+      /** @description Login page message */
       loginPageMessage: string;
+      /** @description Public users */
       publicUsers: boolean;
     };
     SystemConfigSmtpDto: {
+      /** @description Whether SMTP email notifications are enabled */
       enabled: boolean;
+      /** @description Email address to send from */
       from: string;
+      /** @description Email address for replies */
       replyTo: string;
       transport: components["schemas"]["SystemConfigSmtpTransportDto"];
     };
     SystemConfigSmtpTransportDto: {
+      /** @description SMTP server hostname */
       host: string;
+      /** @description Whether to ignore SSL certificate errors */
       ignoreCert: boolean;
+      /** @description SMTP password */
       password: string;
+      /** @description SMTP server port */
       port: number;
+      /** @description Whether to use secure connection (TLS/SSL) */
+      secure: boolean;
+      /** @description SMTP username */
       username: string;
     };
     SystemConfigStorageTemplateDto: {
+      /** @description Enabled */
       enabled: boolean;
+      /** @description Hash verification enabled */
       hashVerificationEnabled: boolean;
+      /** @description Template */
       template: string;
     };
     SystemConfigTemplateEmailsDto: {
@@ -4580,76 +7739,121 @@ export interface components {
       welcomeTemplate: string;
     };
     SystemConfigTemplateStorageOptionDto: {
+      /** @description Available day format options for storage template */
       dayOptions: string[];
+      /** @description Available hour format options for storage template */
       hourOptions: string[];
+      /** @description Available minute format options for storage template */
       minuteOptions: string[];
+      /** @description Available month format options for storage template */
       monthOptions: string[];
+      /** @description Available preset template options */
       presetOptions: string[];
+      /** @description Available second format options for storage template */
       secondOptions: string[];
+      /** @description Available week format options for storage template */
       weekOptions: string[];
+      /** @description Available year format options for storage template */
       yearOptions: string[];
     };
     SystemConfigTemplatesDto: {
       email: components["schemas"]["SystemConfigTemplateEmailsDto"];
     };
     SystemConfigThemeDto: {
+      /** @description Custom CSS for theming */
       customCss: string;
     };
     SystemConfigTrashDto: {
+      /** @description Days */
       days: number;
+      /** @description Enabled */
       enabled: boolean;
     };
     SystemConfigUserDto: {
+      /** @description Delete delay */
       deleteDelay: number;
     };
     TagBulkAssetsDto: {
+      /** @description Asset IDs */
       assetIds: string[];
+      /** @description Tag IDs */
       tagIds: string[];
     };
     TagBulkAssetsResponseDto: {
+      /** @description Number of assets tagged */
       count: number;
     };
     TagCreateDto: {
+      /** @description Tag color (hex) */
       color?: string;
+      /** @description Tag name */
       name: string;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Parent tag ID
+       */
       parentId?: string | null;
     };
     TagResponseDto: {
+      /** @description Tag color (hex) */
       color?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Creation date
+       */
       createdAt: string;
+      /** @description Tag ID */
       id: string;
+      /** @description Tag name */
       name: string;
+      /** @description Parent tag ID */
       parentId?: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Last update date
+       */
       updatedAt: string;
+      /** @description Tag value (full path) */
       value: string;
     };
     TagUpdateDto: {
+      /** @description Tag color (hex) */
       color?: string | null;
     };
     TagUpsertDto: {
+      /** @description Tag names to upsert */
       tags: string[];
     };
     TagsResponse: {
-      /** @default true */
+      /**
+       * @description Whether tags are enabled
+       * @default true
+       */
       enabled: boolean;
-      /** @default true */
+      /**
+       * @description Whether tags appear in web sidebar
+       * @default true
+       */
       sidebarWeb: boolean;
     };
     TagsUpdate: {
+      /** @description Whether tags are enabled */
       enabled?: boolean;
+      /** @description Whether tags appear in web sidebar */
       sidebarWeb?: boolean;
     };
     TemplateDto: {
+      /** @description Template name */
       template: string;
     };
     TemplateResponseDto: {
+      /** @description Template HTML content */
       html: string;
+      /** @description Template name */
       name: string;
     };
     TestEmailResponseDto: {
+      /** @description Email message ID */
       messageId: string;
     };
     TimeBucketAssetResponseDto: {
@@ -4659,7 +7863,7 @@ export interface components {
       country: (string | null)[];
       /** @description Array of video durations in HH:MM:SS format (null for images) */
       duration: (string | null)[];
-      /** @description Array of file creation timestamps in UTC (ISO 8601 format, without timezone) */
+      /** @description Array of file creation timestamps in UTC */
       fileCreatedAt: string[];
       /** @description Array of asset IDs in the time bucket */
       id: string[];
@@ -4702,112 +7906,225 @@ export interface components {
        */
       timeBucket: string;
     };
-    /** @enum {string} */
+    /**
+     * @description Tone mapping
+     * @enum {string}
+     */
     ToneMapping: "hable" | "mobius" | "reinhard" | "disabled";
-    /** @enum {string} */
+    /**
+     * @description Transcode hardware acceleration
+     * @enum {string}
+     */
     TranscodeHWAccel: "nvenc" | "qsv" | "vaapi" | "rkmpp" | "disabled";
-    /** @enum {string} */
+    /**
+     * @description Transcode policy
+     * @enum {string}
+     */
     TranscodePolicy: "all" | "optimal" | "bitrate" | "required" | "disabled";
     TrashResponseDto: {
+      /** @description Number of items in trash */
       count: number;
     };
     UpdateAlbumDto: {
+      /** @description Album name */
       albumName?: string;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Album thumbnail asset ID
+       */
       albumThumbnailAssetId?: string;
+      /** @description Album description */
       description?: string;
+      /** @description Enable activity feed */
       isActivityEnabled?: boolean;
+      /** @description Asset sort order */
       order?: components["schemas"]["AssetOrder"];
     };
     UpdateAlbumUserDto: {
+      /** @description Album user role */
       role: components["schemas"]["AlbumUserRole"];
     };
     UpdateAssetDto: {
+      /** @description Original date and time */
       dateTimeOriginal?: string;
+      /** @description Asset description */
       description?: string;
+      /** @description Mark as favorite */
       isFavorite?: boolean;
+      /** @description Latitude coordinate */
       latitude?: number;
-      /** Format: uuid */
+      /**
+       * Format: uuid
+       * @description Live photo video ID
+       */
       livePhotoVideoId?: string | null;
+      /** @description Longitude coordinate */
       longitude?: number;
-      rating?: number;
+      /** @description Rating in range [1-5], or null for unrated */
+      rating?: number | null;
+      /** @description Asset visibility */
       visibility?: components["schemas"]["AssetVisibility"];
     };
     UpdateLibraryDto: {
+      /** @description Exclusion patterns (max 128) */
       exclusionPatterns?: string[];
+      /** @description Import paths (max 128) */
       importPaths?: string[];
+      /** @description Library name */
       name?: string;
     };
     UsageByUserDto: {
+      /** @description Number of photos */
       photos: number;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description User quota size in bytes (null if unlimited)
+       */
       quotaSizeInBytes: number | null;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description Total storage usage in bytes
+       */
       usage: number;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description Storage usage for photos in bytes
+       */
       usagePhotos: number;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description Storage usage for videos in bytes
+       */
       usageVideos: number;
+      /** @description User ID */
       userId: string;
+      /** @description User name */
       userName: string;
+      /** @description Number of videos */
       videos: number;
     };
     UserAdminCreateDto: {
+      /** @description Avatar color */
       avatarColor?: components["schemas"]["UserAvatarColor"] | null;
-      /** Format: email */
+      /**
+       * Format: email
+       * @description User email
+       */
       email: string;
+      /** @description Grant admin privileges */
       isAdmin?: boolean;
+      /** @description User name */
       name: string;
+      /** @description Send notification email */
       notify?: boolean;
+      /** @description User password */
       password: string;
-      /** Format: int64 */
+      /**
+       * @description PIN code
+       * @example 123456
+       */
+      pinCode?: string | null;
+      /**
+       * Format: int64
+       * @description Storage quota in bytes
+       */
       quotaSizeInBytes?: number | null;
+      /** @description Require password change on next login */
       shouldChangePassword?: boolean;
+      /** @description Storage label */
       storageLabel?: string | null;
     };
     UserAdminDeleteDto: {
+      /** @description Force delete even if user has assets */
       force?: boolean;
     };
     UserAdminResponseDto: {
+      /** @description Avatar color */
       avatarColor: components["schemas"]["UserAvatarColor"];
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Creation date
+       */
       createdAt: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Deletion date
+       */
       deletedAt: string | null;
+      /** @description User email */
       email: string;
+      /** @description User ID */
       id: string;
+      /** @description Is admin user */
       isAdmin: boolean;
+      /** @description User license */
       license: components["schemas"]["UserLicense"] | null;
+      /** @description User name */
       name: string;
+      /** @description OAuth ID */
       oauthId: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Profile change date
+       */
       profileChangedAt: string;
+      /** @description Profile image path */
       profileImagePath: string;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description Storage quota in bytes
+       */
       quotaSizeInBytes: number | null;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description Storage usage in bytes
+       */
       quotaUsageInBytes: number | null;
+      /** @description Require password change on next login */
       shouldChangePassword: boolean;
+      /** @description User status */
       status: components["schemas"]["UserStatus"];
+      /** @description Storage label */
       storageLabel: string | null;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Last update date
+       */
       updatedAt: string;
     };
     UserAdminUpdateDto: {
+      /** @description Avatar color */
       avatarColor?: components["schemas"]["UserAvatarColor"] | null;
-      /** Format: email */
+      /**
+       * Format: email
+       * @description User email
+       */
       email?: string;
+      /** @description Grant admin privileges */
       isAdmin?: boolean;
+      /** @description User name */
       name?: string;
+      /** @description User password */
       password?: string;
-      /** @example 123456 */
+      /**
+       * @description PIN code
+       * @example 123456
+       */
       pinCode?: string | null;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description Storage quota in bytes
+       */
       quotaSizeInBytes?: number | null;
+      /** @description Require password change on next login */
       shouldChangePassword?: boolean;
+      /** @description Storage label */
       storageLabel?: string | null;
     };
-    /** @enum {string} */
+    /**
+     * @description Avatar color
+     * @enum {string}
+     */
     UserAvatarColor:
       | "primary"
       | "pink"
@@ -4820,12 +8137,20 @@ export interface components {
       | "gray"
       | "amber";
     UserLicense: {
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Activation date
+       */
       activatedAt: string;
+      /** @description Activation key */
       activationKey: string;
+      /** @description License key */
       licenseKey: string;
     };
-    /** @enum {string} */
+    /**
+     * @description User metadata key
+     * @enum {string}
+     */
     UserMetadataKey: "preferences" | "license" | "onboarding";
     UserPreferencesResponseDto: {
       albums: components["schemas"]["AlbumsResponse"];
@@ -4855,47 +8180,171 @@ export interface components {
       tags?: components["schemas"]["TagsUpdate"];
     };
     UserResponseDto: {
+      /** @description Avatar color */
       avatarColor: components["schemas"]["UserAvatarColor"];
+      /** @description User email */
       email: string;
+      /** @description User ID */
       id: string;
+      /** @description User name */
       name: string;
-      /** Format: date-time */
+      /**
+       * Format: date-time
+       * @description Profile change date
+       */
       profileChangedAt: string;
+      /** @description Profile image path */
       profileImagePath: string;
     };
-    /** @enum {string} */
+    /**
+     * @description User status
+     * @enum {string}
+     */
     UserStatus: "active" | "removing" | "deleted";
     UserUpdateMeDto: {
+      /** @description Avatar color */
       avatarColor?: components["schemas"]["UserAvatarColor"] | null;
-      /** Format: email */
+      /**
+       * Format: email
+       * @description User email
+       */
       email?: string;
+      /** @description User name */
       name?: string;
+      /** @description User password (deprecated, use change password endpoint) */
       password?: string;
     };
     ValidateAccessTokenResponseDto: {
+      /** @description Authentication status */
       authStatus: boolean;
     };
     ValidateLibraryDto: {
+      /** @description Exclusion patterns (max 128) */
       exclusionPatterns?: string[];
+      /** @description Import paths to validate (max 128) */
       importPaths?: string[];
     };
     ValidateLibraryImportPathResponseDto: {
+      /** @description Import path */
       importPath: string;
-      /** @default false */
+      /**
+       * @description Is valid
+       * @default false
+       */
       isValid: boolean;
+      /** @description Validation message */
       message?: string;
     };
     ValidateLibraryResponseDto: {
+      /** @description Validation results for import paths */
       importPaths?: components["schemas"]["ValidateLibraryImportPathResponseDto"][];
     };
     VersionCheckStateResponseDto: {
+      /** @description Last check timestamp */
       checkedAt: string | null;
+      /** @description Release version */
       releaseVersion: string | null;
     };
-    /** @enum {string} */
+    /**
+     * @description Target video codec
+     * @enum {string}
+     */
     VideoCodec: "h264" | "hevc" | "vp9" | "av1";
-    /** @enum {string} */
+    /**
+     * @description Accepted containers
+     * @enum {string}
+     */
     VideoContainer: "mov" | "mp4" | "ogg" | "webm";
+    WorkflowActionItemDto: {
+      /** @description Action configuration */
+      actionConfig?: Record<string, never>;
+      /**
+       * Format: uuid
+       * @description Plugin action ID
+       */
+      pluginActionId: string;
+    };
+    WorkflowActionResponseDto: {
+      /** @description Action configuration */
+      actionConfig: Record<string, never> | null;
+      /** @description Action ID */
+      id: string;
+      /** @description Action order */
+      order: number;
+      /** @description Plugin action ID */
+      pluginActionId: string;
+      /** @description Workflow ID */
+      workflowId: string;
+    };
+    WorkflowCreateDto: {
+      /** @description Workflow actions */
+      actions: components["schemas"]["WorkflowActionItemDto"][];
+      /** @description Workflow description */
+      description?: string;
+      /** @description Workflow enabled */
+      enabled?: boolean;
+      /** @description Workflow filters */
+      filters: components["schemas"]["WorkflowFilterItemDto"][];
+      /** @description Workflow name */
+      name: string;
+      /** @description Workflow trigger type */
+      triggerType: components["schemas"]["PluginTriggerType"];
+    };
+    WorkflowFilterItemDto: {
+      /** @description Filter configuration */
+      filterConfig?: Record<string, never>;
+      /**
+       * Format: uuid
+       * @description Plugin filter ID
+       */
+      pluginFilterId: string;
+    };
+    WorkflowFilterResponseDto: {
+      /** @description Filter configuration */
+      filterConfig: Record<string, never> | null;
+      /** @description Filter ID */
+      id: string;
+      /** @description Filter order */
+      order: number;
+      /** @description Plugin filter ID */
+      pluginFilterId: string;
+      /** @description Workflow ID */
+      workflowId: string;
+    };
+    WorkflowResponseDto: {
+      /** @description Workflow actions */
+      actions: components["schemas"]["WorkflowActionResponseDto"][];
+      /** @description Creation date */
+      createdAt: string;
+      /** @description Workflow description */
+      description: string;
+      /** @description Workflow enabled */
+      enabled: boolean;
+      /** @description Workflow filters */
+      filters: components["schemas"]["WorkflowFilterResponseDto"][];
+      /** @description Workflow ID */
+      id: string;
+      /** @description Workflow name */
+      name: string | null;
+      /** @description Owner user ID */
+      ownerId: string;
+      /** @description Workflow trigger type */
+      triggerType: components["schemas"]["PluginTriggerType"];
+    };
+    WorkflowUpdateDto: {
+      /** @description Workflow actions */
+      actions?: components["schemas"]["WorkflowActionItemDto"][];
+      /** @description Workflow description */
+      description?: string;
+      /** @description Workflow enabled */
+      enabled?: boolean;
+      /** @description Workflow filters */
+      filters?: components["schemas"]["WorkflowFilterItemDto"][];
+      /** @description Workflow name */
+      name?: string;
+      /** @description Workflow trigger type */
+      triggerType?: components["schemas"]["PluginTriggerType"];
+    };
   };
   responses: never;
   parameters: never;
@@ -4908,10 +8357,15 @@ export interface operations {
   getActivities: {
     parameters: {
       query: {
+        /** @description Album ID */
         albumId: string;
+        /** @description Asset ID (if activity is for an asset) */
         assetId?: string;
+        /** @description Filter by activity level */
         level?: components["schemas"]["ReactionLevel"];
+        /** @description Filter by activity type */
         type?: components["schemas"]["ReactionType"];
+        /** @description Filter by user ID */
         userId?: string;
       };
       header?: never;
@@ -4956,7 +8410,9 @@ export interface operations {
   getActivityStatistics: {
     parameters: {
       query: {
+        /** @description Album ID */
         albumId: string;
+        /** @description Asset ID (if activity is for an asset) */
         assetId?: string;
       };
       header?: never;
@@ -5008,6 +8464,188 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+    };
+  };
+  listDatabaseBackups: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatabaseBackupListResponseDto"];
+        };
+      };
+    };
+  };
+  deleteDatabaseBackup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DatabaseBackupDeleteDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  startDatabaseRestoreFlow: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  uploadDatabaseBackup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Backup Upload */
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["DatabaseBackupUploadDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  downloadDatabaseBackup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        filename: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/octet-stream": string;
+        };
+      };
+    };
+  };
+  setMaintenanceMode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetMaintenanceModeDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  detectPriorInstall: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaintenanceDetectInstallResponseDto"];
+        };
+      };
+    };
+  };
+  maintenanceLogin: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MaintenanceLoginDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaintenanceAuthDto"];
+        };
+      };
+    };
+  };
+  getMaintenanceStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaintenanceStatusResponseDto"];
+        };
       };
     };
   };
@@ -5085,7 +8723,9 @@ export interface operations {
   searchUsersAdmin: {
     parameters: {
       query?: {
+        /** @description User ID filter */
         id?: string;
+        /** @description Include deleted users */
         withDeleted?: boolean;
       };
       header?: never;
@@ -5265,11 +8905,35 @@ export interface operations {
       };
     };
   };
+  getUserSessionsAdmin: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SessionResponseDto"][];
+        };
+      };
+    };
+  };
   getUserStatisticsAdmin: {
     parameters: {
       query?: {
+        /** @description Filter by favorite status */
         isFavorite?: boolean;
+        /** @description Filter by trash status */
         isTrashed?: boolean;
+        /** @description Filter by visibility */
         visibility?: components["schemas"]["AssetVisibility"];
       };
       header?: never;
@@ -5293,12 +8957,9 @@ export interface operations {
   getAllAlbums: {
     parameters: {
       query?: {
-        /**
-         * @description Only returns albums that contain the asset
-         *     Ignores the shared parameter
-         *     undefined: get all albums
-         */
+        /** @description Filter albums containing this asset ID (ignores shared parameter) */
         assetId?: string;
+        /** @description Filter by shared status: true = only shared, false = not shared, undefined = all owned albums */
         shared?: boolean;
       };
       header?: never;
@@ -5390,6 +9051,7 @@ export interface operations {
       query?: {
         key?: string;
         slug?: string;
+        /** @description Exclude assets from response */
         withoutAssets?: boolean;
       };
       header?: never;
@@ -5743,6 +9405,16 @@ export interface operations {
       };
     };
     responses: {
+      /** @description Asset is a duplicate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetMediaResponseDto"];
+        };
+      };
+      /** @description Asset uploaded successfully */
       201: {
         headers: {
           [name: string]: unknown;
@@ -5797,11 +9469,33 @@ export interface operations {
       };
     };
   };
+  copyAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssetCopyDto"];
+      };
+    };
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   getAllUserAssetsByDeviceId: {
     parameters: {
       query?: never;
       header?: never;
       path: {
+        /** @description Device ID */
         deviceId: string;
       };
       cookie?: never;
@@ -5862,9 +9556,54 @@ export interface operations {
       };
     };
   };
+  updateBulkAssetMetadata: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssetMetadataBulkUpsertDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetMetadataBulkResponseDto"][];
+        };
+      };
+    };
+  };
+  deleteBulkAssetMetadata: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssetMetadataBulkDeleteDto"];
+      };
+    };
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   getRandom: {
     parameters: {
       query?: {
+        /** @description Number of random assets to return */
         count?: number;
       };
       header?: never;
@@ -5886,8 +9625,11 @@ export interface operations {
   getAssetStatistics: {
     parameters: {
       query?: {
+        /** @description Filter by favorite status */
         isFavorite?: boolean;
+        /** @description Filter by trash status */
         isTrashed?: boolean;
+        /** @description Filter by visibility */
         visibility?: components["schemas"]["AssetVisibility"];
       };
       header?: never;
@@ -5955,6 +9697,71 @@ export interface operations {
       };
     };
   };
+  getAssetEdits: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetEditsResponseDto"];
+        };
+      };
+    };
+  };
+  editAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssetEditsCreateDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetEditsResponseDto"];
+        };
+      };
+    };
+  };
+  removeAssetEdits: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   getAssetMetadata: {
     parameters: {
       query?: never;
@@ -6006,8 +9813,10 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
+        /** @description Asset ID */
         id: string;
-        key: components["schemas"]["AssetMetadataKey"];
+        /** @description Metadata key */
+        key: string;
       };
       cookie?: never;
     };
@@ -6028,8 +9837,10 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
+        /** @description Asset ID */
         id: string;
-        key: components["schemas"]["AssetMetadataKey"];
+        /** @description Metadata key */
+        key: string;
       };
       cookie?: never;
     };
@@ -6043,9 +9854,32 @@ export interface operations {
       };
     };
   };
+  getAssetOcr: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetOcrResponseDto"][];
+        };
+      };
+    };
+  };
   downloadAsset: {
     parameters: {
       query?: {
+        /** @description Return edited asset if available */
+        edited?: boolean;
         key?: string;
         slug?: string;
       };
@@ -6085,6 +9919,7 @@ export interface operations {
       };
     };
     responses: {
+      /** @description Asset replaced successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -6098,7 +9933,10 @@ export interface operations {
   viewAsset: {
     parameters: {
       query?: {
+        /** @description Return edited asset if available */
+        edited?: boolean;
         key?: string;
+        /** @description Asset media size */
         size?: components["schemas"]["AssetMediaSize"];
         slug?: string;
       };
@@ -6383,7 +10221,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["AssetIdsDto"];
+        "application/json": components["schemas"]["DownloadArchiveDto"];
       };
     };
     responses: {
@@ -6463,6 +10301,29 @@ export interface operations {
       };
     };
   };
+  resolveDuplicates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DuplicateResolveDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkIdResponseDto"][];
+        };
+      };
+    };
+  };
   deleteDuplicate: {
     parameters: {
       query?: never;
@@ -6485,6 +10346,7 @@ export interface operations {
   getFaces: {
     parameters: {
       query: {
+        /** @description Face ID */
         id: string;
       };
       header?: never;
@@ -6572,7 +10434,7 @@ export interface operations {
       };
     };
   };
-  getAllJobsStatus: {
+  getQueuesLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -6586,7 +10448,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["AllJobStatusResponseDto"];
+          "application/json": components["schemas"]["QueuesResponseLegacyDto"];
         };
       };
     };
@@ -6612,18 +10474,19 @@ export interface operations {
       };
     };
   };
-  sendJobCommand: {
+  runQueueCommandLegacy: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        id: components["schemas"]["JobName"];
+        /** @description Queue name */
+        name: components["schemas"]["QueueName"];
       };
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["JobCommandDto"];
+        "application/json": components["schemas"]["QueueCommandDto"];
       };
     };
     responses: {
@@ -6632,7 +10495,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["JobStatusDto"];
+          "application/json": components["schemas"]["QueueResponseLegacyDto"];
         };
       };
     };
@@ -6812,11 +10675,17 @@ export interface operations {
   getMapMarkers: {
     parameters: {
       query?: {
-        isArchived?: boolean;
-        isFavorite?: boolean;
+        /** @description Filter assets created after this date */
         fileCreatedAfter?: string;
+        /** @description Filter assets created before this date */
         fileCreatedBefore?: string;
+        /** @description Filter by archived status */
+        isArchived?: boolean;
+        /** @description Filter by favorite status */
+        isFavorite?: boolean;
+        /** @description Include partner assets */
         withPartners?: boolean;
+        /** @description Include shared album assets */
         withSharedAlbums?: boolean;
       };
       header?: never;
@@ -6838,7 +10707,9 @@ export interface operations {
   reverseGeocode: {
     parameters: {
       query: {
+        /** @description Latitude (-90 to 90) */
         lat: number;
+        /** @description Longitude (-180 to 180) */
         lon: number;
       };
       header?: never;
@@ -6860,9 +10731,17 @@ export interface operations {
   searchMemories: {
     parameters: {
       query?: {
+        /** @description Filter by date */
         for?: string;
+        /** @description Filter by saved status */
         isSaved?: boolean;
+        /** @description Include trashed memories */
         isTrashed?: boolean;
+        /** @description Sort order */
+        order?: components["schemas"]["MemorySearchOrder"];
+        /** @description Number of memories to return */
+        size?: number;
+        /** @description Memory type */
         type?: components["schemas"]["MemoryType"];
       };
       header?: never;
@@ -6907,9 +10786,17 @@ export interface operations {
   memoriesStatistics: {
     parameters: {
       query?: {
+        /** @description Filter by date */
         for?: string;
+        /** @description Filter by saved status */
         isSaved?: boolean;
+        /** @description Include trashed memories */
         isTrashed?: boolean;
+        /** @description Sort order */
+        order?: components["schemas"]["MemorySearchOrder"];
+        /** @description Number of memories to return */
+        size?: number;
+        /** @description Memory type */
         type?: components["schemas"]["MemoryType"];
       };
       header?: never;
@@ -7046,9 +10933,13 @@ export interface operations {
   getNotifications: {
     parameters: {
       query?: {
+        /** @description Filter by notification ID */
         id?: string;
+        /** @description Filter by notification level */
         level?: components["schemas"]["NotificationLevel"];
+        /** @description Filter by notification type */
         type?: components["schemas"]["NotificationType"];
+        /** @description Filter by unread status */
         unread?: boolean;
       };
       header?: never;
@@ -7282,6 +11173,7 @@ export interface operations {
   getPartners: {
     parameters: {
       query: {
+        /** @description Partner direction */
         direction: components["schemas"]["PartnerDirection"];
       };
       header?: never;
@@ -7391,12 +11283,15 @@ export interface operations {
   getAllPeople: {
     parameters: {
       query?: {
+        /** @description Closest asset ID for similarity search */
         closestAssetId?: string;
+        /** @description Closest person ID for similarity search */
         closestPersonId?: string;
         /** @description Page number for pagination */
         page?: number;
         /** @description Number of items per page */
         size?: number;
+        /** @description Include hidden people */
         withHidden?: boolean;
       };
       header?: never;
@@ -7639,6 +11534,181 @@ export interface operations {
       };
     };
   };
+  getPlugins: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PluginResponseDto"][];
+        };
+      };
+    };
+  };
+  getPluginTriggers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PluginTriggerResponseDto"][];
+        };
+      };
+    };
+  };
+  getPlugin: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PluginResponseDto"];
+        };
+      };
+    };
+  };
+  getQueues: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QueueResponseDto"][];
+        };
+      };
+    };
+  };
+  getQueue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Queue name */
+        name: components["schemas"]["QueueName"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QueueResponseDto"];
+        };
+      };
+    };
+  };
+  updateQueue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Queue name */
+        name: components["schemas"]["QueueName"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["QueueUpdateDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QueueResponseDto"];
+        };
+      };
+    };
+  };
+  getQueueJobs: {
+    parameters: {
+      query?: {
+        /** @description Filter jobs by status */
+        status?: components["schemas"]["QueueJobStatus"][];
+      };
+      header?: never;
+      path: {
+        /** @description Queue name */
+        name: components["schemas"]["QueueName"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QueueJobResponseDto"][];
+        };
+      };
+    };
+  };
+  emptyQueue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Queue name */
+        name: components["schemas"]["QueueName"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["QueueDeleteDto"];
+      };
+    };
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   getAssetsByCity: {
     parameters: {
       query?: never;
@@ -7680,36 +11750,69 @@ export interface operations {
   searchLargeAssets: {
     parameters: {
       query?: {
+        /** @description Filter by album IDs */
         albumIds?: string[];
+        /** @description Filter by city name */
         city?: string | null;
+        /** @description Filter by country name */
         country?: string | null;
+        /** @description Filter by creation date (after) */
         createdAfter?: string;
+        /** @description Filter by creation date (before) */
         createdBefore?: string;
+        /** @description Device ID to filter by */
         deviceId?: string;
+        /** @description Filter by encoded status */
         isEncoded?: boolean;
+        /** @description Filter by favorite status */
         isFavorite?: boolean;
+        /** @description Filter by motion photo status */
         isMotion?: boolean;
+        /** @description Filter assets not in any album */
         isNotInAlbum?: boolean;
+        /** @description Filter by offline status */
         isOffline?: boolean;
+        /** @description Filter by lens model */
         lensModel?: string | null;
+        /** @description Library ID to filter by */
         libraryId?: string | null;
+        /** @description Filter by camera make */
         make?: string;
+        /** @description Minimum file size in bytes */
         minFileSize?: number;
+        /** @description Filter by camera model */
         model?: string | null;
+        /** @description Filter by OCR text content */
+        ocr?: string;
+        /** @description Filter by person IDs */
         personIds?: string[];
-        rating?: number;
+        /** @description Filter by rating [1-5], or null for unrated */
+        rating?: number | null;
+        /** @description Number of results to return */
         size?: number;
+        /** @description Filter by state/province name */
         state?: string | null;
+        /** @description Filter by tag IDs */
         tagIds?: string[] | null;
+        /** @description Filter by taken date (after) */
         takenAfter?: string;
+        /** @description Filter by taken date (before) */
         takenBefore?: string;
+        /** @description Filter by trash date (after) */
         trashedAfter?: string;
+        /** @description Filter by trash date (before) */
         trashedBefore?: string;
+        /** @description Asset type filter */
         type?: components["schemas"]["AssetTypeEnum"];
+        /** @description Filter by update date (after) */
         updatedAfter?: string;
+        /** @description Filter by update date (before) */
         updatedBefore?: string;
+        /** @description Filter by visibility */
         visibility?: components["schemas"]["AssetVisibility"];
+        /** @description Include deleted assets */
         withDeleted?: boolean;
+        /** @description Include EXIF data in response */
         withExif?: boolean;
       };
       header?: never;
@@ -7754,7 +11857,9 @@ export interface operations {
   searchPerson: {
     parameters: {
       query: {
+        /** @description Person name to search for */
         name: string;
+        /** @description Include hidden people */
         withHidden?: boolean;
       };
       header?: never;
@@ -7776,6 +11881,7 @@ export interface operations {
   searchPlaces: {
     parameters: {
       query: {
+        /** @description Place name to search for */
         name: string;
       };
       header?: never;
@@ -7866,12 +11972,19 @@ export interface operations {
   getSearchSuggestions: {
     parameters: {
       query: {
+        /** @description Filter by country */
         country?: string;
-        /** @description This property was added in v111.0.0 */
+        /** @description Include null values in suggestions */
         includeNull?: boolean;
+        /** @description Filter by lens model */
+        lensModel?: string;
+        /** @description Filter by camera make */
         make?: string;
+        /** @description Filter by camera model */
         model?: string;
+        /** @description Filter by state/province */
         state?: string;
+        /** @description Suggestion type */
         type: components["schemas"]["SearchSuggestionType"];
       };
       header?: never;
@@ -8308,7 +12421,10 @@ export interface operations {
   getAllSharedLinks: {
     parameters: {
       query?: {
+        /** @description Filter by album ID */
         albumId?: string;
+        /** @description Filter by shared link ID */
+        id?: string;
       };
       header?: never;
       path?: never;
@@ -8349,13 +12465,41 @@ export interface operations {
       };
     };
   };
+  sharedLinkLogin: {
+    parameters: {
+      query?: {
+        key?: string;
+        slug?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SharedLinkLoginDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SharedLinkResponseDto"];
+        };
+      };
+    };
+  };
   getMySharedLink: {
     parameters: {
       query?: {
-        password?: string;
-        token?: string;
         key?: string;
+        /** @description Link password */
+        password?: string;
         slug?: string;
+        /** @description Access token */
+        token?: string;
       };
       header?: never;
       path?: never;
@@ -8468,10 +12612,7 @@ export interface operations {
   };
   removeSharedLinkAssets: {
     parameters: {
-      query?: {
-        key?: string;
-        slug?: string;
-      };
+      query?: never;
       header?: never;
       path: {
         id: string;
@@ -8497,6 +12638,7 @@ export interface operations {
   searchStacks: {
     parameters: {
       query?: {
+        /** @description Filter by primary asset ID */
         primaryAssetId?: string;
       };
       header?: never;
@@ -9138,6 +13280,8 @@ export interface operations {
       query: {
         /** @description Filter assets belonging to a specific album */
         albumId?: string;
+        /** @description Bounding box coordinates as west,south,east,north (WGS84) */
+        bbox?: string;
         /** @description Filter by favorite status (true for favorites only, false for non-favorites only) */
         isFavorite?: boolean;
         /** @description Filter by trash status (true for trashed assets only, false for non-trashed only) */
@@ -9184,6 +13328,8 @@ export interface operations {
       query?: {
         /** @description Filter assets belonging to a specific album */
         albumId?: string;
+        /** @description Bounding box coordinates as west,south,east,north (WGS84) */
+        bbox?: string;
         /** @description Filter by favorite status (true for favorites only, false for non-favorites only) */
         isFavorite?: boolean;
         /** @description Filter by trash status (true for trashed assets only, false for non-trashed only) */
@@ -9625,6 +13771,113 @@ export interface operations {
         content: {
           "application/json": string[];
         };
+      };
+    };
+  };
+  getWorkflows: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowResponseDto"][];
+        };
+      };
+    };
+  };
+  createWorkflow: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WorkflowCreateDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowResponseDto"];
+        };
+      };
+    };
+  };
+  getWorkflow: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowResponseDto"];
+        };
+      };
+    };
+  };
+  updateWorkflow: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WorkflowUpdateDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowResponseDto"];
+        };
+      };
+    };
+  };
+  deleteWorkflow: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

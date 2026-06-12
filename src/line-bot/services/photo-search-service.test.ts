@@ -8,6 +8,7 @@ import {
   ensureAgeFromText,
   ensureSceneQueryEn,
   parseSearchPlanFallback,
+  sanitizeSearchPlan,
   translateSceneQueryFallback,
   tryParsePersonAge,
   tryParsePersonScenePhoto,
@@ -29,8 +30,13 @@ describe("parseSearchPlanFallback", () => {
   it("parses scene query", () => {
     const plan = parseSearchPlanFallback("找在海邊的照片");
     expect(plan.intent).toBe("search_photos");
+    expect(plan.personNames).toEqual([]);
     expect(plan.sceneQuery).toBe("海邊");
     expect(plan.sceneQueryEn).toContain("beach");
+  });
+
+  it("does not treat 在 as person for scene-only query", () => {
+    expect(tryParsePersonScenePhoto("找在海邊的照片")).toBeUndefined();
   });
 
   it("parses person scene and 今年", () => {
@@ -84,6 +90,22 @@ describe("parseSearchPlanFallback", () => {
     expect(plan.personNames).toEqual(["小蕊"]);
     expect(plan.sceneQuery).toBe("不在台灣");
     expect(plan.sceneQueryEn).toContain("not Taiwan");
+  });
+});
+
+describe("sanitizeSearchPlan", () => {
+  it("clears stopword person when Qwen mis-parses 找在海邊的照片", () => {
+    const plan = sanitizeSearchPlan(
+      {
+        intent: "search_photos",
+        personNames: ["在"],
+        sceneQuery: "海邊",
+      },
+      "找在海邊的照片",
+    );
+    expect(plan.personNames).toEqual([]);
+    expect(plan.sceneQuery).toBe("海邊");
+    expect(plan.sceneQueryEn).toContain("beach");
   });
 });
 

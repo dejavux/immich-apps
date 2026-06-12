@@ -6,125 +6,70 @@
 
 ---
 
-## 📍 當前狀態（2026-06-12）
+## 📍 當前狀態（2026-06-12 下午）
 
 | 項目 | 狀態 |
 |------|------|
-| Repo `immich-apps` / **`main`** | ✅ |
-| LINE Bot 生產 | ✅ `immich-line-bot:f906783`（V1 搜尋 + Smart Search） |
-| Tekton release + PR L0 CI | ✅ |
-| Phase 3 local-archive | ✅ **5023/5023**（0 new / 5023 dup） |
-| Phase 3 icloud-primary | 🚧 **~22%**（3511 new / 1 dup，~7.2 GB / 32 GB） |
-| external-library 清理 | ✅ ~86 GB 已釋放 |
-| Immich server | v2.0.1（升級 checklist 就緒） |
+| Phase 3 local-archive | ✅ **5023/5023**（icloud dry-run 0 new；local 續傳進行中見 §3.3） |
+| Phase 3 icloud-primary | ✅ **3512/3512**（0 new） |
+| Immich `/data/upload` | **~115 GB** |
+| LaunchAgent watch | ✅ running · 增量已驗 |
+| external-library | ✅ ~86 GB 已清 · DB library 0 rows |
+| **Immich server** | **v2.7.5** ✅（2026-06-12 升級完成） |
+| OpenAPI types | **v2.7.5** · `npm test` 48/48 |
+| LINE Bot | `immich-line-bot:b2522c2` · smoke API 全綠 |
+| pg 備份 | `infra-bootstrap/immich-pg-backup-20260612.sql`（149 MB） |
 
-**整體進度**: ~**82%**（Phase 2: **92%** · Phase 3: **75%**）
+**整體進度**: ~**90%**（Phase 2: **95%** · Phase 3: **96%**）
 
 ---
 
-## 🎯 現在該做什麼（優先順序）
+## 🎯 現在該做什麼
 
-### 1. 讓 icloud-primary 跑完（P0）
+### 1. local-archive 續傳（Phase 3 收尾）
+
+增量測試曾觸發 **1894 new**（Photos 重編碼 hash 變更）。續傳至 dry-run `0 new`：
 
 ```bash
-# 若 terminal 已在跑，勿重複開；中斷後續傳：
-./scripts/photo-sync/immich-sync.sh --library icloud-primary
-
-# 監控
-tail -f ~/Library/Logs/immich-photo-sync/stats/icloud-primary-run-*.log
+./scripts/photo-sync/immich-sync.sh --library local-archive
+./scripts/photo-sync/immich-sync.sh --library local-archive --dry-run   # 目標 0 new
+python3 scripts/photo-sync/audit-local-duplicates.py   # 可選：本機 hash 稽核
 ```
 
-完成標準：dry-run `0 new`，stats JSON `new_assets=0`。
+### 2. 升級後手動驗收（Phase D 剩餘）
 
-### 2. Phase 3 收尾
+- [ ] Web UI：兩相簿 + 時間軸 EXIF 抽查
+- [ ] LINE：「找在海邊的照片」「幫我找小蕊一歲半的照片」
+- [ ] 可選：`npm i -g @immich/cli@2.7.5` 對齊 CLI
 
-- [ ] icloud dry-run `0 new`
-- [ ] LaunchAgent 增量實測（Mac Photos 加 1 張 → 5 分鐘內 Immich 可見）
-- [ ] Admin：移除或停用空的 External library「Migrated photos」
-- [ ] Immich Web UI 抽查 EXIF / 時間軸
+### 3. 下一階段
 
-### 3. 升級評估（icloud 完成後）
-
-→ [IMMICH_UPGRADE_v2.7.5.md](./IMMICH_UPGRADE_v2.7.5.md)  
-建議：icloud dry-run = 0 new 再進維護窗口；中斷可 hash 續傳。
-
-### 4. 下一階段（Phase 3 結案後）
-
-| Phase | 內容 | 前置 |
-|-------|------|------|
-| **3.5** | `tier_policy` + osxphotos（iCloud→Local 搬移） | Phase 3 ✅ |
-| **4** | PostgreSQL → SSD | pg_dump 備份 |
-| **5** | B2 CronJob + 還原測試 | Phase 4 建議先 |
-| **V1.1** | Qwen **vision** 繁中描述 | 確認叢集 vision 模型 |
+| Phase | 內容 |
+|-------|------|
+| **3.5** | `tier_policy` + osxphotos（iCloud→Local 自動搬移） |
+| **4** | PostgreSQL → SSD |
+| **5** | B2 CronJob + 還原測試 |
+| **V1.1** | Qwen **vision** 繁中描述 |
 
 ---
 
-## 軌 A — LINE Bot（維護 / 可選）
-
-| 項目 | 狀態 |
-|------|------|
-| imageSet 批次、tags、metrics | ✅ PR #9 |
-| EXIF 優先、OpenAPI、metadata poll | ✅ PR #10–#11 |
-| V1 自然語言搜尋 + Smart Search | ✅ `f906783` |
-| Grafana dashboard | ⏳ |
-| Qwen vision 描述（V1.1） | ⏳ 需 vision 模型 |
+## 驗證指令
 
 ```bash
-curl -sS https://immich-bot.3q.fi/health
-make release   # 程式變更後
+curl -fsS -H "x-api-key: $IMMICH_API_KEY" https://immich.3q.fi/api/server/version
+# {"major":2,"minor":7,"patch":5}
+
+./scripts/photo-sync/immich-sync.sh --library icloud-primary --dry-run   # 0 new / 3512 dup
+bash scripts/line-bot/smoke-photo-search-e2e.sh --scene "beach sunset" --person rayna
 ```
 
----
-
-## 軌 B — Photo Sync（當前主軌）
-
-```bash
-./scripts/photo-sync/bootstrap-credentials.sh   # 首次
-./scripts/photo-sync/immich-sync.sh --library icloud-primary   # 進行中
-./scripts/photo-sync/install-launchd.sh         # 增量（全量完成後驗證）
-```
-
-→ [PHASE3_PHOTO_SYNC.md](./PHASE3_PHOTO_SYNC.md) · [PHASE3_STORAGE_AUDIT.md](./PHASE3_STORAGE_AUDIT.md) · [scripts/photo-sync/README.md](../scripts/photo-sync/README.md)
-
-**重點認知**（2026-06-12 實測）：
-
-- local + icloud 僅 **1** hash duplicate → union 後 `/data/upload` ~90 GB 是**預期**，非 blob 双份。
-- LINE Bot 時間戳 = webhook 收到時間；正確 EXIF 日期靠 Photo Sync。
-
----
-
-## 軌 C — Ops
-
-- [x] Caddy `immich.3q.fi` / `immich-bot.3q.fi`（infra PR #120）
-- [x] Tekton PR CI `immich-l0`
-- [ ] Immich server Prometheus scrape 驗證 + Grafana
-- [ ] Phase 5 B2
-
----
-
-## 🗺️ 執行順序（總覽）
-
-```mermaid
-graph LR
-    P3a[local-archive ✅] --> P3b[icloud-primary 🚧]
-    P3b --> P3c[增量 LaunchAgent]
-    P3c --> P35[Phase 3.5 tier_policy]
-    P3c --> UP[v2.7.5 升級]
-    P35 --> P4[Phase 4 SSD]
-    P4 --> P5[Phase 5 B2]
-```
-
----
-
-## 📍 歷史（2026-06-10～11）
-
-Phase 2 Tekton + HTTPS + E2E、PR #7 Photo Sync 腳本、儲存盤點、PR #8 憑證 fix、PR #9 LINE Bot 強化 — 詳見 [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md) 每週更新。
+**v2.7.5 升級紀錄** → [IMMICH_UPGRADE_v2.7.5.md](./IMMICH_UPGRADE_v2.7.5.md)
 
 ---
 
 ## 🔗 相關
 
-- [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md) — SSOT
-- [PHASE2_K8S_DEPLOYMENT.md](./PHASE2_K8S_DEPLOYMENT.md)
-- [PHASE3_EXTERNAL_LIBRARY_CLEANUP.md](./PHASE3_EXTERNAL_LIBRARY_CLEANUP.md)
-- [IMMICH_UPGRADE_v2.7.5.md](./IMMICH_UPGRADE_v2.7.5.md)
+- [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)
+- [PHASE3_STORAGE_AUDIT.md](./PHASE3_STORAGE_AUDIT.md)
+- [PHASE3_PHOTO_SYNC.md](./PHASE3_PHOTO_SYNC.md)
+- [scripts/photo-sync/README.md](../scripts/photo-sync/README.md)

@@ -58,7 +58,7 @@ tail -f ~/Library/Logs/immich-photo-sync/sync.log
 | ID | 路徑 | Album | 狀態 |
 |----|------|-------|------|
 | `local-archive` | `LOCAL PHOTO LIBRARY.photoslibrary/originals` | Mac Photos (Local Archive) | ✅ 5023/5023 |
-| `icloud-primary` | `Photos Library.photoslibrary/originals` | Mac Photos (iCloud) | 🚧 ~22%（7.2/32 GB） |
+| `icloud-primary` | `Photos Library.photoslibrary/originals` | Mac Photos (iCloud) | ✅ 3512/3512 |
 
 ## 憑證
 
@@ -71,6 +71,13 @@ tail -f ~/Library/Logs/immich-photo-sync/sync.log
 ## 儲存盤點
 
 Immich 磁碟組成與 duplicate 分析（2026-06-12 更新）→ [docs/PHASE3_STORAGE_AUDIT.md](../../docs/PHASE3_STORAGE_AUDIT.md)
+
+Local library hash / 時間戳抽查：
+
+```bash
+./scripts/photo-sync/audit-local-duplicates.py
+# 報告：~/Library/Logs/immich-photo-sync/audit-local-duplicates.json
+```
 
 ## iCloud 分層（Phase 3.5）
 
