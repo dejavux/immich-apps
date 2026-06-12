@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Dry-run / execute cleanup of redundant external-library copies on Immich node.
-# See docs/PHASE3_EXTERNAL_LIBRARY_CLEANUP.md
+# See docs/00_planning/photo-sync/runbooks/EXTERNAL_LIBRARY_CLEANUP.md
 set -euo pipefail
 
 EXECUTE=0

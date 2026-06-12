@@ -79,6 +79,19 @@
     "vectorchord",
     "vchord",
     "tsconfig",
-    "yamllint"
+    "yamllint",
+    "abspath",
+    "daemonset",
+    "DCGM",
+    "gantt",
+    "ifeq",
+    "launchagent",
+    "letsencrypt",
+    "mxvnw",
+    "pgbench",
+    "photosync",
+    "servicemonitor",
+    "tolerations",
+    "untolerated"
   ]
 }

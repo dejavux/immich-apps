@@ -1,6 +1,6 @@
 # immich-apps — Tekton CI / Release
 
-**SSOT**: [docs/PHASE2_K8S_DEPLOYMENT.md](../docs/PHASE2_K8S_DEPLOYMENT.md)
+**SSOT**: [docs/00_planning/infra/K8S_DEPLOYMENT.md](../docs/00_planning/infra/K8S_DEPLOYMENT.md)
 
 ## Status
 

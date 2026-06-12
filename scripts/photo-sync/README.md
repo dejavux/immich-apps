@@ -70,7 +70,7 @@ tail -f ~/Library/Logs/immich-photo-sync/sync.log
 
 ## 儲存盤點
 
-Immich 磁碟組成與 duplicate 分析（2026-06-12 更新）→ [docs/PHASE3_STORAGE_AUDIT.md](../../docs/PHASE3_STORAGE_AUDIT.md)
+Immich 磁碟組成與 duplicate 分析（2026-06-12 更新）→ [STORAGE_AUDIT.md](../../docs/00_planning/photo-sync/runbooks/STORAGE_AUDIT.md)
 
 Local library hash / 時間戳抽查：
 
@@ -85,4 +85,4 @@ Local library hash / 時間戳抽查：
 
 ## 備份
 
-Mac SSOT → Immich upload → Phase 5 B2（見 `docs/PHASE5_BACKUP_MONITORING.md`）。
+Mac SSOT → Immich upload → Phase 5 B2（見 `docs/00_planning/BACKLOG.md` §Phase 5）。
