@@ -5,7 +5,7 @@
 > 🚀 **Status**: Phase 2 MVP ✅ · Phase 3 ~96% · Immich **v2.7.5** ✅  
 > 📊 **Progress**: [PROGRESS_TRACKING.md](./docs/00_planning/PROGRESS_TRACKING.md)  
 > 📋 **如何進行**: [HOW_TO_PROCEED.md](./docs/00_planning/HOW_TO_PROCEED.md)  
-> 🏗️ **K8s 部署**: [K8S_DEPLOYMENT.md](./docs/00_planning/infra/K8S_DEPLOYMENT.md)
+> 🏗️ **K8s 部署**: [K8S_DEPLOYMENT.md](./docs/20_guides/infra/K8S_DEPLOYMENT.md)
 
 ---
 
@@ -161,9 +161,9 @@ make logs              # 查看 k8s logs
 | 任務 SSOT | [PROGRESS_TRACKING.md](./docs/00_planning/PROGRESS_TRACKING.md) |
 | 執行指南 | [HOW_TO_PROCEED.md](./docs/00_planning/HOW_TO_PROCEED.md) |
 | 指令參考 | [COMMAND_REFERENCE.md](./docs/20_guides/COMMAND_REFERENCE.md) |
-| LINE Bot 規格 | [line-bot/10_REQUIREMENTS.md](./docs/00_planning/line-bot/10_REQUIREMENTS.md) |
-| Photo Sync | [photo-sync/10_REQUIREMENTS.md](./docs/00_planning/photo-sync/10_REQUIREMENTS.md) |
-| K8s / Tekton | [K8S_DEPLOYMENT.md](./docs/00_planning/infra/K8S_DEPLOYMENT.md) |
+| LINE Bot V1.1 | [10_REQUIREMENTS.md](./docs/00_planning/line-bot/10_REQUIREMENTS.md) |
+| Photo Sync（結案） | [phase3-photo-sync-bulk/](./docs/60_completed/phase3-photo-sync-bulk/) |
+| K8s / Tekton | [K8S_DEPLOYMENT.md](./docs/20_guides/infra/K8S_DEPLOYMENT.md) |
 | 已結案 | [60_completed/](./docs/60_completed/) |
 
 ---
@@ -232,7 +232,7 @@ curl https://immich-bot.3q.fi/health
 
 ### 常見問題
 
-詳見：[line-bot/10_REQUIREMENTS.md - Troubleshooting](./docs/00_planning/line-bot/10_REQUIREMENTS.md#troubleshooting)
+詳見：[60_completed/phase2-line-bot-mvp/10_REQUIREMENTS.md - Troubleshooting](./docs/60_completed/phase2-line-bot-mvp/10_REQUIREMENTS.md#troubleshooting)
 
 ### 快速診斷
 

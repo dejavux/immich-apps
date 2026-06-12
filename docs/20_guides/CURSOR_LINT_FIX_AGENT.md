@@ -109,4 +109,4 @@ IMMICH_RELEASE_SKIP_DEPLOY=1 make release-build
 ## 參考
 
 - fuqi 整合：`fuqi-asset-manager/docs/20_guides/CURSOR_LINT_FIX_AGENT.md`
-- K8s release：`docs/00_planning/infra/K8S_DEPLOYMENT.md`
+- K8s release：`docs/20_guides/infra/K8S_DEPLOYMENT.md`

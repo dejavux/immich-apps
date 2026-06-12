@@ -15,5 +15,6 @@
 |------|------|
 | [MIGRATION_SUMMARY.md](./MIGRATION_SUMMARY.md) | 遷移過程紀錄 |
 | [COMPLETION_SUMMARY.md](./COMPLETION_SUMMARY.md) | Phase 0 完成總結 |
+| [REPO_CONSOLIDATION_PLAN.md](./REPO_CONSOLIDATION_PLAN.md) | 整合方案 |
+| [REPO_ARCHITECTURE_RECOMMENDATION.md](./REPO_ARCHITECTURE_RECOMMENDATION.md) | 架構建議 |
 | [../faq/QUESTIONS_ANSWERED.md](../faq/QUESTIONS_ANSWERED.md) | 架構決策 FAQ |
-| [../../00_planning/repo/](../../00_planning/repo/) | 整合方案原文 |

@@ -72,7 +72,7 @@ launchctl list | grep immich-photo-sync
 tail -f ~/Library/Logs/immich-photo-sync/sync.log
 ```
 
-規格：[photo-sync/10_REQUIREMENTS.md](../00_planning/photo-sync/10_REQUIREMENTS.md)
+規格：[60_completed/phase3-photo-sync-bulk/10_REQUIREMENTS.md](../60_completed/phase3-photo-sync-bulk/10_REQUIREMENTS.md)
 
 ---
 
@@ -83,4 +83,4 @@ kubectl get pods -n immich
 curl -fsS -H "x-api-key: $IMMICH_API_KEY" https://immich.3q.fi/api/server/version
 ```
 
-升級 checklist：[infra/upgrades/IMMICH_v2.7.5.md](../00_planning/infra/upgrades/IMMICH_v2.7.5.md)
+升級 checklist：[infra/upgrades/IMMICH_v2.7.5.md](./infra/upgrades/IMMICH_v2.7.5.md)

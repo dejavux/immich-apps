@@ -11,8 +11,8 @@
 | 專案 | 歸檔日 | README |
 |------|--------|--------|
 | Phase 0 Repo 整合 | 2026-06-12 | [phase0-repo-consolidation/](./phase0-repo-consolidation/) |
-| Phase 2 LINE Bot MVP | 2026-06-12 | [phase2-line-bot-mvp/](./phase2-line-bot-mvp/) |
-| Phase 3 Photo Sync 全量 | 2026-06-12 | [phase3-photo-sync-bulk/](./phase3-photo-sync-bulk/) |
+| Phase 2 LINE Bot MVP | 2026-06-13 | [phase2-line-bot-mvp/](./phase2-line-bot-mvp/) ·含 `10_REQUIREMENTS.md` |
+| Phase 3 Photo Sync | 2026-06-13 | [phase3-photo-sync-bulk/](./phase3-photo-sync-bulk/) ·含 `10_REQUIREMENTS.md` |
 | Immich v2.7.5 升級 | 2026-06-12 | [immich-v2.7.5-upgrade/](./immich-v2.7.5-upgrade/) |
 | FAQ | — | [faq/QUESTIONS_ANSWERED.md](./faq/QUESTIONS_ANSWERED.md) |
 

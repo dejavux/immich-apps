@@ -91,4 +91,4 @@ Runbook: [EXTERNAL_LIBRARY_CLEANUP.md](./EXTERNAL_LIBRARY_CLEANUP.md)
 
 ---
 
-**相關**: [10_REQUIREMENTS.md](../10_REQUIREMENTS.md) · [PROGRESS_TRACKING.md](../../PROGRESS_TRACKING.md) §3.3
+**相關**: [10_REQUIREMENTS.md](../../../60_completed/phase3-photo-sync-bulk/10_REQUIREMENTS.md) · [PROGRESS_TRACKING.md](../../../00_planning/PROGRESS_TRACKING.md) §3.3

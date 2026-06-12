@@ -1,7 +1,7 @@
 # Immich v2.7.5 升級
 
 **歸檔日期**: 2026-06-12  
-**活躍 checklist**: [00_planning/infra/upgrades/IMMICH_v2.7.5.md](../../00_planning/infra/upgrades/IMMICH_v2.7.5.md)
+**Checklist**: [20_guides/infra/upgrades/IMMICH_v2.7.5.md](../../20_guides/infra/upgrades/IMMICH_v2.7.5.md)
 
 ## 交付摘要
 
@@ -18,7 +18,7 @@
 | 文件 | 說明 |
 |------|------|
 | [COMPLETION_SUMMARY.md](./COMPLETION_SUMMARY.md) | 本摘要 |
-| [../../00_planning/infra/upgrades/IMMICH_v2.7.5.md](../../00_planning/infra/upgrades/IMMICH_v2.7.5.md) | 完整 checklist |
+| [IMMICH_v2.7.5.md](../../20_guides/infra/upgrades/IMMICH_v2.7.5.md) | 完整 checklist |
 
 ## 環境
 

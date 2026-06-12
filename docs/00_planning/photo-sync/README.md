@@ -1,24 +1,20 @@
 # Photo Sync
 
-**狀態**: 🚧 Phase 3 收尾（全量 ✅ · 增量實測 ✅）  
-**SSOT**: [PROGRESS_TRACKING §Phase 3](../PROGRESS_TRACKING.md)  
-**結案歸檔**: [phase3-photo-sync-bulk](../../60_completed/phase3-photo-sync-bulk/)
+**Phase 3**: ✅ 結案（2026-06-13）→ [60_completed/phase3-photo-sync-bulk/](../../60_completed/phase3-photo-sync-bulk/)  
+**Phase 3.5**: 🟢 **進行中** → [tier-policy/](./tier-policy/)
 
-## 文件
+## 進行中
 
 | 文件 | 用途 |
 |------|------|
-| [10_REQUIREMENTS.md](./10_REQUIREMENTS.md) | 需求、CLI 設定、LaunchAgent |
-| [runbooks/STORAGE_AUDIT.md](./runbooks/STORAGE_AUDIT.md) | 磁碟與 duplicate 分析 |
-| [runbooks/EXTERNAL_LIBRARY_CLEANUP.md](./runbooks/EXTERNAL_LIBRARY_CLEANUP.md) | External library 清理 |
+| [tier-policy/10_REQUIREMENTS.md](./tier-policy/10_REQUIREMENTS.md) | iCloud → Local 自動分層 |
+| [tier-policy/README.md](./tier-policy/README.md) | 子專案入口 |
 
-## 腳本
+## 維運
 
-`scripts/photo-sync/` — `immich-sync.sh`、`install-launchagent.sh`
+| 文件 | 用途 |
+|------|------|
+| [20_guides/photo-sync/](../../20_guides/photo-sync/) | STORAGE_AUDIT 等 runbooks |
+| [scripts/photo-sync/](../../../../scripts/photo-sync/) | immich-sync、LaunchAgent |
 
-## 驗收
-
-- [x] icloud-primary 3512/3512 · local-archive 5023/5023
-- [x] dry-run 0 new
-- [x] LaunchAgent 增量已驗
-- [ ] Phase 3 正式結案簽核
+**SSOT**: [PROGRESS_TRACKING §Phase 3.5](../PROGRESS_TRACKING.md)

@@ -1,7 +1,7 @@
 # Immich v2.0.1 → v2.7.5 升級 — 結案摘要
 
 **執行日**: 2026-06-12  
-**完整 checklist**: [IMMICH_v2.7.5.md](../../00_planning/infra/upgrades/IMMICH_v2.7.5.md)
+**完整 checklist**: [IMMICH_v2.7.5.md](../../20_guides/infra/upgrades/IMMICH_v2.7.5.md)
 
 ---
 
