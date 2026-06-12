@@ -13,6 +13,7 @@ iCloud 空間有限；舊照片應從 `icloud-primary` 移到 `local-archive`，
 | 文件 | 用途 |
 |------|------|
 | [10_REQUIREMENTS.md](./10_REQUIREMENTS.md) | 需求、PoC、驗收 |
+| [20_CROSS_LIBRARY_MOVE_RESEARCH.md](./20_CROSS_LIBRARY_MOVE_RESEARCH.md) | M2 跨 library 研究 |
 | [Phase 3 歸檔](../../../60_completed/phase3-photo-sync-bulk/10_REQUIREMENTS.md) | 背景 §iCloud 分層 |
 
 ## 設定

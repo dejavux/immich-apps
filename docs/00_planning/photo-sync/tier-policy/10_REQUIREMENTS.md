@@ -98,16 +98,37 @@ export PATH="$HOME/.local/bin:$PATH"
 ./scripts/photo-sync/tier-policy-poc.sh --cutoff-date 2023-01-01
 ```
 
-- [ ] 確認 eligible 子集與 Immich 已 sync 重疊率（spot-check 10 張）
-- [ ] 評估 osxphotos 能否安全「跨 library 移動」（M2 前置）
+### M2 — spot-check + 跨 library 可行性（本週）
 
-### M2 — tier-policy.sh
+- [x] **Immich hash 重疊**：577 張 local-path eligible → **100% dup**（`bulk-upload-check`）
+- [x] **eligible 分桶**：2900 總計 · 577 可 export · 2188 iCloud-only · 0 已在 local-archive
+- [x] `tier-policy-spotcheck.sh` · `tier-policy-cross-library-poc.sh`（只計數、不搬檔）
+- [x] [20_CROSS_LIBRARY_MOVE_RESEARCH.md](./20_CROSS_LIBRARY_MOVE_RESEARCH.md)
+
+**M2 結論**：
+
+| 項目 | 結果 |
+|------|------|
+| Immich 覆蓋（可 hash 子集） | **577/577 = 100%** |
+| 跨 library 自動「move」 | **不可**；需 export → photoscript import → 人工/AS 刪 source |
+| v1 建議先搬 | **577** 張已有 local path（Immich 已 dup） |
+| 其餘 2188 | 需 iCloud 下載後才能 export；1865 Live Photo · 940 shared library 需額外 caution |
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+./scripts/photo-sync/tier-policy-spotcheck.sh
+./scripts/photo-sync/tier-policy-cross-library-poc.sh
+```
+
+- [ ] M3：`tier-policy.sh` execute（小批次 577 先導）
+
+### M3 — tier-policy.sh
 
 - [ ] 讀 `photo-sync.config.yaml` 的 `tier_policy`
 - [ ] dry-run：輸出 JSON 報告（eligible / skipped / errors）
 - [ ] execute：小批次（batch_size）搬移 + 日誌
 
-### M3 — LaunchAgent 整合
+### M4 — LaunchAgent 整合
 
 - [ ] 每週 cron 或 fswatch 前執行 tier（可選）
 - [ ] 與 `immich-watch.sh` 協調（避免 sync storm）

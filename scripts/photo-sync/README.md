@@ -84,10 +84,12 @@ Local library hash / 時間戳抽查：
 ```bash
 export PATH="$HOME/.local/bin:$PATH"   # osxphotos via pip3 install --user
 ./scripts/photo-sync/tier-policy-poc.sh [--cutoff-date YYYY-MM-DD]
+./scripts/photo-sync/tier-policy-spotcheck.sh          # Immich hash 重疊
+./scripts/photo-sync/tier-policy-cross-library-poc.sh  # 跨 library 計數（不搬檔）
 ```
 
-Dry-run JSON → `~/Library/Logs/immich-photo-sync/tier/tier-poc-*.json`  
-規格：[tier-policy/10_REQUIREMENTS.md](../../docs/00_planning/photo-sync/tier-policy/10_REQUIREMENTS.md)
+Dry-run JSON → `~/Library/Logs/immich-photo-sync/tier/tier-*.json`  
+規格：[tier-policy/10_REQUIREMENTS.md](../../docs/00_planning/photo-sync/tier-policy/10_REQUIREMENTS.md) · [跨 library 研究](../../docs/00_planning/photo-sync/tier-policy/20_CROSS_LIBRARY_MOVE_RESEARCH.md)
 
 Install osxphotos（無 Homebrew formula）：
 
