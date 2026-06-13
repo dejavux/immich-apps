@@ -52,11 +52,7 @@ if ! command -v osxphotos >/dev/null 2>&1; then
 fi
 
 if [[ "$EXECUTE" == true ]]; then
-  if ! python3 -c "import photoscript" 2>/dev/null; then
-    echo "ERROR: photoscript not found (required for --execute)." >&2
-    echo "  pip3 install --user photoscript" >&2
-    exit 1
-  fi
+  : # osxphotos import uses Photos.app; no extra Python deps
 fi
 
 if [[ ! -f "$CONFIG" ]]; then

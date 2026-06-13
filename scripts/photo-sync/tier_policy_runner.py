@@ -40,12 +40,8 @@ except ImportError as exc:
 
 
 def require_photoscript() -> None:
-    try:
-        import photoscript  # noqa: F401
-    except ImportError as exc:
-        raise SystemExit(
-            "photoscript not found. Install: pip3 install --user photoscript"
-        ) from exc
+    if shutil.which("osxphotos") is None:
+        raise SystemExit("osxphotos not on PATH")
 
 
 MEDIA_EXT = {
@@ -119,31 +115,51 @@ def import_to_target(
     target_lib: Path,
     file_paths: list[Path],
     album_name: str,
+    import_timeout: int,
     open_delay: int,
 ) -> list[str]:
-    import photoscript
-    from photoscript.exceptions import AppleScriptError
-
     errors: list[str] = []
     media_paths = [str(p) for p in file_paths if p.is_file()]
     if not media_paths:
         return ["no files to import"]
 
-    lib = photoscript.PhotosLibrary()
-    lib.open(str(target_lib), delay=open_delay)
-    lib.activate()
+    subprocess.run(
+        ["open", "-a", "Photos", str(target_lib)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if open_delay > 0:
+        time.sleep(open_delay)
 
-    album = lib.album(album_name)
-    if album is None:
-        album = lib.create_album(album_name)
-
+    cmd = [
+        "osxphotos",
+        "import",
+        *media_paths,
+        "--library",
+        str(target_lib),
+        "--album",
+        album_name,
+        "--skip-dups",
+    ]
     try:
-        lib.import_photos(media_paths, album=album, skip_duplicate_check=True)
-    except AppleScriptError as exc:
-        errors.append(f"import_photos failed: {exc}")
-    finally:
-        lib.quit()
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=import_timeout,
+        )
+    except subprocess.TimeoutExpired:
+        errors.append(
+            f"osxphotos import timed out after {import_timeout}s "
+            "(Photos.app may need manual confirmation in GUI)"
+        )
+        return errors
 
+    if proc.returncode != 0:
+        detail = proc.stderr.strip() or proc.stdout.strip() or "osxphotos import failed"
+        errors.append(detail[:500])
     return errors
 
 
@@ -231,10 +247,16 @@ def parse_args() -> argparse.Namespace:
         help="Do not pause for manual delete confirmation between batches",
     )
     parser.add_argument(
+        "--import-timeout",
+        type=int,
+        default=600,
+        help="Seconds to wait for osxphotos import (Photos.app must be available)",
+    )
+    parser.add_argument(
         "--open-delay",
         type=int,
         default=10,
-        help="Seconds to wait after photoscript opens target library",
+        help="Deprecated; kept for CLI compat",
     )
     parser.add_argument("--output", help="Write JSON report path")
     return parser.parse_args()
@@ -378,6 +400,7 @@ def main() -> int:
             target_lib=target_lib,
             file_paths=exported_files,
             album_name=target_album,
+            import_timeout=args.import_timeout,
             open_delay=args.open_delay,
         )
         report["execute"]["errors"].extend(import_errors)

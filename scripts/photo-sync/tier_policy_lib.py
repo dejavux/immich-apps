@@ -151,6 +151,7 @@ def select_move_candidates(
             continue
         selected.append(photo)
         counts["selected"] += 1
+    selected.sort(key=lambda photo: (photo.date or datetime.min, photo.uuid))
     return selected, counts
 
 
