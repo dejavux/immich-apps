@@ -86,6 +86,8 @@ export PATH="$HOME/.local/bin:$PATH"   # osxphotos via pip3 install --user
 ./scripts/photo-sync/tier-policy-poc.sh [--cutoff-date YYYY-MM-DD]
 ./scripts/photo-sync/tier-policy-spotcheck.sh          # Immich hash 重疊
 ./scripts/photo-sync/tier-policy-cross-library-poc.sh  # 跨 library 計數（不搬檔）
+./scripts/photo-sync/tier-policy.sh --dry-run            # M3 規劃
+./scripts/photo-sync/tier-policy.sh --execute --batch-size 10  # M3 執行
 ```
 
 Dry-run JSON → `~/Library/Logs/immich-photo-sync/tier/tier-*.json`  
