@@ -66,12 +66,20 @@ tier_policy:
   dry_run: true
 ```
 
-**待增**（Phase 3.5 實作時）：
+**Config 欄位**（見 `photo-sync.config.yaml.example`）：
 
 ```yaml
-  # min_age_days: 30      # 避免搬移剛拍的照片
-  # batch_size: 50        # 每輪最多處理張數
-  # log_dir: ~/Library/Logs/immich-photo-sync/tier
+  batch_size: 10
+  local_path_only: true
+  skip_shared_library: false
+  # staging_dir: /tmp/immich-photo-sync/tier-staging
+  # target_album: Mac Photos (Local Archive)
+```
+
+~~**待增**（Phase 3.5 實作時）~~：
+
+```yaml
+  # min_age_days: 30      # Planned: 避免搬移剛拍的照片
 ```
 
 ---
@@ -122,11 +130,24 @@ export PATH="$HOME/.local/bin:$PATH"
 
 - [ ] M3：`tier-policy.sh` execute（小批次 577 先導）
 
-### M3 — tier-policy.sh
+### M3 — tier-policy.sh ✅（v1）
 
-- [ ] 讀 `photo-sync.config.yaml` 的 `tier_policy`
-- [ ] dry-run：輸出 JSON 報告（eligible / skipped / errors）
-- [ ] execute：小批次（batch_size）搬移 + 日誌
+- [x] 讀 `photo-sync.config.yaml` 的 `tier_policy`
+- [x] dry-run：JSON 報告（eligible / skipped / batch 清單）
+- [x] execute：`osxphotos export` → `photoscript import`（小批次 `batch_size`）
+- [x] 人工 gate：`tier-delete-manifest-*.json` + terminal 暫停
+- [x] 狀態檔 `tier/state.json`（resume / 跳過已 import）
+- [x] Runbook：[TIER_POLICY.md](../../../20_guides/photo-sync/runbooks/TIER_POLICY.md)
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+pip3 install --user photoscript   # execute 需要
+./scripts/photo-sync/tier-policy.sh --dry-run --batch-size 10
+# enabled: true 後
+./scripts/photo-sync/tier-policy.sh --execute --batch-size 10
+```
+
+- [ ] 實際跑完 577 張 + 人工刪除驗收
 
 ### M4 — LaunchAgent 整合
 

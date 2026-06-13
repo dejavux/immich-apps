@@ -56,7 +56,17 @@ export PATH="$HOME/.local/bin:$PATH"
 
 → [20_CROSS_LIBRARY_MOVE_RESEARCH.md](./photo-sync/tier-policy/20_CROSS_LIBRARY_MOVE_RESEARCH.md)
 
-**M3 下一步**：`tier-policy.sh` execute（先小批次 577 張 local-path）
+**M3 下一步**：`tier-policy.sh` 已實作 — 先 `--dry-run`，再小批 `--execute`
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+pip3 install --user photoscript
+./scripts/photo-sync/tier-policy.sh --dry-run --batch-size 10
+# config: tier_policy.enabled: true
+./scripts/photo-sync/tier-policy.sh --execute --batch-size 10
+```
+
+→ [TIER_POLICY.md runbook](../20_guides/photo-sync/runbooks/TIER_POLICY.md)
 
 ### Optional — Photo Edit + AI（P3 · 非主軌）
 
