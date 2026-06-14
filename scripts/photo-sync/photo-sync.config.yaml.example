@@ -40,11 +40,12 @@ tier_policy:
   max_size_gb: 50
   cutoff_date: "2023-01-01"   # PoC: tier-policy-poc.sh 預設讀此欄位
   dry_run: true
-  batch_size: 10              # tier-policy.sh --execute 每批張數
-  local_path_only: true       # v1：只搬已有 originals path 的項目
-  skip_shared_library: false  # false = 含 shared library（刪除仍走人工 gate）
+  batch_size: 10
+  local_path_only: true
+  skip_shared_library: false
+  import_mode: manual         # manual | auto — manual 較穩（Photos GUI import）
+  import_to_album: false       # false = 不指定 album，減少 AppleScript 卡住
   # staging_dir: /tmp/immich-photo-sync/tier-staging
-  # target_album: Mac Photos (Local Archive)  # 預設用 target library 的 album
 
 sync:
   recursive: true

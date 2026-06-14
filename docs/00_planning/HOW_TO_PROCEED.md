@@ -56,15 +56,27 @@ export PATH="$HOME/.local/bin:$PATH"
 
 → [20_CROSS_LIBRARY_MOVE_RESEARCH.md](./photo-sync/tier-policy/20_CROSS_LIBRARY_MOVE_RESEARCH.md)
 
-**M3 下一步**：`tier-policy.sh` 已實作 — 先 `--dry-run`，再小批 `--execute`
+**M3 第一輪 bulk（2026-06-14）** — export/import **1615/1615 verify ✅**：
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
-pip3 install --user photoscript
-./scripts/photo-sync/tier-policy.sh --dry-run --batch-size 10
-# config: tier_policy.enabled: true
-./scripts/photo-sync/tier-policy.sh --execute --batch-size 10
+# 驗證 staging ↔ LOCAL 數量
+./scripts/photo-sync/tier-policy-verify-staging.sh
+# 重試失敗 batch（auto import + Live Photo filter）
+IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-retry-failed-import.sh
 ```
+
+| 結果 | 數值 |
+|------|------|
+| export（cutoff 一年前） | 1615 張 · 33 batch |
+| LOCAL verify | **1615 / 1615** |
+| ismissing 待 Phase B | 4119 張 |
+
+**下一步**：
+
+1. **人工 gate**：依 `tier-delete-manifest-*.json` 在 icloud-primary 刪除已 verify 項目（Immich 仍有備份）
+2. **Phase B**：4119 張 `ismissing` 需先從 iCloud 下載再 re-export
+3. **immich-sync dry-run** 確認兩 library 0 new
 
 → [TIER_POLICY.md runbook](../20_guides/photo-sync/runbooks/TIER_POLICY.md)
 

@@ -31,7 +31,7 @@
 | **Phase 1** | 基礎設施 | ✅ 已部署 | 50% 完成 | █████░░░░░ 50% | 2025-10-06 |
 | **Phase 2** | LINE Bot | ✅ 結案 | MVP 100% | ██████████ 100% | 2026-06-12 |
 | **Phase 3** | Photo Sync | ✅ 結案 | 100% | ██████████ 100% | 2026-06-13 |
-| **Phase 3.5** | iCloud 分層 | 🟡 P1 | M1 PoC ~80% | ███████░░░ 70% | 2026-06-27 |
+| **Phase 3.5** | iCloud 分層 | 🟡 P1 | M3 第一輪 import ✅ | ████████░░ 85% | 2026-06-27 |
 | **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-05 |
 | **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-12 |
 
@@ -481,29 +481,43 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 ## 🟡 P1：Phase 3.5 — iCloud tier policy
 
-**狀態**: 🟢 Kickoff（2026-06-13）  
+**狀態**: 🟡 M3 執行中（2026-06-14 bulk export/import 第一輪完成）  
 **規格**: [photo-sync/tier-policy/10_REQUIREMENTS.md](./photo-sync/tier-policy/10_REQUIREMENTS.md)  
 **目標**: `tier_policy` 自動將 eligible 照片 icloud → local-archive
 
-### 3.5.0 M1 PoC
+### 3.5.0 M1 PoC ✅
 
 - [x] osxphotos 安裝 · 讀 icloud-primary metadata
 - [x] eligible 數量（`cutoff_date: 2023-01-01` → **2900**）
 - [x] `scripts/photo-sync/tier-policy-poc.sh`（dry-run JSON）
-- [ ] eligible ⊂ Immich spot-check（10 張）
-- [ ] 跨 library 移動方案評估
+- [x] eligible ⊂ Immich spot-check（577 local-path → **100%** SHA1 dup）
+- [x] 跨 library 移動方案評估 → [20_CROSS_LIBRARY_MOVE_RESEARCH.md](./photo-sync/tier-policy/20_CROSS_LIBRARY_MOVE_RESEARCH.md)
 
-### 3.5.1 tier-policy.sh
+### 3.5.1 tier-policy.sh ✅（M3 腳本）
 
-- [ ] 讀 config · dry-run / execute
-- [ ] 小批次搬移 + rollback 文件
+- [x] 讀 config · dry-run / execute / export-only / import-staging
+- [x] bulk export + bulk import + verify-staging + retry-failed
+- [x] Live Photo import 修正（略過 companion `.mov`）
+- [ ] 人工刪除 source gate（1615 張待確認後刪 icloud-primary）
+- [ ] rollback 實測文件
 
-### 3.5.2 整合
+### 3.5.2 第一輪 bulk 執行（2026-06-14）
+
+| 指標 | 數值 |
+|------|------|
+| cutoff | `--cutoff-one-year` → **2025-06-14** |
+| export | **1615** 張（33 batch · local-path only） |
+| ismissing 未 export | **4119**（需 iCloud 下載 · Phase B） |
+| import verify | **1615 / 1615** ✅ |
+| LOCAL 總數 | 3000 → **4616**（+1616） |
+| 失敗 batch 重試 | 7 → 0 gap（`tier-policy-retry-failed-import.sh`） |
+
+### 3.5.3 整合
 
 - [ ] LaunchAgent / cron
-- [ ] runbook `20_guides/photo-sync/runbooks/TIER_POLICY.md`
+- [x] runbook [TIER_POLICY.md](../20_guides/photo-sync/runbooks/TIER_POLICY.md)
 
-**已完成**: config `tier_policy` schema · kickoff 規格文件 · tier-policy-poc.sh
+**已完成**: config schema · M1/M2 研究 · M3 腳本 · 第一輪 1615 張 export→import→verify
 
 ---
 
@@ -735,9 +749,9 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 ---
 
-**專案狀態**: ✅ Phase 2/3 結案 · Sprint = E2E 驗收 + Phase 3.5  
-**當前重點**: Web UI/LINE 手動 E2E → Phase 3.5 跨 library 移動 → Phase 5 備份  
-**下一里程碑**: Phase 3.5 M1 spot-check + M2 tier-policy.sh（2026-06-20）  
+**專案狀態**: ✅ Phase 2/3 結案 · Phase 3.5 M3 第一輪 import ✅  
+**當前重點**: 人工刪 icloud source gate → Phase B ismissing 下載 → immich-sync 驗收  
+**下一里程碑**: Phase 3.5 source 刪除 + Phase B iCloud 下載策略（2026-06-20）  
 **Optional**: [photo-edit/](./photo-edit/) AI 修圖整合（P3）
 
 **最後更新**: 2026-06-13  

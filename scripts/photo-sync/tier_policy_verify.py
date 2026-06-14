@@ -27,7 +27,7 @@ except ImportError as exc:
 def verify_uuid(
     *,
     source_db: osxphotos.PhotosDB,
-    target_db: osxphotos.PhotosDB,
+    _target_db: osxphotos.PhotosDB,
     target_sigs: set[str],
     uuid: str,
 ) -> dict:
@@ -69,11 +69,7 @@ def main() -> int:
     target_cfg = library_by_id(config, tier.get("target_library_id", "local-archive"))
     source_db = osxphotos.PhotosDB(str(photos_library_path(source_cfg)))
     target_db = osxphotos.PhotosDB(str(photos_library_path(target_cfg)))
-    target_sigs = {
-        sig
-        for photo in target_db.photos()
-        if (sig := photo_signature(photo))
-    }
+    target_sigs = {sig for photo in target_db.photos() if (sig := photo_signature(photo))}
 
     uuids: list[str] = []
     seen: set[str] = set()
@@ -96,7 +92,7 @@ def main() -> int:
     results = [
         verify_uuid(
             source_db=source_db,
-            target_db=target_db,
+            _target_db=target_db,
             target_sigs=target_sigs,
             uuid=uuid,
         )
@@ -108,9 +104,7 @@ def main() -> int:
         "target_photo_count": len(list(target_db.photos())),
         "checked": len(results),
         "in_target": sum(1 for row in results if row.get("target_present")),
-        "source_only": sum(
-            1 for row in results if row.get("source_present") and not row.get("target_present")
-        ),
+        "source_only": sum(1 for row in results if row.get("source_present") and not row.get("target_present")),
         "items": results,
     }
     print(json.dumps(summary, indent=2, ensure_ascii=False))

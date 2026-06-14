@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# 只對 git 變更檔跑 ESLint / Prettier / tsc / Markdown / cspell / shellcheck / helm lint / make 語法。
+# 只對 git 變更檔跑 ESLint / Prettier / tsc / Markdown / cspell / shellcheck /
+# helm lint / make 語法 / scripts/photo-sync/*.py（ruff + flake8 + pylint + pyright）。
 #
 #   ./scripts/lint-changed-files.sh
 #   ./scripts/lint-changed-files.sh --staged
@@ -98,6 +99,7 @@ PRETTIER_FILES=()
 MD_FILES=()
 SH_FILES=()
 SPELL_FILES=()
+PY_FILES=()
 HELM_CHARTS=()
 RUN_TYPECHECK=false
 NEED_MAKE_PARSE=false
@@ -110,6 +112,7 @@ for f in "${FILES[@]}"; do
     *.ts|*.tsx|*.mts|*.cts) RUN_TYPECHECK=true ;;
     *.md) MD_FILES+=("$f") ;;
     *.sh) SH_FILES+=("$f") ;;
+    scripts/photo-sync/*.py) PY_FILES+=("$f") ;;
     Makefile|*.mk) NEED_MAKE_PARSE=true ;;
     deploy/helm/*/Chart.yaml)
       chart_dir="$(dirname "$f")"
@@ -125,7 +128,7 @@ fi
 
 MAKE_N=0; [[ "$NEED_MAKE_PARSE" == true ]] && MAKE_N=1
 echo -e "${BLUE}變更統計:${NC} 共 ${#FILES[@]} 個檔案"
-echo "   ESLint: ${#ESLINT_FILES[@]} | Prettier: ${#PRETTIER_FILES[@]} | CSpell: ${#SPELL_FILES[@]} | Markdown: ${#MD_FILES[@]} | shellcheck: ${#SH_FILES[@]} | helm: ${#HELM_CHARTS[@]} | make: ${MAKE_N}"
+echo "   ESLint: ${#ESLINT_FILES[@]} | Prettier: ${#PRETTIER_FILES[@]} | CSpell: ${#SPELL_FILES[@]} | Markdown: ${#MD_FILES[@]} | shellcheck: ${#SH_FILES[@]} | Python: ${#PY_FILES[@]} | helm: ${#HELM_CHARTS[@]} | make: ${MAKE_N}"
 echo ""
 
 HAS_ERROR=false
@@ -201,6 +204,19 @@ if [[ ${#SH_FILES[@]} -gt 0 ]]; then
     fi
   else
     echo -e "${YELLOW}   shellcheck 未安裝，略過（brew install shellcheck）${NC}"
+  fi
+  echo ""
+fi
+
+if [[ ${#PY_FILES[@]} -gt 0 ]]; then
+  echo -e "${BLUE}photo-sync Python（ruff + flake8 + pylint + pyright）${NC}"
+  _py_lint=(bash ./scripts/lint-photo-sync-py.sh)
+  [[ "$FIX_MODE" == true ]] && _py_lint+=(--fix)
+  _py_lint+=(-- "${PY_FILES[@]}")
+  if "${_py_lint[@]}" 2>&1; then
+    echo -e "${GREEN}   photo-sync Python 通過（${#PY_FILES[@]} 個檔案）${NC}"
+  else
+    echo -e "${RED}   photo-sync Python 失敗${NC}"; HAS_ERROR=true
   fi
   echo ""
 fi

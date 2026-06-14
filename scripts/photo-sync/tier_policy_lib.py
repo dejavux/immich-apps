@@ -6,13 +6,14 @@ import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
-try:
-    import osxphotos
-except ImportError:
-    osxphotos = None  # type: ignore[assignment,misc]
+if TYPE_CHECKING:
+    from osxphotos import PhotosDB
+else:
+    PhotosDB = Any
 
 
 def expand(path: str) -> Path:
@@ -41,9 +42,7 @@ def photos_library_path(library: dict) -> Path:
 
 
 def tier_log_dir(config: dict) -> Path:
-    log_dir = expand(
-        config.get("sync", {}).get("log_dir", "~/Library/Logs/immich-photo-sync")
-    )
+    log_dir = expand(config.get("sync", {}).get("log_dir", "~/Library/Logs/immich-photo-sync"))
     tier_dir = log_dir / "tier"
     tier_dir.mkdir(parents=True, exist_ok=True)
     return tier_dir
@@ -66,8 +65,12 @@ def state_path(config: dict) -> Path:
 def load_state(config: dict) -> dict:
     path = state_path(config)
     if not path.is_file():
-        return {"imported_uuids": [], "runs": []}
-    return json.loads(path.read_text(encoding="utf-8"))
+        return {"imported_uuids": [], "exported_uuids": [], "runs": []}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data.setdefault("exported_uuids", [])
+    data.setdefault("imported_uuids", [])
+    data.setdefault("runs", [])
+    return data
 
 
 def save_state(config: dict, state: dict) -> None:
@@ -82,15 +85,11 @@ def photo_signature(photo) -> str | None:
     return f"{filename}:{photo.fingerprint}"
 
 
-def eligible_photos(db: osxphotos.PhotosDB, cutoff_date: str) -> list:
-    return [
-        photo
-        for photo in db.photos()
-        if photo.date and photo.date.strftime("%Y-%m-%d") < cutoff_date
-    ]
+def eligible_photos(db: PhotosDB, cutoff_date: str) -> list:
+    return [photo for photo in db.photos() if photo.date and photo.date.strftime("%Y-%m-%d") < cutoff_date]
 
 
-def target_signatures(target_db: osxphotos.PhotosDB) -> set[str]:
+def target_signatures(target_db: PhotosDB) -> set[str]:
     sigs: set[str] = set()
     for photo in target_db.photos():
         sig = photo_signature(photo)
@@ -108,18 +107,18 @@ def has_local_original(photo) -> bool:
 
 
 def select_move_candidates(
-    source_db: osxphotos.PhotosDB,
+    source_db: PhotosDB,
     target_sigs: set[str],
     *,
     cutoff_date: str,
     local_path_only: bool,
     skip_shared_library: bool,
     skip_ismissing: bool,
-    imported_uuids: set[str],
+    processed_uuids: set[str],
 ) -> tuple[list, dict[str, int]]:
     counts = {
         "eligible_total": 0,
-        "skipped_already_imported": 0,
+        "skipped_already_processed": 0,
         "skipped_in_target": 0,
         "skipped_ismissing": 0,
         "skipped_no_local_path": 0,
@@ -130,8 +129,8 @@ def select_move_candidates(
     selected: list = []
     for photo in eligible_photos(source_db, cutoff_date):
         counts["eligible_total"] += 1
-        if photo.uuid in imported_uuids:
-            counts["skipped_already_imported"] += 1
+        if photo.uuid in processed_uuids:
+            counts["skipped_already_processed"] += 1
             continue
         sig = photo_signature(photo)
         if sig and sig in target_sigs:
