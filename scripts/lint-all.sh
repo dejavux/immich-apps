@@ -34,6 +34,7 @@ run_ok() {
 
 run_ok "eslint（npm run lint）" npm run lint
 run_ok "TypeScript（npm run type-check）" npm run type-check
+run_ok "photo-sync Python（ruff + flake8 + pylint + pyright）" bash ./scripts/lint-photo-sync-py.sh
 
 if npm run format:check --if-present >/dev/null 2>&1; then
   run_ok "prettier（npm run format:check）" npm run format:check

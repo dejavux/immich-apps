@@ -1,0 +1,66 @@
+[project]
+name = "immich-apps"
+version = "0.1.0"
+description = "Immich apps and photo-sync tooling"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+photo-sync = [
+    "PyYAML>=6.0,<7",
+    "osxphotos",
+]
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = ["E203", "W503", "E402"]
+exclude = ".git,__pycache__,build,dist,*.egg-info,.venv,venv,node_modules"
+
+[tool.ruff]
+line-length = 120
+exclude = ["node_modules", "dist"]
+
+[tool.ruff.lint]
+extend-ignore = ["E203"]
+
+[tool.pyright]
+include = ["scripts/photo-sync"]
+pythonVersion = "3.10"
+extraPaths = ["scripts/photo-sync"]
+reportMissingImports = "none"
+reportMissingModuleSource = "none"
+
+[tool.pylint.MASTER]
+ignore-paths = ["^.*node_modules.*$"]
+
+[tool.pylint.BASIC]
+module-rgx = "^(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+)|([a-zA-Z][a-zA-Z0-9_-]*))$"
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "wrong-import-position",
+    "consider-using-with",
+]
+
+[tool.pylint.SIMILARITIES]
+min-similarity-lines = 30
+ignore-comments = true
+ignore-docstrings = true
+ignore-imports = true
+ignore-signatures = true
+
+[tool.pylint.DESIGN]
+max-args = 15
+max-locals = 55
+max-branches = 30
+max-statements = 140
+max-returns = 10
+
+[tool.pylint.FORMAT]
+max-line-length = 120
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"

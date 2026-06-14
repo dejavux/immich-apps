@@ -31,6 +31,7 @@
     "imageset",
     "inpaint",
     "ismissing",
+    "killall",
     "launchctl",
     "Launchd",
     "launchd",

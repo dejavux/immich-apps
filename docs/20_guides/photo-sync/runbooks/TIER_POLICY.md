@@ -1,6 +1,6 @@
 # Tier Policy Runbook — icloud-primary → local-archive
 
-**Phase 3.5 M3** · 最後更新：2026-06-13
+**Phase 3.5 M3** · 最後更新：2026-06-14
 
 ---
 
@@ -37,27 +37,61 @@ tier_policy:
 
 報告：`~/Library/Logs/immich-photo-sync/tier/tier-plan-*.json`
 
-### 2. 執行一批（export → import）
+### 2. 執行一批（建議：export 與 import 分開）
 
-**會啟動 Photos.app** 並開啟 `local-archive` library（首次可能需點確認）。
+**Apple 限制**：寫入 Photos library **必須**經 Photos.app；無法完全 headless。
+**可靠做法**：先 export，再 **manual import** + verify poll。
+
+#### 2a. 只 export（不需 Photos 互動）
 
 ```bash
-# 設定 enabled: true 後
-./scripts/photo-sync/tier-policy.sh --execute --batch-size 10
+./scripts/photo-sync/tier-policy.sh --execute --export-only --force --batch-size 1
+# → staging/batch-*/batch-manifest.json
 ```
 
-每批：
+#### 2b. import staging（推薦 `--import-mode manual`）
 
-1. `osxphotos export` → staging
-2. `photoscript` import 至 target album
-3. fingerprint 驗證
-4. 輸出 **delete manifest**（不自動刪 source）
+```bash
+# 開 Photos LOCAL library + Finder，你在 GUI 做 File → Import
+./scripts/photo-sync/tier-policy-import-staging.sh \
+  /tmp/immich-photo-sync/tier-staging/batch-YYYYMMDD-HHMMSS \
+  --import-mode manual --verify-timeout 300
+
+# 或嘗試自動（可能卡在 Photos modal）
+./scripts/photo-sync/tier-policy-import-staging.sh /path/to/batch --import-mode auto
+```
+
+腳本會 **poll verify**（最多 `--verify-timeout` 秒），以 target library 是否出現檔案為準——
+不再相信 `osxphotos import` 的 exit code alone。
+
+#### 2c. 一次跑 export+import（舊行為）
+
+```bash
+./scripts/photo-sync/tier-policy.sh --execute --force --batch-size 1 \
+  --import-mode manual --verify-timeout 300
+```
 
 ### 3. 人工刪除 source（gate）
 
 manifest：`~/Library/Logs/immich-photo-sync/tier/tier-delete-manifest-*.json`
 
-1. 在 Photos 開啟 **icloud-primary**
+**自動化（2026-06-14 實測）**：
+
+```bash
+# 1. 建立相簿 TierPolicy-Delete（1615 張）
+./scripts/photo-sync/tier-policy-delete-source.sh --yes --skip-gui
+
+# 2. Photos 開啟 icloud-primary → 點相簿 → ⌘A → ⌘Delete → 確認
+#    或腳本 GUI 模式（需 Terminal 輔助使用權限）：
+./scripts/photo-sync/tier-policy-delete-source.sh --yes
+
+# 3. 驗證（1615 張應在 Recently Deleted）
+python3 -c "import osxphotos; db=osxphotos.PhotosDB('~/Pictures/Photos Library.photoslibrary'); ..."
+```
+
+**釋放 iCloud 空間**：Photos → 設定 → 「永久清除已刪除項目」（或等 30 天自動清除）
+
+手動步驟（舊）：
 2. 依 manifest 的 `filename` / `date` 找到項目
 3. **刪除**（Immich 仍有備份；local-archive 已 import）
 4. `shared_library: true` 項目需特別確認是否適合刪除
@@ -78,8 +112,35 @@ done
 ### 5. 驗收
 
 ```bash
+./scripts/photo-sync/tier-policy-verify-staging.sh
+# → 1615/1615 verified · report: ~/Library/Logs/immich-photo-sync/tier/tier-verify-staging.json
 ./scripts/photo-sync/immich-sync.sh --dry-run
 ./scripts/photo-sync/tier-policy-spotcheck.sh
+```
+
+### 6. 重試失敗 batch
+
+```bash
+./scripts/photo-sync/tier-policy-verify-staging.sh   # 產生 tier-verify-staging.json
+IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-retry-failed-import.sh
+```
+
+---
+
+## Bulk 流程（已實測 2026-06-14）
+
+```bash
+# 1. export 全部 local-path eligible（cutoff 一年前）
+./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-one-year
+
+# 2. import 全部 staging batch
+IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-bulk-import-staging.sh
+
+# 3. 若有 gap → retry
+./scripts/photo-sync/tier-policy-retry-failed-import.sh
+
+# 4. 驗證
+./scripts/photo-sync/tier-policy-verify-staging.sh
 ```
 
 ---
@@ -97,9 +158,13 @@ done
 | 問題 | 處理 |
 |------|------|
 | `tier_policy.enabled is false` | config 設 `enabled: true` 或 `--force` |
-| Photos 彈 duplicate 視窗 | 應已設 `skip_duplicate_check=True`；確認 photoscript 版本 |
+| import hang 在 0% | 改 `--import-mode manual`；Photos 前台 File → Import |
+| import 顯示成功但 verify 失敗 | 常見：Photos 被 killall / 寫錯 library；用 import-staging 重試 |
+| Live Photo Unknown error | **只 import HEIC/JPEG**；`.mov` 留同資料夾。auto 模式已自動略過 companion `.mov` |
+| osxphotos import 假成功 | 以 verify poll 為準；見 `tier-policy-import-staging.sh` |
+| export 含 `_edited` 變體 | verify 以 `filename:fingerprint` 為準；原檔與 edited 為不同項目 |
 | export 空目錄 | 項目可能 `ismissing`；v1 只處理 local path |
-| import 後 verify 失敗 | 查 staging 與 target library；勿刪 source |
+| Automation 權限 | 系統設定 → 隱私權 → 自動化 → Terminal 勾 Photos |
 
 ---
 

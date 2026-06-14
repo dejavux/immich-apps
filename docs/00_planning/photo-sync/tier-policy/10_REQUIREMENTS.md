@@ -128,26 +128,29 @@ export PATH="$HOME/.local/bin:$PATH"
 ./scripts/photo-sync/tier-policy-cross-library-poc.sh
 ```
 
-- [ ] M3：`tier-policy.sh` execute（小批次 577 先導）
+- [x] M3：`tier-policy.sh` execute — **第一輪 1615/1615 verify**（2026-06-14）
 
-### M3 — tier-policy.sh ✅（v1）
+### M3 — tier-policy.sh ✅（v1 · 2026-06-14 bulk）
 
 - [x] 讀 `photo-sync.config.yaml` 的 `tier_policy`
 - [x] dry-run：JSON 報告（eligible / skipped / batch 清單）
-- [x] execute：`osxphotos export` → `photoscript import`（小批次 `batch_size`）
+- [x] execute：`osxphotos export` → `osxphotos import` + verify poll
+- [x] export-only / import-staging / bulk-export / bulk-import / verify-staging / retry-failed
+- [x] Live Photo import 修正（略過 companion `.mov`）
 - [x] 人工 gate：`tier-delete-manifest-*.json` + terminal 暫停
-- [x] 狀態檔 `tier/state.json`（resume / 跳過已 import）
+- [x] 狀態檔 `tier/state.json`（exported **1615** · imported **1615**）
 - [x] Runbook：[TIER_POLICY.md](../../../20_guides/photo-sync/runbooks/TIER_POLICY.md)
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
-pip3 install --user photoscript   # execute 需要
-./scripts/photo-sync/tier-policy.sh --dry-run --batch-size 10
-# enabled: true 後
-./scripts/photo-sync/tier-policy.sh --execute --batch-size 10
+./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-one-year
+IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-bulk-import-staging.sh
+./scripts/photo-sync/tier-policy-verify-staging.sh   # 1615/1615
 ```
 
-- [ ] 實際跑完 577 張 + 人工刪除驗收
+- [x] 人工刪除 icloud-primary source（1615 張 → **Recently Deleted** · 2026-06-14）
+- [ ] 永久清除 Recently Deleted（釋放 iCloud 配額）
+- [ ] Phase B：4119 張 `ismissing` iCloud 下載 + re-export
 
 ### M4 — LaunchAgent 整合
 
@@ -159,10 +162,10 @@ pip3 install --user photoscript   # execute 需要
 
 ## 驗收標準
 
-- [ ] `tier_policy.dry_run` 輸出 eligible 清單且可重現
-- [ ] 執行後：iCloud library 磁碟/Photos 顯示容量下降（或 eligible 減少）
-- [ ] Immich：`immich-sync.sh --dry-run` 兩 library 仍 **0 new**（或僅新搬移檔 +1 次）
-- [ ] 無 Photos library  corruption（手動 spot-check 10 張 EXIF/日期）
+- [x] `tier_policy.dry_run` 輸出 eligible 清單且可重現
+- [ ] 執行後：iCloud library 磁碟/Photos 顯示容量下降（**待人工刪 source**）
+- [ ] Immich：`immich-sync.sh --dry-run` 兩 library 仍 **0 new**
+- [x] staging verify **1615/1615**（fingerprint + filename fallback）
 - [ ] rollback 程序 documented（從 local 移回 iCloud 手動步驟）
 
 ---

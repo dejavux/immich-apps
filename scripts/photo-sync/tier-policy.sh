@@ -29,7 +29,10 @@ while [[ $# -gt 0 ]]; do
 Usage: $0 [--dry-run] [--execute] [--batch-size N] [--config PATH]
 
   --dry-run     Plan only (default when tier_policy.dry_run: true)
-  --execute     Export + import via Photos.app (requires tier_policy.enabled: true)
+  --execute     Export (+ optional import; use --export-only to skip import)
+  --export-only With --execute: staging only
+  --import-staging DIR   Import existing batch (see tier-policy-import-staging.sh)
+  --import-mode manual|auto
   --force       Allow execute when enabled: false
   --batch-size  Photos per batch (default: tier_policy.batch_size or 10)
   --no-pause    Skip manual-delete confirmation prompt
@@ -52,11 +55,7 @@ if ! command -v osxphotos >/dev/null 2>&1; then
 fi
 
 if [[ "$EXECUTE" == true ]]; then
-  if ! python3 -c "import photoscript" 2>/dev/null; then
-    echo "ERROR: photoscript not found (required for --execute)." >&2
-    echo "  pip3 install --user photoscript" >&2
-    exit 1
-  fi
+  : # osxphotos import uses Photos.app; no extra Python deps
 fi
 
 if [[ ! -f "$CONFIG" ]]; then
