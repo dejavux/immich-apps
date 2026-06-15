@@ -71,6 +71,7 @@
     "osxphotos",
     "photoslibrary",
     "photoscript",
+    "photokit",
     "pipefail",
     "pipelinerun",
     "shellcheck",

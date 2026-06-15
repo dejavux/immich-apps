@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.immich.photo-sync.reconcile</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__IMMICH_APPS_ROOT__/scripts/photo-sync/run-with-op-env.sh</string>
+        <string>__IMMICH_APPS_ROOT__/scripts/photo-sync/immich-reconcile.sh</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>4</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>__HOME__/Library/Logs/immich-photo-sync/reconcile.launchd.stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Library/Logs/immich-photo-sync/reconcile.launchd.stderr.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>__HOME__/.pyenv/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PHOTO_SYNC_CONFIG</key>
+        <string>__HOME__/.config/immich-apps/photo-sync.config.yaml</string>
+    </dict>
+</dict>
+</plist>

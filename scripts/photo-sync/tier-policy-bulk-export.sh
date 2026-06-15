@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # Export all tier-policy candidates to staging (no Photos import).
 #
-# Usage:
-#   ./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-one-year
-#   ./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-date 2023-01-01 --batch-size 50
+# Cutoff (pick one; default = tier_policy.cutoff_date from config):
+#   ./scripts/photo-sync/tier-policy-bulk-export.sh
+#   ./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-days 365
+#   ./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-date 2023-01-01
+#   ./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-one-year   # alias for --cutoff-days 365
+#
+# Other:
+#   ./scripts/photo-sync/tier-policy-bulk-export.sh --batch-size 50
 #
 set -euo pipefail
 

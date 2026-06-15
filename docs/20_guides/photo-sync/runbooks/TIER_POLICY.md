@@ -89,12 +89,18 @@ manifest：`~/Library/Logs/immich-photo-sync/tier/tier-delete-manifest-*.json`
 python3 -c "import osxphotos; db=osxphotos.PhotosDB('~/Pictures/Photos Library.photoslibrary'); ..."
 ```
 
-**釋放 iCloud 空間**：Photos → 設定 → 「永久清除已刪除項目」（或等 30 天自動清除）
+**釋放 iCloud 空間**（無「設定裡永久清除」選項）：
+
+1. Photos 左側 **最近刪除** / Recently Deleted
+2. 右上角 **全部删除** / Delete All → 確認
+
+或選單：**照片** → **清除已删除的项目…** / Erase Deleted Items…
 
 手動步驟（舊）：
-2. 依 manifest 的 `filename` / `date` 找到項目
-3. **刪除**（Immich 仍有備份；local-archive 已 import）
-4. `shared_library: true` 項目需特別確認是否適合刪除
+
+1. 在 Photos 開啟 **icloud-primary**
+2. **刪除**（Immich 仍有備份；local-archive 已 import）
+3. `shared_library: true` 項目需特別確認是否適合刪除
 
 腳本會在 terminal 暫停等待 Enter（`--no-pause` 可略過）。
 
@@ -130,8 +136,14 @@ IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-retry-failed-import.sh
 ## Bulk 流程（已實測 2026-06-14）
 
 ```bash
-# 1. export 全部 local-path eligible（cutoff 一年前）
-./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-one-year
+# cutoff：預設 config tier_policy.cutoff_date；或 CLI 覆寫
+./scripts/photo-sync/tier-policy-bulk-export.sh                    # config 預設
+./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-days 365  # 推薦：任意天數
+./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-date 2023-01-01
+./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-one-year  # = --cutoff-days 365
+
+# Phase B 監控
+WATCH=1 INTERVAL=300 ./scripts/photo-sync/tier-policy-monitor-ismissing.sh --cutoff-days 365
 
 # 2. import 全部 staging batch
 IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-bulk-import-staging.sh

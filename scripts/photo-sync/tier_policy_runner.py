@@ -31,6 +31,7 @@ from tier_policy_lib import (
     tier_log_dir,
     utc_now,
 )
+from photo_sync_lib import primary_checksum
 
 try:
     import osxphotos
@@ -206,6 +207,15 @@ def import_to_target(
     return errors
 
 
+def batch_checksums(staging_batch: Path, photos: list) -> dict[str, str | None]:
+    checksums: dict[str, str | None] = {}
+    for photo in photos:
+        photo_dir = staging_batch / photo.uuid
+        files = media_files_in_dir(photo_dir) if photo_dir.is_dir() else []
+        checksums[photo.uuid] = primary_checksum(files) if files else None
+    return checksums
+
+
 def write_batch_manifest(
     staging_batch: Path,
     *,
@@ -224,6 +234,7 @@ def write_batch_manifest(
                 "uuid": photo.uuid,
                 "filename": photo.original_filename or photo.filename,
                 "date": photo.date.strftime("%Y-%m-%d") if photo.date else None,
+                "checksum": primary_checksum(files) if files else None,
                 "staging_files": [str(p) for p in files],
             }
         )
@@ -330,7 +341,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--cutoff-one-year",
         action="store_true",
-        help="Use today minus 365 days as cutoff",
+        help="Use today minus 365 days as cutoff (alias for --cutoff-days 365)",
+    )
+    parser.add_argument(
+        "--cutoff-days",
+        type=int,
+        help="Use today minus N days as cutoff (overrides tier_policy.cutoff_date)",
     )
     parser.add_argument(
         "--batch-size",
@@ -415,7 +431,9 @@ def main() -> int:
     source_id = tier.get("source_library_id", "icloud-primary")
     target_id = tier.get("target_library_id", "local-archive")
     cutoff = args.cutoff_date or tier.get("cutoff_date", "2023-01-01")
-    if args.cutoff_one_year:
+    if args.cutoff_days is not None:
+        cutoff = (date.today() - timedelta(days=args.cutoff_days)).isoformat()
+    elif args.cutoff_one_year:
         cutoff = (date.today() - timedelta(days=365)).isoformat()
     batch_size = args.batch_size or tier.get("batch_size", 10)
     local_path_only = tier.get("local_path_only", True)
@@ -640,12 +658,14 @@ def main() -> int:
             )
 
         delete_items = []
+        uuid_checksums = batch_checksums(staging_batch, batch)
         for photo in batch:
             if photo.uuid in verified:
                 delete_items.append(
                     {
                         "uuid": photo.uuid,
                         "filename": photo.original_filename or photo.filename,
+                        "checksum": uuid_checksums.get(photo.uuid),
                         "date": photo.date.strftime("%Y-%m-%d") if photo.date else None,
                         "shared_library": is_shared_library(photo),
                         "source_library": str(source_lib),

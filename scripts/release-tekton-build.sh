@@ -93,7 +93,7 @@ metadata:
   labels:
     app.kubernetes.io/part-of: immich-apps
     tekton.dev/pipeline: ${PIPELINE}
-    tekton.dev/image-tag: ${SHORT_SHA}
+    tekton.dev/image-tag: "${SHORT_SHA}"
 spec:
   pipelineRef:
     name: ${PIPELINE}
