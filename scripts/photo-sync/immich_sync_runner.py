@@ -16,6 +16,10 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from immich_api_upload import sync_library_api
+
 
 def log(log_file: str, msg: str) -> None:
     line = f"[{datetime.now():%Y-%m-%d %H:%M:%S}] {msg}\n"
@@ -177,16 +181,10 @@ def run_upload_with_retries(
         failed_list.write_text("\n".join(failed_paths) + "\n", encoding="utf-8")
         log(log_file, f"FAILED_LIST {failed_list} count={len(failed_paths)}")
 
-    if (
-        not dry
-        and retry_failed
-        and failed_paths
-        and total_stats.get("failed_assets", 0) > 0
-    ):
+    if not dry and retry_failed and failed_paths and total_stats.get("failed_assets", 0) > 0:
         log(
             log_file,
-            f"RETRY failed uploads library={lib_id} "
-            f"count={len(failed_paths)} concurrency={retry_concurrency}",
+            f"RETRY failed uploads library={lib_id} count={len(failed_paths)} concurrency={retry_concurrency}",
         )
         retry_cmd = build_upload_cmd(
             url=url,
@@ -208,17 +206,11 @@ def run_upload_with_retries(
             result_code = retry_code
 
     attempt = 0
-    while (
-        not dry
-        and attempt < max_retries
-        and result_code != 0
-        and is_transient_error(output, result_code)
-    ):
+    while not dry and attempt < max_retries and result_code != 0 and is_transient_error(output, result_code):
         attempt += 1
         log(
             log_file,
-            f"RETRY transient library={lib_id} attempt={attempt}/{max_retries} "
-            f"delay={retry_delay}s",
+            f"RETRY transient library={lib_id} attempt={attempt}/{max_retries} delay={retry_delay}s",
         )
         time.sleep(retry_delay)
         retry_log = stats_dir / f"{lib_id}-transient-{datetime.now():%Y%m%d-%H%M%S}.log"
@@ -235,9 +227,7 @@ def run_upload_with_retries(
 def print_watch_config(config_path: str) -> int:
     with open(config_path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
-    log_dir = Path(
-        os.path.expanduser(cfg.get("sync", {}).get("log_dir", "~/Library/Logs/immich-photo-sync"))
-    )
+    log_dir = Path(os.path.expanduser(cfg.get("sync", {}).get("log_dir", "~/Library/Logs/immich-photo-sync")))
     debounce = cfg.get("sync", {}).get("debounce_seconds", 30)
     print(f"LOG_DIR={log_dir}")
     print(f"DEBOUNCE={debounce}")
@@ -270,6 +260,7 @@ def main() -> int:
         os.environ["IMMICH_INSTANCE_URL"] = url.rstrip("/")
 
     sync_cfg = cfg.get("sync", {})
+    upload_mode = sync_cfg.get("upload_mode", "api")
     recursive = sync_cfg.get("recursive", True)
     concurrency = sync_cfg.get("upload_concurrency", 2)
     retry_failed = sync_cfg.get("retry_failed_uploads", True)
@@ -294,23 +285,38 @@ def main() -> int:
         if not lib_path.is_dir():
             log(log_file, f"ERROR library={lib_id} path not found: {lib_path}")
             continue
-        log(log_file, f"START library={lib_id} path={lib_path} album={album}")
-        result_code, stats, run_log = run_upload_with_retries(
-            log_file=log_file,
-            lib_id=lib_id,
-            url=os.environ["IMMICH_INSTANCE_URL"],
-            api_key=api_key,
-            lib_path=lib_path,
-            album=album,
-            recursive=recursive,
-            concurrency=concurrency,
-            stats_dir=stats_dir,
-            dry=dry,
-            retry_failed=retry_failed,
-            retry_concurrency=retry_concurrency,
-            max_retries=max_retries,
-            retry_delay=retry_delay,
-        )
+        log(log_file, f"START library={lib_id} path={lib_path} album={album} mode={upload_mode}")
+        if upload_mode == "api":
+            stats = sync_library_api(
+                url=os.environ["IMMICH_INSTANCE_URL"],
+                api_key=api_key,
+                lib_id=lib_id,
+                originals=lib_path,
+                album_name=album,
+                concurrency=concurrency,
+                dry=dry,
+                log=lambda msg: log(log_file, msg),
+            )
+            result_code = 0 if stats.get("failed_assets", 0) == 0 else 1
+            run_log = stats_dir / f"{lib_id}-run-{datetime.now():%Y%m%d-%H%M%S}.log"
+            run_log.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
+        else:
+            result_code, stats, run_log = run_upload_with_retries(
+                log_file=log_file,
+                lib_id=lib_id,
+                url=os.environ["IMMICH_INSTANCE_URL"],
+                api_key=api_key,
+                lib_path=lib_path,
+                album=album,
+                recursive=recursive,
+                concurrency=concurrency,
+                stats_dir=stats_dir,
+                dry=dry,
+                retry_failed=retry_failed,
+                retry_concurrency=retry_concurrency,
+                max_retries=max_retries,
+                retry_delay=retry_delay,
+            )
         if json_output and stats:
             failed_count = stats.get("failed_assets", 0)
             log(

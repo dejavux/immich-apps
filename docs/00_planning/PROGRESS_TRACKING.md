@@ -498,21 +498,34 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 - [x] 讀 config · dry-run / execute / export-only / import-staging
 - [x] bulk export + bulk import + verify-staging + retry-failed
 - [x] Live Photo import 修正（略過 companion `.mov`）
-- [ ] 人工刪除 source gate（1615 張待確認後刪 icloud-primary）
+- [x] 人工刪除 source gate（1615 → Recently Deleted · 2026-06-14）
+- [ ] 永久清除 Recently Deleted（釋放 iCloud 配額）
 - [ ] rollback 實測文件
 
-### 3.5.2 第一輪 bulk 執行（2026-06-14）
+### 3.5.2 第一輪 bulk 執行（2026-06-14）✅
 
 | 指標 | 數值 |
 |------|------|
-| cutoff | `--cutoff-one-year` → **2025-06-14** |
+| cutoff | `--cutoff-days 365` → **2025-06-14** |
 | export | **1615** 張（33 batch · local-path only） |
-| ismissing 未 export | **4119**（需 iCloud 下載 · Phase B） |
 | import verify | **1615 / 1615** ✅ |
-| LOCAL 總數 | 3000 → **4616**（+1616） |
-| 失敗 batch 重試 | 7 → 0 gap（`tier-policy-retry-failed-import.sh`） |
+| Immich dry-run | **0 new**（兩 library） |
+| LOCAL 總數 | 3000 → **4616** |
+| `make release` | ✅ **2217530**（Tekton label fix） |
 
-### 3.5.3 整合
+### 3.5.3 Phase B（2026-06-15）🟡
+
+| 指標 | baseline |
+|------|----------|
+| eligible_ismissing | **4119** |
+| export_ready_now | 1（1615 已在 state） |
+| 監控 | `tier-policy-monitor-ismissing.sh --cutoff-days 365` |
+
+- [x] 原尺寸下載已開
+- [ ] `eligible_ismissing` → 0
+- [ ] Phase B bulk export/import/delete
+
+### 3.5.4 整合
 
 - [ ] LaunchAgent / cron
 - [x] runbook [TIER_POLICY.md](../20_guides/photo-sync/runbooks/TIER_POLICY.md)
@@ -533,6 +546,22 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | C | Web before/after + 批次 queue | 📋 |
 
 **原則**: 不覆蓋原 blob；Mac Photos SSOT；新 asset + `source:{id}` tag
+
+---
+
+## 📋 Optional — Similar images / 重複偵測
+
+**狀態**: 📋 待驗證（P2）  
+**規格**: [photo-sync/similar-images/10_REQUIREMENTS.md](./photo-sync/similar-images/10_REQUIREMENTS.md)  
+**Runbook**: [SIMILAR_IMAGES_EVAL.md](../20_guides/photo-sync/runbooks/SIMILAR_IMAGES_EVAL.md)
+
+| 步驟 | 狀態 |
+|------|------|
+| 啟用 Duplicate Detection + job 完成 | 📋 |
+| Ground truth 20 組 + recall/precision | 📋 |
+| 決策：內建 vs `similar-images-audit.py` | 📋 |
+
+**背景**：checksum dedupe 無法抓 Photos 重編碼（~1506 hash-miss）；Immich L3 用 CLIP embedding 可能可補。
 
 ---
 
@@ -694,25 +723,26 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 > 詳細步驟見 [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-### 本週重點（2026-06-12）
+### 本週重點（2026-06-15）
 
 **進行中** 🚧:
 
-1. **local-archive 續傳**（1894 new → dry-run 0 new）
-2. 升級後 **Web UI / LINE 手動 E2E**
+1. **Phase 3.5 Phase B**：4119 `ismissing` 原尺寸下載（`tier-policy-monitor-ismissing.sh`）
+2. **P0 人工 E2E**（Web UI + LINE 場景搜尋）
+3. **Recently Deleted 永久清除**（釋放 iCloud 配額）
 
 **排程** 📋:
 
-1. **Phase 3.5** osxphotos / tier_policy
-2. **Phase 4** PostgreSQL → SSD
-3. **Phase 5** B2 備份 + 還原測試
+1. Phase B bulk re-export/import → immich-sync **0 new**
+2. **Similar images eval**（Duplicate Detection runbook）
+3. Phase 5 B2 備份
 
-**已完成** ✅（本週）:
+**已完成** ✅（近期）:
 
-- local 5023 + icloud 3512 全量；icloud dry-run **0 new**
-- `/data/upload` **~115 GB**；external ~86 GB 清理
-- **Immich v2.7.5** 升級 + OpenAPI sync + smoke
-- LaunchAgent 增量實測；PR #12 photo-sync runner
+- Phase 3.5 M3 第一輪 **1615/1615** export→import→verify（2026-06-14）
+- M1 spot-check **100%** Immich dup · M2 跨 library 研究
+- infra-bootstrap Immich v2.7.5 K8s **`588ee55`**（Recreate · toleration · Caddy timeout）
+- Phase 3 全量 + LaunchAgent 增量 · Immich v2.7.5
 
 ---
 
@@ -749,11 +779,12 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 ---
 
-**專案狀態**: ✅ Phase 2/3 結案 · Phase 3.5 M3 第一輪 import ✅  
-**當前重點**: 人工刪 icloud source gate → Phase B ismissing 下載 → immich-sync 驗收  
-**下一里程碑**: Phase 3.5 source 刪除 + Phase B iCloud 下載策略（2026-06-20）  
-**Optional**: [photo-edit/](./photo-edit/) AI 修圖整合（P3）
+**專案狀態**: ✅ Phase 2/3 結案 · Phase 3.5 M3 第一輪 ✅ · **Phase B 下載中**  
+**當前重點**: ismissing 監控 → Phase B bulk → immich-sync 0 new · P0 E2E  
+**下一里程碑**: Phase B 4119 張完成 + Similar images eval（2026-06-22）  
+**Optional**: [photo-edit/](./photo-edit/) · [similar-images/](./photo-sync/similar-images/)  
+**Infra**: immich v2.7.5 K8s 已 merge → `infra-bootstrap` **`588ee55`**
 
-**最後更新**: 2026-06-13  
+**最後更新**: 2026-06-15  
 **維護者**: Infrastructure Team + App Dev Team  
 **更新頻率**: Phase 里程碑或全量 sync 階段變更時

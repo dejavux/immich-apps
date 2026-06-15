@@ -70,7 +70,9 @@ tail -f ~/Library/Logs/immich-photo-sync/sync.log
 
 ## 儲存盤點
 
-Immich 磁碟組成與 duplicate 分析 → [STORAGE_AUDIT.md](../../docs/20_guides/photo-sync/runbooks/STORAGE_AUDIT.md)
+Immich 磁碟組成與 checksum duplicate 分析 → [STORAGE_AUDIT.md](../../docs/20_guides/photo-sync/runbooks/STORAGE_AUDIT.md)
+
+視覺相似 / Duplicate Detection 是否夠用 → [SIMILAR_IMAGES_EVAL.md](../../docs/20_guides/photo-sync/runbooks/SIMILAR_IMAGES_EVAL.md)
 
 Local library hash / 時間戳抽查：
 
@@ -104,6 +106,23 @@ pip3 install --user osxphotos
 規格：[tier-policy/10_REQUIREMENTS.md](../../docs/00_planning/photo-sync/tier-policy/10_REQUIREMENTS.md)
 
 `tier_policy` 已寫入 config（`enabled: false`）；PoC 進行中（osxphotos）。
+
+## Delete reconcile（Phase 3.6）
+
+```bash
+eval "$(./scripts/dev/load-env-from-op.sh)"
+./scripts/photo-sync/immich-reconcile.sh                    # dry-run
+./scripts/photo-sync/immich-reconcile.sh --apply --confirm  # 需 delete_policy=conservative
+./scripts/photo-sync/install-reconcile-launchd.sh          # 週日 04:00 dry-run
+```
+
+日期稽核（Immich vs Photos.app）：
+
+```bash
+python3 scripts/photo-sync/immich_audit_dates.py --min-delta-days 1
+```
+
+規格：[delete-reconcile/10_REQUIREMENTS.md](../../docs/00_planning/photo-sync/delete-reconcile/10_REQUIREMENTS.md)
 
 ## 備份
 

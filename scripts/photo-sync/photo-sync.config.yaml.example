@@ -49,6 +49,8 @@ tier_policy:
 
 sync:
   recursive: true
+  upload_mode: api              # api（Photos 日期）| cli（legacy immich upload）
+  timezone_default: Asia/Taipei
   upload_concurrency: 2
   retry_failed_uploads: true
   retry_concurrency: 1
@@ -58,6 +60,16 @@ sync:
   json_output: true
   debounce_seconds: 30
   log_dir: ~/Library/Logs/immich-photo-sync
+  delete_policy: none          # none | conservative（--apply 需 conservative）
+  reconcile:
+    enabled: false
+    scope: albums
+    immich_tags: []
+    fetch_page_size: 500
+    batch_size: 100
+    grace_days: 7
+    action: trash
+    schedule: "0 4 * * 0"
 
 # XMP sidecar（Immich CLI 上傳時自動偵測同目錄 *.xmp / *.jpg.xmp）
 # 見 https://docs.immich.app/features/xmp-sidecars

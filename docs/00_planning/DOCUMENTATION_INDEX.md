@@ -2,7 +2,7 @@
 
 > `docs/00_planning/` — **進行中專案需求** only
 
-**最後更新**: 2026-06-13（Phase 2/3 結案 · infra/repo 移出 planning）
+**最後更新**: 2026-06-15（Phase 3.5 Phase B · similar-images eval）
 
 ---
 
@@ -35,6 +35,15 @@ iCloud → Local 自動分層（osxphotos）。
 | [10_REQUIREMENTS.md](./photo-sync/tier-policy/10_REQUIREMENTS.md) | PoC · tier-policy.sh · 驗收 |
 
 Phase 3 已歸檔 → [60_completed/phase3-photo-sync-bulk/](../60_completed/phase3-photo-sync-bulk/)
+
+### [Similar images（Optional）](./photo-sync/similar-images/README.md)
+
+驗證 Immich Duplicate Detection 是否足夠；不足則自建 audit CLI。
+
+| 文件 | 說明 |
+|------|------|
+| [10_REQUIREMENTS.md](./photo-sync/similar-images/10_REQUIREMENTS.md) | 三層 dedupe · 驗收標準 |
+| [SIMILAR_IMAGES_EVAL.md](../20_guides/photo-sync/runbooks/SIMILAR_IMAGES_EVAL.md) | 驗證 runbook |
 
 ### [Photo Edit + AI（Optional）](./photo-edit/README.md)
 
