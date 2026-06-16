@@ -23,7 +23,7 @@
 | 軌道 | 任務 | 狀態 | 負責 |
 |------|------|------|------|
 | **P0** | Web UI + LINE 人工 E2E | 🟡 進行中 | 人工 |
-| **P1** | Phase 3.5 Phase B（4119 ismissing 下載 → bulk） | 🟡 **主軌** | 本機 + Photos |
+| **P1** | Phase 3.5 Phase B bulk（~2665 張） | 🟢 **可開跑** | 本機 + Photos |
 | **P2** | Similar images 內建驗證 | 📋 待跑 runbook | 本機 |
 | **—** | infra-bootstrap Immich v2.7.5 K8s | ✅ `588ee55` 已 merge | — |
 
@@ -33,11 +33,21 @@
 
 ```text
 P0  並行     人工 E2E 驗收
-P1  本週     Phase 3.5 Phase B ismissing 下載 + re-export/import
+P1  本週     Phase 3.5 Phase B bulk export/import/delete（download gate ✅）
 P2  空檔     Similar images eval（Duplicate Detection vs 自建工具）
 P2  Q3       Phase 5 B2 備份 · Phase 4 SSD · LINE V1.1 Grafana
 P3  有空再做 Photo Edit AI · fswatch debounce
 ```
+
+---
+
+## Phase 3.6 — delete reconcile（✅ 2026-06-15）
+
+- [x] conservative orphan cleanup · album scope reconcile
+- [x] API upload + bulk date fix · PR #19 `39f8a66`
+- [x] 週日 LaunchAgent dry-run reconcile
+
+**維運**：tier 搬移不刪 Immich；apply 僅 dry-run 確認後手動。
 
 ---
 
@@ -52,13 +62,14 @@ P3  有空再做 Photo Edit AI · fswatch debounce
 - [x] M3 bulk export/import **1615/1615** verify（2026-06-14）
 - [x] 人工刪 source → Recently Deleted
 - [x] runbook [TIER_POLICY.md](../20_guides/photo-sync/runbooks/TIER_POLICY.md)
-- [x] `tier-policy-monitor-ismissing.sh`（Phase B 監控）
+- [x] `tier-policy-monitor-ismissing.sh` · `tier-policy-download-missing.sh`（Phase B）
 
 ### 進行中（Phase B）
 
-- [ ] `eligible_ismissing` **4119 → 0**（原尺寸下載 + 依年份瀏覽）
-- [ ] Phase B bulk export/import/delete
-- [ ] Recently Deleted **永久清除**（釋放 iCloud 配額）
+- [x] `tier-policy-download-missing.sh` 全量 eligible（4280/4281 · 2026-06-15）
+- [ ] `eligible_ismissing` **1 → 0**（最後 1 張；bulk 可並行或略等）
+- [ ] Phase B bulk export/import/delete（~**2665** 新張 = 4280 − 1615）
+- [ ] Recently Deleted **永久清除**（第一輪 1615 + 本輪合計）
 - [ ] immich-sync dry-run **0 new**
 
 ### 待辦

@@ -1,7 +1,8 @@
 # Photo Sync
 
 **Phase 3**: ✅ 結案（2026-06-13）→ [60_completed/phase3-photo-sync-bulk/](../../60_completed/phase3-photo-sync-bulk/)  
-**Phase 3.5**: 🟢 **進行中** → [tier-policy/](./tier-policy/) · Phase B ismissing 下載
+**Phase 3.5**: 🟢 **bulk 可開跑** → [tier-policy/](./tier-policy/)  
+**Phase 3.6**: ✅ M1/M2（PR #19）→ [delete-reconcile/](./delete-reconcile/)
 
 ## 進行中
 

@@ -5,9 +5,10 @@ from __future__ import annotations
 import base64
 import binascii
 import hashlib
+import json
 import os
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
@@ -68,8 +69,16 @@ def normalize_checksum(value: str | None) -> str | None:
     return decoded.hex()
 
 
+def _base_stem(stem: str) -> str:
+    """IMG_9107_edited → img_9107 (for deduping export variants)."""
+    lowered = stem.lower()
+    if lowered.endswith("_edited"):
+        return lowered[: -len("_edited")]
+    return lowered
+
+
 def paths_for_import(file_paths: list[Path]) -> list[Path]:
-    """Drop Live Photo companion video when a still image exists in the same folder."""
+    """Pick importable files: skip Live Photo companion video and _edited duplicates."""
     by_dir: dict[Path, list[Path]] = defaultdict(list)
     for path in file_paths:
         if path.is_file():
@@ -79,8 +88,16 @@ def paths_for_import(file_paths: list[Path]) -> list[Path]:
     for files in by_dir.values():
         image_stems = {p.stem.lower() for p in files if p.suffix.lower() in IMAGE_EXT}
         for path in sorted(files):
-            if path.suffix.lower() in {".mov", ".mp4", ".m4v"} and path.stem.lower() in image_stems:
+            stem = path.stem.lower()
+            # Live Photo: skip companion video when still image exists.
+            if path.suffix.lower() in {".mov", ".mp4", ".m4v"} and stem in image_stems:
                 continue
+            # Photos export: skip *_edited.* when base file (same stem without _edited) exists.
+            if stem.endswith("_edited"):
+                base = _base_stem(path.stem)
+                has_base = any(_base_stem(p.stem) == base and not p.stem.lower().endswith("_edited") for p in files)
+                if has_base:
+                    continue
             selected.append(path)
     return sorted(selected)
 
@@ -173,9 +190,17 @@ def reconcile_settings(config: dict) -> dict:
         "fetch_page_size": 500,
         "grace_days": 7,
         "action": "trash",
+        "auto_apply": False,
         "schedule": "0 4 * * 0",
+        "watch": {
+            "enabled": False,
+            "debounce_seconds": 300,
+        },
     }
-    merged = {**defaults, **(sync_settings(config).get("reconcile") or {})}
+    raw = sync_settings(config).get("reconcile") or {}
+    watch_defaults = defaults.pop("watch")
+    merged = {**defaults, **raw}
+    merged["watch"] = {**watch_defaults, **(raw.get("watch") or {})}
     return merged
 
 
@@ -204,6 +229,85 @@ def reconcile_log_dir(config: dict) -> Path:
     path = log_dir(config) / "reconcile"
     path.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def reconcile_grace_state_path(config: dict) -> Path:
+    return reconcile_log_dir(config) / "orphan-grace-state.json"
+
+
+def load_reconcile_grace_state(config: dict) -> dict:
+    path = reconcile_grace_state_path(config)
+    if not path.is_file():
+        return {"candidates": {}}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        return {"candidates": {}}
+    data.setdefault("candidates", {})
+    return data
+
+
+def save_reconcile_grace_state(config: dict, state: dict) -> None:
+    path = reconcile_grace_state_path(config)
+    path.write_text(json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def filter_orphans_by_grace(
+    orphans: list[dict],
+    state: dict,
+    grace_days: int,
+    *,
+    now: datetime | None = None,
+) -> tuple[list[dict], list[dict], dict]:
+    """Split orphans into apply-ready vs grace-pending; persist first_seen timestamps."""
+    if grace_days <= 0:
+        return orphans, [], state
+
+    moment = now or datetime.now(timezone.utc)
+    candidates: dict = dict(state.get("candidates") or {})
+    orphan_checksums = {row["checksum"] for row in orphans if row.get("checksum")}
+
+    for checksum in list(candidates):
+        if checksum not in orphan_checksums:
+            del candidates[checksum]
+
+    ready: list[dict] = []
+    pending: list[dict] = []
+    for row in orphans:
+        checksum = row.get("checksum")
+        if not checksum:
+            ready.append(row)
+            continue
+        entry = candidates.get(checksum)
+        if not entry:
+            candidates[checksum] = {
+                "first_seen_at": moment.isoformat(),
+                "asset_id": row.get("asset_id"),
+                "filename": row.get("filename"),
+            }
+            pending.append({**row, "grace_until": (moment + timedelta(days=grace_days)).date().isoformat()})
+            continue
+        first_seen_raw = entry.get("first_seen_at")
+        try:
+            first_seen = datetime.fromisoformat(str(first_seen_raw))
+            if first_seen.tzinfo is None:
+                first_seen = first_seen.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            first_seen = moment
+            entry["first_seen_at"] = moment.isoformat()
+        grace_end = first_seen + timedelta(days=grace_days)
+        if moment >= grace_end:
+            ready.append({**row, "first_seen_at": entry.get("first_seen_at")})
+        else:
+            pending.append(
+                {
+                    **row,
+                    "first_seen_at": entry.get("first_seen_at"),
+                    "grace_until": grace_end.date().isoformat(),
+                }
+            )
+
+    updated = {"candidates": candidates, "updated_at": moment.isoformat()}
+    return ready, pending, updated
 
 
 def utc_now() -> str:

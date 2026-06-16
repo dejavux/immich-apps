@@ -6,7 +6,7 @@ CONFIG="${PHOTO_SYNC_CONFIG:-$HOME/.config/immich-apps/photo-sync.config.yaml}"
 EXTRA=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --apply|--confirm|--asset-id) EXTRA+=("$1"); [[ $# -gt 1 && "$1" == --asset-id ]] && EXTRA+=("$2") && shift; shift ;;
+    --apply|--confirm|--asset-id|--library-id) EXTRA+=("$1"); [[ $# -gt 1 && "$1" == --asset-id || "$1" == --library-id ]] && EXTRA+=("$2") && shift; shift ;;
     --min-delta-days) EXTRA+=("$1" "$2"); shift 2 ;;
     *) EXTRA+=("$1"); shift ;;
   esac

@@ -132,7 +132,25 @@ def iana_timezone(dt: datetime, fallback: str) -> str:
     return fallback
 
 
-def collect_mismatches(config: dict, *, min_delta_days: int, asset_id: str | None) -> tuple[list[dict], int]:
+def is_tier_import_window(dt: datetime) -> bool:
+    local = dt.replace(tzinfo=None) if dt.tzinfo else dt
+    start = datetime(2026, 6, 14)
+    end = datetime(2026, 6, 17, 23, 59, 59)
+    return start <= local <= end
+
+
+def should_skip_mismatch(photos_dt: datetime, immich_dt: datetime) -> bool:
+    """Skip when Mac still has import-day date but Immich already has the real capture date."""
+    return is_tier_import_window(photos_dt) and not is_tier_import_window(immich_dt)
+
+
+def collect_mismatches(
+    config: dict,
+    *,
+    min_delta_days: int,
+    asset_id: str | None,
+    library_id: str | None = None,
+) -> tuple[list[dict], int]:
     immich_by_checksum = load_immich_assets_by_checksum(config)
     if asset_id:
         immich_by_checksum = {
@@ -147,6 +165,8 @@ def collect_mismatches(config: dict, *, min_delta_days: int, asset_id: str | Non
         if not lib.get("enabled", True):
             continue
         lib_id = lib.get("id")
+        if library_id and lib_id != library_id:
+            continue
         originals = expand(str(lib["path"]))
         photos_lib = photos_library_path(originals)
         db = osxphotos.PhotosDB(str(photos_lib))
@@ -177,6 +197,8 @@ def collect_mismatches(config: dict, *, min_delta_days: int, asset_id: str | Non
             delta_days = abs((photos_local.date() - immich_local.date()).days)
             if delta_days < min_delta_days:
                 continue
+            if should_skip_mismatch(photos_dt, immich_dt):
+                continue
             delta_seconds = int(
                 abs((photos_dt.astimezone(timezone.utc) - immich_dt.astimezone(timezone.utc)).total_seconds())
             )
@@ -197,7 +219,31 @@ def collect_mismatches(config: dict, *, min_delta_days: int, asset_id: str | Non
             )
 
     mismatches.sort(key=lambda row: row["delta_days"], reverse=True)
-    return mismatches, checked
+    return dedupe_mismatches_by_asset(mismatches), checked
+
+
+def dedupe_mismatches_by_asset(mismatches: list[dict]) -> list[dict]:
+    """One row per Immich asset; prefer local-archive over icloud-primary."""
+    rank = {"local-archive": 0, "icloud-primary": 1}
+    best: dict[str, dict] = {}
+    for row in mismatches:
+        aid = row["asset_id"]
+        prev = best.get(aid)
+        if prev is None:
+            best[aid] = row
+            continue
+        if rank.get(row["library_id"], 9) < rank.get(prev["library_id"], 9):
+            best[aid] = row
+    return sorted(best.values(), key=lambda row: row["delta_days"], reverse=True)
+
+
+def photos_dt_to_immich_iso(photos_dt: datetime, config: dict) -> str:
+    """Immich bulk update expects UTC Z; offset isoformat often updates exif only."""
+    if photos_dt.tzinfo is None:
+        photos_dt = photos_dt.replace(tzinfo=ZoneInfo(default_timezone(config)))
+    utc = photos_dt.astimezone(timezone.utc)
+    text = utc.isoformat(timespec="milliseconds")
+    return text.replace("+00:00", "Z")
 
 
 def apply_fixes(
@@ -211,12 +257,12 @@ def apply_fixes(
     applied: list[dict] = []
 
     for row in mismatches:
-        photos_dt = datetime.fromisoformat(row["photos_date"])
-        if photos_dt.tzinfo is None:
-            photos_dt = photos_dt.replace(tzinfo=ZoneInfo(default_timezone(config)))
         body = {
             "ids": [row["asset_id"]],
-            "dateTimeOriginal": photos_dt.isoformat(),
+            "dateTimeOriginal": photos_dt_to_immich_iso(
+                datetime.fromisoformat(row["photos_date"]),
+                config,
+            ),
         }
         api_request(method="PUT", url=f"{base}/assets", api_key=api_key, body=body)
         applied.append({**row, "result": "updated"})
@@ -232,6 +278,7 @@ def main() -> int:
         default=str(Path.home() / ".config/immich-apps/photo-sync.config.yaml"),
     )
     parser.add_argument("--asset-id", help="Only check/fix one Immich asset id")
+    parser.add_argument("--library-id", help="Only check/fix one Mac library id (e.g. local-archive)")
     parser.add_argument("--min-delta-days", type=int, default=1)
     parser.add_argument("--limit", type=int, default=50, help="Max mismatches to print")
     parser.add_argument("--apply", action="store_true", help="Apply dateTimeOriginal fixes")
@@ -249,6 +296,7 @@ def main() -> int:
         config,
         min_delta_days=args.min_delta_days,
         asset_id=args.asset_id,
+        library_id=args.library_id,
     )
 
     applied: list[dict] = []

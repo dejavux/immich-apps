@@ -67,9 +67,13 @@ sync:
     immich_tags: []
     fetch_page_size: 500
     batch_size: 100
-    grace_days: 7
+    grace_days: 7              # --apply 僅 trash 超過 grace 的 orphan（狀態檔 orphan-grace-state.json）
     action: trash
+    auto_apply: false          # true + delete_policy=conservative → watch 可自動 --apply --confirm
     schedule: "0 4 * * 0"
+    watch:
+      enabled: false           # M3: fswatch → debounced reconcile
+      debounce_seconds: 300
 
 # XMP sidecar（Immich CLI 上傳時自動偵測同目錄 *.xmp / *.jpg.xmp）
 # 見 https://docs.immich.app/features/xmp-sidecars

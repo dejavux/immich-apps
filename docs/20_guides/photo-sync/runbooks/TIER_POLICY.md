@@ -142,8 +142,19 @@ IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-retry-failed-import.sh
 ./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-date 2023-01-01
 ./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-one-year  # = --cutoff-days 365
 
-# Phase B 監控
+# Phase B 監控 / 下載
 WATCH=1 INTERVAL=300 ./scripts/photo-sync/tier-policy-monitor-ismissing.sh --cutoff-days 365
+# Gate: eligible_ismissing → 0 後才 bulk export
+
+MIN_FREE_GB=60 ./scripts/photo-sync/tier-policy-download-missing.sh --cutoff-days 365
+# log: ~/Library/Logs/immich-photo-sync/tier/icloud-pull.log
+
+# Phase B bulk（download 完成後 · ~2666 新張）
+./scripts/photo-sync/tier-policy-bulk-export.sh --cutoff-days 365
+IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-bulk-import-staging.sh
+./scripts/photo-sync/tier-policy-verify-staging.sh
+./scripts/photo-sync/tier-policy-delete-source.sh --yes --skip-gui
+./scripts/photo-sync/immich-sync.sh --dry-run   # 預期 0 new
 
 # 2. import 全部 staging batch
 IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-bulk-import-staging.sh

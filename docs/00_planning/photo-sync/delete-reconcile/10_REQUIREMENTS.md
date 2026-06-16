@@ -88,6 +88,9 @@ eval "$(./scripts/dev/load-env-from-op.sh)"
 
 # 週日 04:00 dry-run LaunchAgent
 ./scripts/photo-sync/install-reconcile-launchd.sh
+
+# M3：fswatch 即時 reconcile（需 reconcile.enabled + reconcile.watch.enabled）
+./scripts/photo-sync/install-reconcile-watch-launchd.sh
 ```
 
 **Immich scope**：預設用 config `libraries[].album`（`Mac Photos (iCloud)`、`Mac Photos (Local Archive)`），**不是** `mac-sync` tag（CLI upload 未打 tag）。
@@ -112,7 +115,7 @@ eval "$(./scripts/dev/load-env-from-op.sh)"
 |------|------|------|
 | **M1** | config + `immich-reconcile.sh` dry-run + tier manifest checksum | ✅ |
 | **M2** | `--apply --confirm` + trash API + LaunchAgent 週 dry-run | ✅ |
-| **M3** | fswatch lightweight reconcile（debounce 大） | 📋 可選 |
+| **M3** | fswatch lightweight reconcile（debounce 大） | ✅ `immich-reconcile-watch.sh` + LaunchAgent |
 
 ---
 
@@ -123,7 +126,7 @@ eval "$(./scripts/dev/load-env-from-op.sh)"
 | Live Photo (.heic + .mov) | 以 primary upload 檔 checksum 為準 |
 | Immich checksum 為 base64 | `photo_sync_lib.normalize_checksum()` 轉 hex |
 | ismissing（無 local originals） | originals/ scan 不計入 → 不因此刪 Immich |
-| Recently Deleted | M2 用 `grace_days`；M1 只比對 originals/ |
+| Recently Deleted | `grace_days` 延遲 apply；dry-run 仍列出全部 orphan 候選 |
 | 無 checksum 的 Immich asset | skip，列入 `skipped_no_checksum` |
 
 ---
