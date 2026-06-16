@@ -1,19 +1,23 @@
 # Phase B — iCloud ismissing 下載策略
 
-**狀態**: 🟡 下載進行中（2026-06-15）  
-**前置**: Phase 3.5 M3 第一輪 local-path **1615/1615** 完成（2026-06-14）
+**狀態**: 🟢 download gate 達標（2026-06-15 16:21）· bulk 可開跑  
+**前置**: Phase 3.5 M3 第一輪 local-path **1615/1615** 完成（2026-06-14）· Phase 3.6 reconcile/API upload ✅（PR #19）
 
 ---
 
 ## 背景
 
-| 指標 | 數值（2026-06-15 baseline） |
-|------|------|
-| cutoff 365d eligible | **4281** |
-| 已 export/import（local-path） | **1615** ✅ |
-| eligible `ismissing` 待下載 | **4119** |
-| icloud-primary 現役 | **4818** |
-| export_ready_now | **1**（其餘 1615 已在 state 跳過） |
+| 指標 | baseline（06-15 早） | 最新（06-15 15:14） | 說明 |
+|------|---------------------|---------------------|------|
+| cutoff 365d eligible | 4281 | 4281 | 一年前 cutoff |
+| 已 export/import（M3 第一輪） | 1615 | 1615 | `state.json` 跳過 |
+| eligible `ismissing` | **4119** | **34** | Phase B 完成條件 → **0** |
+| 全庫 `ismissing` | ~4565 | **129** | 含 cutoff 後仍 cloud-only |
+| `local_path` | ~160 | **4690** | originals 已落地 |
+| `export_ready_now` | 1 | **4247** | 可進 bulk export |
+| osxphotos export 進度 | — | **4270/4281** | `icloud-pull.log` |
+
+**趨勢**：`WATCH=1` 監控約 6 小時，`eligible_ismissing` 4119→34；`tier-policy-download-missing.sh` 全量 eligible 接近跑完。
 
 ---
 
@@ -71,13 +75,13 @@ WATCH=1 INTERVAL=300 ./scripts/photo-sync/tier-policy-monitor-ismissing.sh --cut
 ./scripts/photo-sync/audit-icloud-videos.sh
 ```
 
-**完成條件**：`eligible_ismissing` → **0**，且 `export_ready_now` 穩定上升。
+**完成條件（download）**：`eligible_ismissing` → **0 或 1**（實務上 **1 即可開 bulk**）；`export_ready_now` ≈ **4280**（新張 ~**2665** = 4280 − 1615）。
 
-**首次監控觀察（2026-06-15）**：全庫 `ismissing`↓、`local_path`↑，但 `eligible_ismissing` 仍 **4119** 不變——表示 iCloud 有在下載，但 **cutoff 前的舊照片** 可能尚未觸發。建議在 Photos **依年份往回瀏覽**（2025-06 以前），並保持 App 開啟；log 見 `ismissing-monitor.log`。
+**Bulk gate**：`tier-policy-bulk-export.sh` 只 export `local_path` 項目；剩 1 張 ismissing 會被略過，不阻塞主流程。
 
-### 2. Re-export + import
+**首次監控觀察（2026-06-15 早）**：全庫 `ismissing`↓、`local_path`↑，但 `eligible_ismissing` 一度持平——需 **Photos 依年份往回瀏覽** + `download-missing` 腳本並行。午後 `eligible_ismissing` 已降至 **34**。
 
-下載完成後：
+### 2. Re-export + import（download 完成後主軌）
 
 ```bash
 # cutoff 預設讀 config；也可用 --cutoff-days N / --cutoff-date YYYY-MM-DD
@@ -88,7 +92,19 @@ IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-bulk-import-staging.sh
 # → Photos：TierPolicy-Delete 相簿 → ⌘A → ⌘Delete → 確認
 ```
 
-`state.json` 的 `exported_uuids` / `imported_uuids` 會跳過已完成 UUID。
+`state.json` 的 `exported_uuids` / `imported_uuids` 會跳過已完成 UUID（1615）。
+
+**建議順序**（與 M3 第一輪相同，規模更大 ~2666 張）：
+
+1. **Gate**：`eligible_ismissing` ≤ 1 · `export_ready_now` ≈ 4280（**不必等 0**）
+2. **Export**：`tier-policy-bulk-export.sh --cutoff-days 365`（可隔夜；staging 需磁碟）
+3. **Import**：`IMPORT_MODE=auto` 或 `manual` + `tier-policy-bulk-import-staging.sh`
+4. **Verify**：`tier-policy-verify-staging.sh`；失敗 → `tier-policy-retry-failed-import.sh`
+5. **Delete source**：`tier-policy-delete-source.sh` → GUI 刪 icloud → Recently Deleted
+6. **Immich**：`immich-sync.sh --dry-run` → **0 new**（`upload_mode: api` 帶 Photos 日期）
+7. **iCloud 配額**：Recently Deleted → **全部删除**（第一輪 1615 + 本輪合計）
+
+**與 immich-watch 錯峰**：bulk export 期間可暫停 `com.immich.photo-sync.watch`（避免 sync storm）。
 
 ### 3. Immich 驗收
 
@@ -96,6 +112,19 @@ IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-bulk-import-staging.sh
 ./scripts/photo-sync/immich-sync.sh --dry-run
 # 預期：兩 library 0 new
 ```
+
+### 4. Phase B 收尾 checklist
+
+| # | 項目 | 指令 / 備註 |
+|---|------|-------------|
+| A | 確認 download 完成 | `eligible_ismissing: 0`；`icloud-pull.log` 無 error |
+| B | bulk export/import/verify | 見 §2 |
+| C | 刪 icloud source + 清 Recently Deleted | 釋放 iCloud 配額 |
+| D | immich-sync 0 new | API upload 預設已開 |
+| E | 可選：immich-reconcile dry-run | 週日 LaunchAgent 已裝；apply 僅在確認 orphan 後 |
+| F | 更新 PROGRESS_TRACKING §3.5.3 | Phase B ✅ |
+
+**Phase 3.5 全完成後**：tier 搬移結束；icloud 僅留 cutoff 後新照；local-archive + Immich union 不變。
 
 ---
 

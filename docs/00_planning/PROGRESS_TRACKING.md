@@ -5,8 +5,8 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-13（Phase 2/3 結案 · docs 二次整理）  
-**專案狀態**: ✅ Phase 2/3 結案 · 🟢 Phase 3.5 Kickoff · P0 E2E 人工驗收並行  
+**最後更新**: 2026-06-15（Phase B 下載尾聲 · Phase 3.6 ✅）  
+**專案狀態**: ✅ Phase 2/3 結案 · 🟡 Phase 3.5 Phase B · Phase 3.6 M1/M2 ✅ · P0 E2E 並行  
 **負責人**: Infrastructure Team + App Dev Team
 
 ---
@@ -31,7 +31,7 @@
 | **Phase 1** | 基礎設施 | ✅ 已部署 | 50% 完成 | █████░░░░░ 50% | 2025-10-06 |
 | **Phase 2** | LINE Bot | ✅ 結案 | MVP 100% | ██████████ 100% | 2026-06-12 |
 | **Phase 3** | Photo Sync | ✅ 結案 | 100% | ██████████ 100% | 2026-06-13 |
-| **Phase 3.5** | iCloud 分層 | 🟡 P1 | M3 第一輪 import ✅ | ████████░░ 85% | 2026-06-27 |
+| **Phase 3.5** | iCloud 分層 | 🟢 P1 | download gate ✅ · bulk 待跑 | █████████░ 92% | 2026-06-22 |
 | **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-05 |
 | **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-12 |
 
@@ -481,7 +481,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 ## 🟡 P1：Phase 3.5 — iCloud tier policy
 
-**狀態**: 🟡 M3 執行中（2026-06-14 bulk export/import 第一輪完成）  
+**狀態**: 🟡 Phase B 下載尾聲（2026-06-15）  
 **規格**: [photo-sync/tier-policy/10_REQUIREMENTS.md](./photo-sync/tier-policy/10_REQUIREMENTS.md)  
 **目標**: `tier_policy` 自動將 eligible 照片 icloud → local-archive
 
@@ -513,17 +513,21 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | LOCAL 總數 | 3000 → **4616** |
 | `make release` | ✅ **2217530**（Tekton label fix） |
 
-### 3.5.3 Phase B（2026-06-15）🟡
+### 3.5.3 Phase B（2026-06-15）🟢 download gate
 
-| 指標 | baseline |
-|------|----------|
-| eligible_ismissing | **4119** |
-| export_ready_now | 1（1615 已在 state） |
-| 監控 | `tier-policy-monitor-ismissing.sh --cutoff-days 365` |
+| 指標 | baseline（早） | 最新（16:21） |
+|------|----------------|---------------|
+| eligible_ismissing | **4119** | **1** |
+| export_ready_now | 1 | **4280** |
+| local_path | ~160 | **4818** |
 
-- [x] 原尺寸下載已開
-- [ ] `eligible_ismissing` → 0
-- [ ] Phase B bulk export/import/delete
+- [x] `tier-policy-download-missing.sh` 全量 eligible（4280/4281）
+- [x] `tier-policy-monitor-ismissing.sh` 監控
+- [ ] `eligible_ismissing` → **0**（剩 1 張）
+- [ ] Phase B bulk export/import/delete（~**2665** 新張）
+- [ ] Recently Deleted 永久清除（1615 + 本輪）
+
+→ 詳細步驟：[30_PHASE_B_ICLOUD_DOWNLOAD.md](./photo-sync/tier-policy/30_PHASE_B_ICLOUD_DOWNLOAD.md)
 
 ### 3.5.4 整合
 
@@ -531,6 +535,31 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 - [x] runbook [TIER_POLICY.md](../20_guides/photo-sync/runbooks/TIER_POLICY.md)
 
 **已完成**: config schema · M1/M2 研究 · M3 腳本 · 第一輪 1615 張 export→import→verify
+
+---
+
+## ✅ P1 完成：Phase 3.6 — Delete Reconcile
+
+**狀態**: ✅ M1/M2 完成（2026-06-15 · PR #19 merged `39f8a66`）  
+**規格**: [photo-sync/delete-reconcile/10_REQUIREMENTS.md](./photo-sync/delete-reconcile/10_REQUIREMENTS.md)
+
+### 3.6.1 實作 ✅
+
+- [x] `delete_policy: conservative`（雙 library SHA1 皆無才 trash Immich orphan）
+- [x] `immich-reconcile.sh` dry-run / `--apply --confirm`（album scope：`Mac Photos (iCloud)` + `Local Archive`）
+- [x] `immich_api_upload.py` + `upload_mode: api`（`fileCreatedAt` 來自 Photos `photo.date`）
+- [x] `immich-fix-dates.sh` 批量修復 CLI mtime 問題（~3500+ 筆）
+- [x] `install-reconcile-launchd.sh` 週日 04:00 dry-run
+
+### 3.6.2 實測 ✅
+
+| 項目 | 結果 |
+|------|------|
+| Orphan reconcile | **484** trashed → 重測 **0 orphan** |
+| Re-sync dry-run | **0 new** |
+| Mac Photos 保留 | **5094** |
+
+**維運**：tier 搬移後 Immich **不刪**（local-archive 仍為 retention）；reconcile apply 僅在 dry-run 確認後手動執行。
 
 ---
 
@@ -727,18 +756,19 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 **進行中** 🚧:
 
-1. **Phase 3.5 Phase B**：4119 `ismissing` 原尺寸下載（`tier-policy-monitor-ismissing.sh`）
-2. **P0 人工 E2E**（Web UI + LINE 場景搜尋）
-3. **Recently Deleted 永久清除**（釋放 iCloud 配額）
+1. **Phase 3.5 Phase B bulk**（~2665 張 export→import→delete）
+2. **P0 人工 E2E**（Web UI + LINE 場景搜尋 · 與 bulk 並行）
 
-**排程** 📋:
+**排程** 📋（bulk 完成後）:
 
-1. Phase B bulk re-export/import → immich-sync **0 new**
-2. **Similar images eval**（Duplicate Detection runbook）
-3. Phase 5 B2 備份
+1. Recently Deleted **永久清除**（第一輪 1615 + 本輪合計）
+2. immich-sync dry-run **0 new**
+3. **Similar images eval**（Duplicate Detection runbook）
+4. Phase 5 B2 備份 · tier LaunchAgent/cron（全量結案後）
 
 **已完成** ✅（近期）:
 
+- Phase 3.6 delete reconcile + API upload（PR #19 · `39f8a66`）
 - Phase 3.5 M3 第一輪 **1615/1615** export→import→verify（2026-06-14）
 - M1 spot-check **100%** Immich dup · M2 跨 library 研究
 - infra-bootstrap Immich v2.7.5 K8s **`588ee55`**（Recreate · toleration · Caddy timeout）
@@ -779,9 +809,9 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 ---
 
-**專案狀態**: ✅ Phase 2/3 結案 · Phase 3.5 M3 第一輪 ✅ · **Phase B 下載中**  
-**當前重點**: ismissing 監控 → Phase B bulk → immich-sync 0 new · P0 E2E  
-**下一里程碑**: Phase B 4119 張完成 + Similar images eval（2026-06-22）  
+**專案狀態**: ✅ Phase 2/3 結案 · Phase 3.6 ✅ · **Phase 3.5 bulk 可開跑**  
+**當前重點**: bulk export/import → Recently Deleted 清除 · P0 E2E 並行  
+**下一里程碑**: Phase 3.5 結案 + Similar images eval（2026-06-22）  
 **Optional**: [photo-edit/](./photo-edit/) · [similar-images/](./photo-sync/similar-images/)  
 **Infra**: immich v2.7.5 K8s 已 merge → `infra-bootstrap` **`588ee55`**
 

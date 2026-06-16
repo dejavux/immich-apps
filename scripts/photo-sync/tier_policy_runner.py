@@ -31,7 +31,7 @@ from tier_policy_lib import (
     tier_log_dir,
     utc_now,
 )
-from photo_sync_lib import primary_checksum
+from photo_sync_lib import primary_checksum, paths_for_import
 
 try:
     import osxphotos
@@ -60,23 +60,6 @@ MEDIA_EXT = {
 }
 
 IMAGE_EXT = {".jpg", ".jpeg", ".heic", ".heif", ".png", ".gif", ".tif", ".tiff", ".webp"}
-
-
-def paths_for_import(file_paths: list[Path]) -> list[Path]:
-    """Drop Live Photo companion .mov when a matching still image exists in the same folder."""
-    by_dir: dict[Path, list[Path]] = {}
-    for path in file_paths:
-        if path.is_file():
-            by_dir.setdefault(path.parent, []).append(path)
-
-    selected: list[Path] = []
-    for files in by_dir.values():
-        image_stems = {p.stem.lower() for p in files if p.suffix.lower() in IMAGE_EXT}
-        for path in sorted(files):
-            if path.suffix.lower() in {".mov", ".mp4", ".m4v"} and path.stem.lower() in image_stems:
-                continue
-            selected.append(path)
-    return sorted(selected)
 
 
 def media_files_in_dir(directory: Path) -> list[Path]:
@@ -125,6 +108,28 @@ def export_batch(
     return exported, errors
 
 
+def _sync_mtime_from_exif(paths: list[Path]) -> None:
+    """Align file mtime with EXIF so Photos import fallback uses capture time."""
+    if not shutil.which("exiftool"):
+        return
+    media = [str(p) for p in paths if p.suffix.lower() in MEDIA_EXT]
+    if not media:
+        return
+    subprocess.run(
+        [
+            "exiftool",
+            "-overwrite_original",
+            "-q",
+            "-q",
+            "-FileModifyDate<DateTimeOriginal",
+            *media,
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
 def import_to_target(
     *,
     target_lib: Path,
@@ -158,6 +163,8 @@ def import_to_target(
         )
         return []
 
+    _sync_mtime_from_exif(import_paths)
+
     subprocess.run(["open", "-a", "Photos", str(target_lib)], check=False)
     if open_delay > 0:
         time.sleep(open_delay)
@@ -174,36 +181,33 @@ def import_to_target(
     )
     time.sleep(3)
 
-    cmd = [
+    cmd_base = [
         "osxphotos",
         "import",
-        *media_paths,
         "--library",
         str(target_lib),
         "--skip-dups",
+        "--exiftool",
     ]
     if album_name:
-        cmd.extend(["--album", album_name])
+        cmd_base.extend(["--album", album_name])
 
-    try:
-        proc = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=import_timeout,
-        )
-    except subprocess.TimeoutExpired:
-        errors.append(
-            f"osxphotos import timed out after {import_timeout}s. "
-            "Switch to Photos.app and complete import manually, then run "
-            "tier-policy-import-staging.sh on the batch directory."
-        )
-        return errors
-
-    if proc.returncode != 0:
-        detail = proc.stderr.strip() or proc.stdout.strip() or "osxphotos import failed"
-        errors.append(detail[:500])
+    for media_path in media_paths:
+        cmd = [*cmd_base, media_path]
+        try:
+            proc = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=max(60, import_timeout // max(1, len(media_paths))),
+            )
+        except subprocess.TimeoutExpired:
+            errors.append(f"osxphotos import timed out for {Path(media_path).name} after {import_timeout}s")
+            continue
+        if proc.returncode != 0:
+            detail = proc.stderr.strip() or proc.stdout.strip() or "osxphotos import failed"
+            errors.append(f"{Path(media_path).name}: {detail[:300]}")
     return errors
 
 
@@ -300,14 +304,17 @@ def wait_for_verified_imports(
     poll_seconds: int,
 ) -> tuple[list[str], list[str], list[dict]]:
     deadline = time.time() + timeout_seconds
+    last_verified: list[str] = []
+    last_failed: list[str] = []
     last_notes: list[dict] = []
+    total = len(photos)
     while time.time() < deadline:
         verified, failed, notes = verify_imports(target_lib, photos, known_sigs)
-        last_notes = notes
-        if verified:
-            return verified, failed, notes
+        last_verified, last_failed, last_notes = verified, failed, notes
+        if len(verified) >= total:
+            return verified, [], notes
         time.sleep(poll_seconds)
-    return [], [p.uuid for p in photos], last_notes
+    return last_verified, last_failed, last_notes
 
 
 def manual_delete_gate(manifest_path: Path, pause: bool) -> None:
@@ -382,6 +389,11 @@ def parse_args() -> argparse.Namespace:
         "--force",
         action="store_true",
         help="Run --execute even if tier_policy.enabled=false",
+    )
+    parser.add_argument(
+        "--ignore-processed-state",
+        action="store_true",
+        help="Select by target signature only; ignore exported/imported UUIDs in state.json",
     )
     parser.add_argument(
         "--include-shared",
@@ -467,7 +479,7 @@ def main() -> int:
     state = load_state(config)
     imported_uuids = set(state.get("imported_uuids", []))
     exported_uuids = set(state.get("exported_uuids", []))
-    processed_uuids = imported_uuids | exported_uuids
+    processed_uuids = set() if args.ignore_processed_state else (imported_uuids | exported_uuids)
 
     source_db = osxphotos.PhotosDB(str(source_lib))
     target_db = osxphotos.PhotosDB(str(target_lib))
@@ -626,6 +638,7 @@ def main() -> int:
         if isinstance(tier_import_mode, str) and tier_import_mode in ("auto", "manual"):
             import_mode = tier_import_mode
 
+        import_paths = paths_for_import(exported_files)
         import_errors = import_to_target(
             target_lib=target_lib,
             file_paths=exported_files,
@@ -635,7 +648,7 @@ def main() -> int:
             import_mode=import_mode,
         )
         report["execute"]["errors"].extend(import_errors)
-        if import_errors and import_mode == "auto":
+        if import_errors and import_mode == "auto" and len(import_errors) >= len(import_paths):
             raise RuntimeError("; ".join(import_errors))
 
         report["execute"]["imported"] = len(uuids)

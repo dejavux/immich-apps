@@ -18,12 +18,15 @@ from photo_sync_lib import (
     build_mac_refcount,
     delete_policy,
     expand,
+    filter_orphans_by_grace,
     load_config,
+    load_reconcile_grace_state,
     log_dir,
     normalize_checksum,
     reconcile_album_names,
     reconcile_log_dir,
     reconcile_settings,
+    save_reconcile_grace_state,
     utc_now,
 )
 
@@ -313,6 +316,8 @@ def build_report(
     tier_checksums: dict[str, dict],
     apply: bool,
     applied: list[dict] | None = None,
+    grace_ready: list[dict] | None = None,
+    grace_pending: list[dict] | None = None,
 ) -> dict:
     policy = delete_policy(config)
     reconcile = reconcile_settings(config)
@@ -324,6 +329,8 @@ def build_report(
         reconcile=reconcile,
         apply=apply,
     )
+    ready = grace_ready if grace_ready is not None else orphans
+    pending = grace_pending if grace_pending is not None else []
 
     return {
         "generated_at": utc_now(),
@@ -340,6 +347,8 @@ def build_report(
         },
         "summary": {
             "orphan_candidates": len(orphans),
+            "orphan_ready_for_apply": len(ready),
+            "skipped_grace_pending": len(pending),
             "skipped_still_on_mac": len(skipped_on_mac),
             "skipped_tier_local_retains": len(skipped_tier_local),
             "skipped_trashed": len(skipped_trashed),
@@ -347,10 +356,33 @@ def build_report(
             "applied": len(applied or []),
         },
         "orphans": orphans[:500],
+        "orphans_ready_for_apply": ready[:500],
+        "grace_pending": pending[:100],
         "applied": (applied or [])[:500],
         "skipped_tier_local_retains": skipped_tier_local[:100],
         "orphans_truncated": max(0, len(orphans) - 500),
     }
+
+
+def print_watch_config(config_path: str) -> int:
+    config = load_config(expand(config_path))
+    reconcile = reconcile_settings(config)
+    if not reconcile.get("enabled", False):
+        print("ERROR: sync.reconcile.enabled is false", file=sys.stderr)
+        return 1
+    if not reconcile.get("watch", {}).get("enabled", False):
+        print("ERROR: sync.reconcile.watch.enabled is false", file=sys.stderr)
+        return 1
+    log_path = reconcile_log_dir(config)
+    debounce = int(reconcile.get("watch", {}).get("debounce_seconds", 300))
+    auto_apply = bool(reconcile.get("auto_apply", False)) and delete_policy(config) == "conservative"
+    print(f"LOG_DIR={log_path}")
+    print(f"DEBOUNCE={debounce}")
+    print(f"AUTO_APPLY={'true' if auto_apply else 'false'}")
+    for lib in config.get("libraries", []):
+        if lib.get("enabled", True):
+            print(os.path.expanduser(lib.get("path", "")))
+    return 0
 
 
 def parse_args() -> argparse.Namespace:
@@ -380,6 +412,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    if len(sys.argv) >= 2 and sys.argv[1] == "--watch-config":
+        if len(sys.argv) != 3:
+            print("Usage: immich_reconcile.py --watch-config CONFIG.yaml", file=sys.stderr)
+            return 1
+        return print_watch_config(sys.argv[2])
+
     args = parse_args()
     config_path = expand(args.config)
     if not config_path.is_file():
@@ -418,22 +456,35 @@ def main() -> int:
 
     tier_checksums = load_tier_delete_checksums(config)
 
+    orphans_for_apply, *_rest = compute_orphans(
+        immich_assets=immich_assets,
+        mac_refcount=mac_refcount,
+        libraries_by_checksum=libraries_by_checksum,
+        tier_checksums=tier_checksums,
+        reconcile=reconcile,
+        apply=args.apply,
+    )
+    grace_state = load_reconcile_grace_state(config)
+    grace_days = int(reconcile.get("grace_days", 7))
+    ready_orphans, pending_orphans, grace_state = filter_orphans_by_grace(
+        orphans_for_apply,
+        grace_state,
+        grace_days,
+    )
+    save_reconcile_grace_state(config, grace_state)
+
     applied: list[dict] = []
     if args.apply:
-        orphans_for_apply, *_rest = compute_orphans(
-            immich_assets=immich_assets,
-            mac_refcount=mac_refcount,
-            libraries_by_checksum=libraries_by_checksum,
-            tier_checksums=tier_checksums,
-            reconcile=reconcile,
-            apply=True,
-        )
         action = reconcile.get("action", "trash")
-        print(f"Applying {action} to {len(orphans_for_apply)} orphan(s)…", flush=True)
+        print(
+            f"Applying {action} to {len(ready_orphans)} orphan(s) "
+            f"({len(pending_orphans)} still in {grace_days}d grace)…",
+            flush=True,
+        )
         applied = apply_orphan_action(
             base=base,
             api_key=api_key,
-            orphans=orphans_for_apply,
+            orphans=ready_orphans,
             action=action,
             batch_size=int(reconcile.get("batch_size", 100)),
         )
@@ -447,6 +498,8 @@ def main() -> int:
         tier_checksums=tier_checksums,
         apply=args.apply,
         applied=applied if args.apply else None,
+        grace_ready=ready_orphans,
+        grace_pending=pending_orphans,
     )
 
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -460,6 +513,10 @@ def main() -> int:
         print("\nSample orphan candidates:")
         for row in report["orphans"][:5]:
             print(f"  - {row['asset_id']}  {row.get('filename')}  {row.get('checksum', '')[:12]}…")
+    if report["summary"]["skipped_grace_pending"]:
+        print(f"\nGrace pending ({grace_days}d): {report['summary']['skipped_grace_pending']}")
+        for row in report.get("grace_pending", [])[:3]:
+            print(f"  - {row.get('filename')} until {row.get('grace_until')}")
     return 0
 
 

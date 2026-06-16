@@ -36,6 +36,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cutoff-date", help="Override tier_policy.cutoff_date")
     parser.add_argument("--cutoff-days", type=int, help="Today minus N days")
     parser.add_argument("--cutoff-one-year", action="store_true")
+    parser.add_argument(
+        "--ignore-processed-state",
+        action="store_true",
+        help="Count candidates not yet in local-archive (ignore state.json UUIDs)",
+    )
     return parser.parse_args()
 
 
@@ -70,7 +75,7 @@ def main() -> int:
 
     exported = set(state.get("exported_uuids", []))
     imported = set(state.get("imported_uuids", []))
-    processed = exported | imported
+    processed = set() if args.ignore_processed_state else (exported | imported)
 
     candidates, _counts = select_move_candidates(
         db,

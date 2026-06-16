@@ -1,20 +1,22 @@
 # Phase 3.5 — iCloud 分層（tier policy）
 
-**狀態**: 🟡 M3 第一輪完成（2026-06-14）  
-**優先級**: P1（P0 驗收後主軌）  
+**狀態**: 🟢 bulk 可開跑（2026-06-15）  
+**優先級**: P1 主軌 · P0 E2E 並行  
 **SSOT**: [10_REQUIREMENTS.md](./10_REQUIREMENTS.md) · [PROGRESS_TRACKING §3.5](../../PROGRESS_TRACKING.md)
 
-## 進度摘要（2026-06-14）
+## 進度摘要（2026-06-15）
 
 | 階段 | 狀態 |
 |------|------|
 | M1 PoC + spot-check | ✅ 577 local eligible 100% Immich dup |
 | M2 跨 library 研究 | ✅ export→import 可行 |
-| M3 bulk export | ✅ **1615** 張（cutoff 一年前 · local-path） |
+| M3 bulk export（第一輪） | ✅ **1615** 張（cutoff 一年前 · local-path） |
 | M3 bulk import + verify | ✅ **1615 / 1615** |
-| 人工刪 source | ✅ 1615 → Recently Deleted |
-| 永久清除 Recently Deleted | ⏳ 見下方說明 |
-| Phase B（4119 ismissing） | 🟡 原尺寸下載已開 · 監控中 |
+| 人工刪 source（第一輪） | ✅ 1615 → Recently Deleted |
+| Phase 3.6 reconcile + API upload | ✅ PR #19 · orphan 484 trashed · date fix |
+| Phase B download originals | ✅ **4280/4281** · `eligible_ismissing` **1** |
+| Phase B bulk export/import | 🟡 export ✅ **75 batch** · import 進行中 |
+| 永久清除 Recently Deleted | ⏳ 兩輪 delete 後一次清 |
 
 ## 問題
 

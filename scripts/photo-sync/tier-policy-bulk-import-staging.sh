@@ -28,10 +28,25 @@ for batch in "${BATCHES[@]}"; do
     skip=$((skip + 1))
     continue
   fi
-  echo "--- import $batch ---"
+  # Skip batches whose UUIDs are all already imported (resume-friendly).
+  pending=$(python3 -c "
+import json, sys
+from pathlib import Path
+state_path = Path('$HOME/Library/Logs/immich-photo-sync/tier/state.json')
+manifest = json.loads(Path('$batch/batch-manifest.json').read_text())
+imported = set(json.loads(state_path.read_text()).get('imported_uuids', []))
+uuids = [i['uuid'] for i in manifest.get('items', [])]
+print(sum(1 for u in uuids if u not in imported))
+" 2>/dev/null || echo "1")
+  if [[ "${pending:-1}" -eq 0 ]]; then
+    echo "SKIP (already imported): $batch"
+    skip=$((skip + 1))
+    continue
+  fi
+  echo "--- import $batch (pending=$pending) ---"
   if "$ROOT/scripts/photo-sync/tier-policy-import-staging.sh" \
     "$batch" --import-mode "$IMPORT_MODE" \
-    --open-delay 20 --import-timeout 300 --verify-timeout 180 \
+    --open-delay 25 --import-timeout 600 --verify-timeout 300 \
     --no-pause --force; then
     ok=$((ok + 1))
   else

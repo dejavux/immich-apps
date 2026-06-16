@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+import sqlite3
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -106,6 +108,30 @@ def has_local_original(photo) -> bool:
     return bool(photo.path and expand(str(photo.path)).is_file())
 
 
+@lru_cache(maxsize=4)
+def load_visible_uuids(source_lib: Path) -> frozenset[str]:
+    db_path = source_lib / "database" / "Photos.sqlite"
+    if not db_path.is_file():
+        return frozenset()
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    rows = conn.execute(
+        """
+        SELECT ZUUID FROM ZASSET
+        WHERE ZTRASHEDSTATE=0 AND ZVISIBILITYSTATE=0 AND ZCLOUDLOCALSTATE=1
+        """
+    ).fetchall()
+    conn.close()
+    return frozenset(row[0] for row in rows)
+
+
+def is_visible_in_photos_app(photo, visible_uuids: frozenset[str]) -> bool:
+    """Match Photos.app Library count (ZVISIBILITYSTATE=0, ZCLOUDLOCALSTATE=1)."""
+    state = getattr(photo, "visibility_state", None)
+    if state is not None:
+        return int(state) == 0
+    return photo.uuid in visible_uuids
+
+
 def select_move_candidates(
     source_db: PhotosDB,
     target_sigs: set[str],
@@ -115,20 +141,31 @@ def select_move_candidates(
     skip_shared_library: bool,
     skip_ismissing: bool,
     processed_uuids: set[str],
+    visible_only: bool = True,
 ) -> tuple[list, dict[str, int]]:
     counts = {
         "eligible_total": 0,
+        "eligible_visible": 0,
         "skipped_already_processed": 0,
         "skipped_in_target": 0,
         "skipped_ismissing": 0,
         "skipped_no_local_path": 0,
         "skipped_shared_library": 0,
         "skipped_burst": 0,
+        "skipped_not_visible": 0,
         "selected": 0,
     }
     selected: list = []
+    visible_uuids: frozenset[str] = frozenset()
+    if visible_only:
+        visible_uuids = load_visible_uuids(Path(str(source_db.library_path)))
     for photo in eligible_photos(source_db, cutoff_date):
         counts["eligible_total"] += 1
+        if visible_only:
+            if not is_visible_in_photos_app(photo, visible_uuids):
+                counts["skipped_not_visible"] += 1
+                continue
+            counts["eligible_visible"] += 1
         if photo.uuid in processed_uuids:
             counts["skipped_already_processed"] += 1
             continue
