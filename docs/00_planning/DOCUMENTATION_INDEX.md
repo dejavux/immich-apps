@@ -2,7 +2,7 @@
 
 > `docs/00_planning/` — **進行中專案需求** only
 
-**最後更新**: 2026-06-15（Phase 3.5 Phase B · similar-images eval）
+**最後更新**: 2026-06-17（Phase 3.6 歸檔 60_completed · delete-reconcile stub）
 
 ---
 
@@ -17,14 +17,6 @@
 ---
 
 ## 進行中專案
-
-### [LINE Bot V1.1](./line-bot/README.md)
-
-MVP 已歸檔 → [60_completed/phase2-line-bot-mvp/](../60_completed/phase2-line-bot-mvp/)
-
-| 文件 | 說明 |
-|------|------|
-| [10_REQUIREMENTS.md](./line-bot/10_REQUIREMENTS.md) | V1.1 需求 |
 
 ### [Photo Sync Phase 3.5](./photo-sync/tier-policy/README.md)
 
@@ -74,6 +66,7 @@ AI 修圖與 Immich 整合（Sidecar BFF · ComfyUI）。
 | 專案 | 歸檔 |
 |------|------|
 | Phase 0 Repo | [phase0-repo-consolidation/](../60_completed/phase0-repo-consolidation/) |
-| Phase 2 LINE Bot MVP | [phase2-line-bot-mvp/](../60_completed/phase2-line-bot-mvp/) |
+| Phase 2 LINE Bot MVP（V1.1 defer） | [phase2-line-bot-mvp/](../60_completed/phase2-line-bot-mvp/) |
 | Phase 3 Photo Sync | [phase3-photo-sync-bulk/](../60_completed/phase3-photo-sync-bulk/) |
+| Phase 3.6 Delete Reconcile | [phase3-6-delete-reconcile/](../60_completed/phase3-6-delete-reconcile/) |
 | Immich v2.7.5 | [immich-v2.7.5-upgrade/](../60_completed/immich-v2.7.5-upgrade/) |

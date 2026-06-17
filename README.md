@@ -2,7 +2,7 @@
 
 **完整的 Immich 生態系統**：Immich server + LINE Bot + Photo Sync
 
-> 🚀 **Status**: Phase 2 MVP ✅ · Phase 3 ~96% · Immich **v2.7.5** ✅  
+> 🚀 **Status**: Phase 2 ✅ · Phase 3 ✅ · Phase 3.5 Phase B 收尾中 🟡 · Phase 3.6 M3 ✅ M3.1 待 PR · Immich **v2.7.5** ✅  
 > 📊 **Progress**: [PROGRESS_TRACKING.md](./docs/00_planning/PROGRESS_TRACKING.md)  
 > 📋 **如何進行**: [HOW_TO_PROCEED.md](./docs/00_planning/HOW_TO_PROCEED.md)  
 > 🏗️ **K8s 部署**: [K8S_DEPLOYMENT.md](./docs/20_guides/infra/K8S_DEPLOYMENT.md)
@@ -94,7 +94,7 @@ make logs
 - **Namespace**: `immich`
 - **Components**: server, machine-learning, redis, postgres
 - **Web UI**: <https://immich.3q.fi>
-- **Storage**: lama hostPath (HDD) → 規劃遷移到 SSD
+- **Storage**: lama hostPath (HDD) → Phase 4 SSD 遷移（defer P2）
 
 ### 2. LINE Bot
 
@@ -104,7 +104,7 @@ make logs
 - **Features**:
   - 從 LINE 接收照片
   - 自動上傳到 Immich
-  - AI 標註（CLIP + GPT-4V）
+  - AI 標註（CLIP + Smart Search；V1.1 Qwen vision defer P3）
 
 ### 3. Photo Sync
 
@@ -274,6 +274,6 @@ MIT
 
 ---
 
-**最後更新**: 2026-06-12  
+**最後更新**: 2026-06-17  
 **維護者**: Infrastructure Team + App Dev Team  
 **Repo**: <https://github.com/dejavux/immich-apps>

@@ -1,3 +1,0 @@
-# Moved
-
-→ [80_history/IMMICH_ENHANCEMENT_PROJECT.md](./80_history/IMMICH_ENHANCEMENT_PROJECT.md)

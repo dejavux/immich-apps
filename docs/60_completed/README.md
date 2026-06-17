@@ -13,6 +13,7 @@
 | Phase 0 Repo 整合 | 2026-06-12 | [phase0-repo-consolidation/](./phase0-repo-consolidation/) |
 | Phase 2 LINE Bot MVP | 2026-06-13 | [phase2-line-bot-mvp/](./phase2-line-bot-mvp/) ·含 `10_REQUIREMENTS.md` |
 | Phase 3 Photo Sync | 2026-06-13 | [phase3-photo-sync-bulk/](./phase3-photo-sync-bulk/) ·含 `10_REQUIREMENTS.md` |
+| Phase 3.6 Delete Reconcile | 2026-06-17 | [phase3-6-delete-reconcile/](./phase3-6-delete-reconcile/) ·含 `10_REQUIREMENTS.md` |
 | Immich v2.7.5 升級 | 2026-06-12 | [immich-v2.7.5-upgrade/](./immich-v2.7.5-upgrade/) |
 | FAQ | — | [faq/QUESTIONS_ANSWERED.md](./faq/QUESTIONS_ANSWERED.md) |
 

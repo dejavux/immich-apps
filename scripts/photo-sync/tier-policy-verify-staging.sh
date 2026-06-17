@@ -54,12 +54,13 @@ for batch in batches:
         total += 1
         photo = source.get_photo(item["uuid"])
         if photo is None:
-            batch_miss += 1
-            missing_items.append((batch.name, item.get("filename", "?"), item["uuid"][:8]))
-            continue
-        sig = photo_signature(photo)
-        filename = (photo.original_filename or photo.filename or "").lower()
-        ok = bool(sig and sig in target_sigs) or bool(by_filename.get(filename))
+            # Source may already be deleted from icloud; fall back to manifest filename.
+            filename = (item.get("filename") or "").lower()
+            ok = bool(filename and by_filename.get(filename))
+        else:
+            sig = photo_signature(photo)
+            filename = (photo.original_filename or photo.filename or "").lower()
+            ok = bool(sig and sig in target_sigs) or bool(by_filename.get(filename))
         if ok:
             verified += 1
             batch_ok += 1
