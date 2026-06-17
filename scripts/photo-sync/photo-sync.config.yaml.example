@@ -63,11 +63,14 @@ sync:
   delete_policy: none          # none | conservative（--apply 需 conservative）
   reconcile:
     enabled: false
-    scope: albums
+    scope: albums              # albums | tags | both
     immich_tags: []
+    include_mac_uploads: true  # UUID 檔名上傳（即使未掛相簿）
+    photos_db_libraries:       # icloud：以 Photos.sqlite 判斷（purge 後才算刪除）
+      - icloud-primary
     fetch_page_size: 500
     batch_size: 100
-    grace_days: 7              # --apply 僅 trash 超過 grace 的 orphan（狀態檔 orphan-grace-state.json）
+    grace_days: 0              # 0 = orphan 一經確認即可 --apply；>0 寫入 orphan-grace-state.json
     action: trash
     auto_apply: false          # true + delete_policy=conservative → watch 可自動 --apply --confirm
     schedule: "0 4 * * 0"

@@ -7,6 +7,8 @@ import binascii
 import hashlib
 import json
 import os
+import re
+import sqlite3
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -31,6 +33,11 @@ MEDIA_EXT = {
 }
 
 IMAGE_EXT = {".jpg", ".jpeg", ".heic", ".heif", ".png", ".gif", ".tif", ".tiff", ".webp"}
+
+UUID_STEM_RE = re.compile(
+    r"^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}",
+    re.IGNORECASE,
+)
 
 
 def expand(path: str) -> Path:
@@ -124,6 +131,58 @@ def originals_root(library: dict) -> Path:
     raise SystemExit(f"cannot derive originals path from library config: {raw}")
 
 
+def photos_library_path(library: dict) -> Path:
+    raw = expand(str(library["path"]))
+    if raw.name == "originals":
+        return raw.parent
+    if raw.suffix == ".photoslibrary":
+        return raw
+    raise SystemExit(f"cannot derive .photoslibrary from path: {raw}")
+
+
+def uuid_from_originals_name(name: str) -> str | None:
+    match = UUID_STEM_RE.match(name)
+    if not match:
+        return None
+    return match.group(0).upper()
+
+
+def photos_db_tracked_uuids(photos_library: Path) -> set[str]:
+    """UUIDs still in Photos.sqlite (library or Recently Deleted — not purged)."""
+    db_path = photos_library / "database" / "Photos.sqlite"
+    if not db_path.is_file():
+        return set()
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    rows = conn.execute("SELECT ZUUID FROM ZASSET").fetchall()
+    conn.close()
+    return {str(row[0]).upper() for row in rows}
+
+
+def scan_photos_db_inventory(library: dict, library_id: str) -> dict[str, set[str]]:
+    """Count checksum present only when Photos DB still tracks the UUID (not purged)."""
+    photos_lib = photos_library_path(library)
+    tracked = photos_db_tracked_uuids(photos_lib)
+    root = originals_root(library)
+    inventory: dict[str, set[str]] = defaultdict(set)
+    if not root.is_dir():
+        return inventory
+
+    for dirpath, _, filenames in os.walk(root):
+        for name in filenames:
+            path = Path(dirpath) / name
+            if path.suffix.lower() not in MEDIA_EXT:
+                continue
+            uuid = uuid_from_originals_name(name)
+            if not uuid or uuid not in tracked:
+                continue
+            try:
+                checksum = sha1_file(path)
+            except OSError:
+                continue
+            inventory[checksum].add(library_id)
+    return inventory
+
+
 def scan_originals_inventory(root: Path, library_id: str) -> dict[str, set[str]]:
     """Map hex checksum → library ids that still have the file on disk."""
     inventory: dict[str, set[str]] = defaultdict(set)
@@ -147,8 +206,11 @@ def build_mac_refcount(
     config: dict,
     *,
     library_ids: list[str] | None = None,
+    reconcile: dict | None = None,
 ) -> tuple[dict[str, int], dict[str, list[str]]]:
     """Return checksum → refcount and checksum → library id list."""
+    reconcile = reconcile or reconcile_settings(config)
+    photos_db_libs = set(reconcile.get("photos_db_libraries") or [])
     refcount: dict[str, int] = defaultdict(int)
     libraries_by_checksum: dict[str, list[str]] = defaultdict(list)
 
@@ -158,8 +220,11 @@ def build_mac_refcount(
             continue
         if library_ids and lib_id not in library_ids:
             continue
-        root = originals_root(lib)
-        partial = scan_originals_inventory(root, lib_id)
+        if lib_id in photos_db_libs:
+            partial = scan_photos_db_inventory(lib, lib_id)
+        else:
+            root = originals_root(lib)
+            partial = scan_originals_inventory(root, lib_id)
         for checksum, ids in partial.items():
             refcount[checksum] += len(ids)
             for lib_name in sorted(ids):
@@ -186,9 +251,11 @@ def reconcile_settings(config: dict) -> dict:
         "scope": "albums",
         "immich_albums": None,
         "immich_tags": [],
+        "include_mac_uploads": True,
+        "photos_db_libraries": ["icloud-primary"],
         "batch_size": 100,
         "fetch_page_size": 500,
-        "grace_days": 7,
+        "grace_days": 0,
         "action": "trash",
         "auto_apply": False,
         "schedule": "0 4 * * 0",
@@ -201,7 +268,24 @@ def reconcile_settings(config: dict) -> dict:
     watch_defaults = defaults.pop("watch")
     merged = {**defaults, **raw}
     merged["watch"] = {**watch_defaults, **(raw.get("watch") or {})}
+    if merged.get("photos_db_libraries") and "include_mac_uploads" not in raw:
+        merged["include_mac_uploads"] = True
     return merged
+
+
+def reconcile_immich_tags(config: dict) -> list[str]:
+    reconcile = reconcile_settings(config)
+    explicit = list(reconcile.get("immich_tags") or [])
+    if explicit:
+        return [str(name) for name in explicit if name]
+    tags: list[str] = []
+    for lib in config.get("libraries", []):
+        if not lib.get("enabled", True):
+            continue
+        for tag in lib.get("tags") or []:
+            if tag and tag not in tags:
+                tags.append(str(tag))
+    return tags
 
 
 def reconcile_album_names(config: dict) -> list[str]:

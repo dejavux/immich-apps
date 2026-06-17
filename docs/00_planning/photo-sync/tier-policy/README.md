@@ -1,10 +1,10 @@
 # Phase 3.5 — iCloud 分層（tier policy）
 
-**狀態**: 🟢 bulk 可開跑（2026-06-15）  
+**狀態**: 🟡 Phase B bulk 收尾（2026-06-17）  
 **優先級**: P1 主軌 · P0 E2E 並行  
 **SSOT**: [10_REQUIREMENTS.md](./10_REQUIREMENTS.md) · [PROGRESS_TRACKING §3.5](../../PROGRESS_TRACKING.md)
 
-## 進度摘要（2026-06-15）
+## 進度摘要（2026-06-17）
 
 | 階段 | 狀態 |
 |------|------|
@@ -13,10 +13,11 @@
 | M3 bulk export（第一輪） | ✅ **1615** 張（cutoff 一年前 · local-path） |
 | M3 bulk import + verify | ✅ **1615 / 1615** |
 | 人工刪 source（第一輪） | ✅ 1615 → Recently Deleted |
-| Phase 3.6 reconcile + API upload | ✅ PR #19 · orphan 484 trashed · date fix |
-| Phase B download originals | ✅ **4280/4281** · `eligible_ismissing` **1** |
-| Phase B bulk export/import | 🟡 export ✅ **75 batch** · import 進行中 |
-| 永久清除 Recently Deleted | ⏳ 兩輪 delete 後一次清 |
+| Phase 3.6 reconcile + API upload | ✅ PR #19/#20 · orphan **501** trashed |
+| Phase B download originals | ✅ **4280/4281** |
+| Phase B bulk export | ✅ **75 batch** |
+| Phase B bulk import / delete | 🟡 import 多輪 · delete-source retry（6/16） |
+| 永久清除 Recently Deleted | ⏳ verify 後 purge → reconcile |
 
 ## 問題
 
