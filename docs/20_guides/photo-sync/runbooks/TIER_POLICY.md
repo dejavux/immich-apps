@@ -1,6 +1,57 @@
 # Tier Policy Runbook — icloud-primary → local-archive
 
-**Phase 3.5 M3** · 最後更新：2026-06-14
+**Phase 3.5 M3** · 最後更新：2026-06-18
+
+---
+
+## 狀態一覽（每日）
+
+```bash
+./scripts/photo-sync/tier-policy-status.sh --cutoff-days 365
+```
+
+---
+
+## Phase 3.5 收尾實測（2026-06-18）
+
+| 項目 | 結果 |
+|------|------|
+| staging verify | `staging_items: 0` ✅ |
+| icloud dry-run | `0 new` ✅ |
+| local-archive dry-run | `9 new`（tier import 後續傳；可 `./scripts/photo-sync/immich-sync.sh`） |
+| reconcile dry-run | `orphan_candidates: 0` ✅（purge 前後皆 0；無需 apply） |
+| delete-source Phase B | `--skip-blocked`：**2313 ready** / 1942 blocked（local 驗證失敗） |
+| Recently Deleted | **286** 張 · GUI purge 需 **Terminal.app + Photos 前台** |
+
+### delete-source（Phase B）
+
+```bash
+# 必須在 Terminal.app（非 IDE agent shell）· Photos 須有自動化權限
+open -a Photos ~/Pictures/Photos\ Library.photoslibrary
+./scripts/photo-sync/tier-policy-delete-source-phaseb.sh
+# 完成後：Photos → TierPolicy-Delete → ⌘A → ⌘Delete
+./scripts/photo-sync/tier-policy-delete-source.sh --yes   # 含 GUI delete（小批次）
+```
+
+`--skip-blocked`：僅處理已在 local-archive 驗證的 UUID；**已不在 icloud DB** 的 UUID 視為已刪（不阻擋）。
+
+診斷 blocked 分桶：
+
+```bash
+./scripts/photo-sync/tier-policy-diagnose-blocked.sh --manifests-only
+```
+
+**2026-06-18 實測（Phase B manifests）**：4255 張中 **2313 ready** · **1942 absent_from_icloud**（非 import 失敗）· **0 blocked_not_in_local**。
+
+### Recently Deleted purge
+
+```bash
+./scripts/photo-sync/photos-purge-recently-deleted.sh --dry-run
+./scripts/photo-sync/photos-purge-recently-deleted.sh --confirm
+# 若 GUI 失敗：Photos → 最近刪除 → 全部删除（手動）
+```
+
+purge 後 reconcile 仍可能為 0（目前 Mac 上資產仍多）；見 [RECONCILE_OPERATIONS.md](./RECONCILE_OPERATIONS.md)。
 
 ---
 

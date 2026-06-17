@@ -5,6 +5,7 @@ import {
 } from "@line/bot-sdk";
 
 import { env } from "../config/env";
+import { WELCOME_MESSAGE } from "../services/line-welcome";
 import { ImmichClient } from "../../shared/immich-client";
 import { downloadLineMessageContent } from "../../shared/line-content";
 import {
@@ -53,6 +54,14 @@ export async function handleWebhookEvents(
 
 async function handleEvent(event: WebhookEvent): Promise<void> {
   webhookEventsTotal.inc({ type: event.type });
+
+  if (event.type === "follow" && "replyToken" in event) {
+    await messagingClient.replyMessage({
+      replyToken: event.replyToken,
+      messages: [{ type: "text", text: WELCOME_MESSAGE }],
+    });
+    return;
+  }
 
   if (event.type === "message" && event.message.type === "image") {
     await handleImageMessage(event as MessageEvent);

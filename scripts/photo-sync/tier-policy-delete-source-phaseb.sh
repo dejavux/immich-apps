@@ -33,6 +33,7 @@ python3 "${ROOT}/scripts/photo-sync/tier_policy_delete_source.py" \
   --manifests-only \
   "${MANIFEST_ARGS[@]}" \
   --yes \
+  --skip-blocked \
   --skip-gui \
   --resume \
   --batch-size 25

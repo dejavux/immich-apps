@@ -2,9 +2,10 @@
 
 **完整的 Immich 生態系統**：Immich server + LINE Bot + Photo Sync
 
-> 🚀 **Status**: Phase 2 ✅ · Phase 3 ✅ · Phase 3.5 Phase B 收尾中 🟡 · Phase 3.6 M3 ✅ M3.1 待 PR · Immich **v2.7.5** ✅  
+> 🚀 **Status**: Phase 2/3/3.6 ✅ · Phase 3.5 Phase B 收尾 🟡 · Immich **v2.7.5** ✅  
 > 📊 **Progress**: [PROGRESS_TRACKING.md](./docs/00_planning/PROGRESS_TRACKING.md)  
 > 📋 **如何進行**: [HOW_TO_PROCEED.md](./docs/00_planning/HOW_TO_PROCEED.md)  
+> 🎨 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./docs/00_planning/UX_PRODUCT_REVIEW.md)  
 > 🏗️ **K8s 部署**: [K8S_DEPLOYMENT.md](./docs/20_guides/infra/K8S_DEPLOYMENT.md)
 
 ---
@@ -160,8 +161,9 @@ make logs              # 查看 k8s logs
 |------|------|
 | 任務 SSOT | [PROGRESS_TRACKING.md](./docs/00_planning/PROGRESS_TRACKING.md) |
 | 執行指南 | [HOW_TO_PROCEED.md](./docs/00_planning/HOW_TO_PROCEED.md) |
+| UX / 產品檢視 | [UX_PRODUCT_REVIEW.md](./docs/00_planning/UX_PRODUCT_REVIEW.md) |
 | 指令參考 | [COMMAND_REFERENCE.md](./docs/20_guides/COMMAND_REFERENCE.md) |
-| LINE Bot V1.1 | [10_REQUIREMENTS.md](./docs/00_planning/line-bot/10_REQUIREMENTS.md) |
+| LINE Bot V1.1 | [60_completed/phase2-line-bot-mvp/10_REQUIREMENTS.md](./docs/60_completed/phase2-line-bot-mvp/10_REQUIREMENTS.md) |
 | Photo Sync（結案） | [phase3-photo-sync-bulk/](./docs/60_completed/phase3-photo-sync-bulk/) |
 | K8s / Tekton | [K8S_DEPLOYMENT.md](./docs/20_guides/infra/K8S_DEPLOYMENT.md) |
 | 已結案 | [60_completed/](./docs/60_completed/) |
@@ -274,6 +276,6 @@ MIT
 
 ---
 
-**最後更新**: 2026-06-17  
+**最後更新**: 2026-06-18  
 **維護者**: Infrastructure Team + App Dev Team  
 **Repo**: <https://github.com/dejavux/immich-apps>

@@ -2,7 +2,7 @@
 
 > `docs/00_planning/` — **進行中專案需求** only
 
-**最後更新**: 2026-06-17（Phase 3.6 歸檔 60_completed · delete-reconcile stub）
+**最後更新**: 2026-06-18（UX 產品檢視 · Phase 3.6 歸檔完成）
 
 ---
 
@@ -13,6 +13,7 @@
 | [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md) | 任務 checklist SSOT |
 | [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md) | 本週 Sprint |
 | [BACKLOG.md](./BACKLOG.md) | 待辦優先序 |
+| [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md) | UI/UX/Flow 檢視與下一階段建議 |
 
 ---
 

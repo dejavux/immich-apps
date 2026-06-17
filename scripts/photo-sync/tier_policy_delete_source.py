@@ -272,6 +272,11 @@ def parse_args() -> argparse.Namespace:
         help="Do not merge state.json imported_uuids (use manifest items only)",
     )
     parser.add_argument("--limit", type=int, help="Max UUIDs to process (testing)")
+    parser.add_argument(
+        "--skip-blocked",
+        action="store_true",
+        help="Process ready UUIDs only; skip those not verified in target",
+    )
     return parser.parse_args()
 
 
@@ -306,23 +311,47 @@ def main() -> int:
         uuids=uuids,
     )
 
+    absent_from_source: list[str] = []
+    blocked_not_in_target: list[str] = []
+    for uid in not_ready:
+        if source_db.get_photo(uid) is None:
+            absent_from_source.append(uid)
+        else:
+            blocked_not_in_target.append(uid)
+
     report = {
         "generated_at": utc_now(),
         "source_library": str(source_lib),
         "album": args.album,
         "requested": len(uuids),
         "ready_to_delete": len(ready),
-        "blocked_not_in_target": not_ready,
+        "absent_from_icloud": len(absent_from_source),
+        "blocked_not_in_local": blocked_not_in_target,
         "dry_run": args.dry_run,
     }
     print(json.dumps(report, indent=2, ensure_ascii=False))
 
-    if not_ready:
+    if absent_from_source:
         print(
-            f"ERROR: {len(not_ready)} UUID(s) not verified in target; aborting.",
+            f"INFO: {len(absent_from_source)} UUID(s) already absent from icloud "
+            "(likely in Recently Deleted or prior delete round).",
             file=sys.stderr,
         )
-        return 1
+
+    if blocked_not_in_target:
+        if args.skip_blocked:
+            print(
+                f"WARN: skipping {len(blocked_not_in_target)} UUID(s) not verified in local-archive; "
+                f"processing {len(ready)} ready.",
+                file=sys.stderr,
+            )
+            report["skipped_blocked"] = len(blocked_not_in_target)
+        else:
+            print(
+                f"ERROR: {len(blocked_not_in_target)} UUID(s) not verified in local-archive; aborting.",
+                file=sys.stderr,
+            )
+            return 1
 
     if not args.yes and not args.dry_run and sys.stdin.isatty():
         answer = input(f"Delete {len(ready)} item(s) from icloud-primary? [y/N] ")

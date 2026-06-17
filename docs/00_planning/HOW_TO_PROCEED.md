@@ -1,9 +1,10 @@
 # 如何進行 — Immich Apps 執行指南
 
-**日期**: 2026-06-17  
+**日期**: 2026-06-18  
 **Repo**: <https://github.com/dejavux/immich-apps>  
 **進度 SSOT**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
-**待辦優先序**: [BACKLOG.md](./BACKLOG.md)
+**待辦優先序**: [BACKLOG.md](./BACKLOG.md)  
+**UX / 產品檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
 
@@ -11,15 +12,16 @@
 
 | 項目 | 狀態 |
 |------|------|
-| Phase 2 LINE Bot MVP | ✅ 結案 |
+| Phase 2 LINE Bot MVP | ✅ 結案（搜尋 + Flex carousel 已上線） |
 | Phase 3 Photo Sync | ✅ 結案（全量 + 增量） |
-| Phase 3.5 tier policy | 🟡 **Phase B bulk 進行中**（export ✅ 75 batch · import 多輪 · delete-source retry） |
-| Phase 3.6 delete reconcile | ✅ M1/M2/M3（PR #19/#20）· 🟡 **M3.1** 本機驗證 · 待 PR |
+| Phase 3.5 tier policy | 🟡 **Phase B 收尾**（staging verify `0` · purge + delete-source 待完成） |
+| Phase 3.6 delete reconcile | ✅ 歸檔（PR #19/#20/#21/#22）· M3.1 + diagnose 已 merge |
 | Immich server | **v2.7.5** @ `https://immich.3q.fi` |
-| LINE Bot 映像 | `immich-line-bot:d803a19`（PR #20 merge 後） |
+| LINE Bot 映像 | 以 `main` 最新 Tekton release 為準 |
 | LaunchAgent | ✅ running |
 
-**Reconcile 實測（2026-06-17）**：累計 **501** orphan trashed（484+17）· 最新 dry-run `orphan_candidates: 0`
+**Reconcile 實測（2026-06-18 01:15）**：dry-run `orphan_candidates: 20` · `orphan_ready_for_apply: 20`（purge 後待 apply）  
+**Tier verify（2026-06-18）**：`staging_items: 0` · `verified: 0` — import 輪次已清空 staging
 
 ---
 
@@ -29,10 +31,10 @@
 
 | 優先 | 任務 | 說明 |
 |------|------|------|
-| **P1** | Phase B bulk 收尾 | import fail retry · verify-staging · delete-source |
-| **P1** | Reconcile M3.1 PR | `photos_db_libraries` · `include_mac_uploads` · `grace_days: 0` |
-| **P1** | Recently Deleted purge | bulk verify OK 後；**purge 後**再 reconcile |
-| **P0** | 人工 E2E | Web UI 時間軸 + LINE 場景搜尋 |
+| **P1** | Phase B 收尾 | delete-source · `photos_gui_ops.py purge` · immich-sync dry-run `0 new` |
+| **P1** | Reconcile apply | purge 後 `--apply`（目前 dry-run **20** orphan ready） |
+| **P0** | 人工 E2E | Web 兩相簿時間軸 + LINE 場景/人名搜尋（見 [UX_PRODUCT_REVIEW](./UX_PRODUCT_REVIEW.md) checklist） |
+| **P2** | UX 拋光（下週） | LINE Rich Menu · 人物消歧 Quick Reply · `tier-policy-status` |
 
 Phase 3.5 完成後：**icloud-primary** 只剩 cutoff 後新照 · **local-archive** 承載歷史 · **Immich union** 不變。
 
@@ -53,10 +55,10 @@ Phase 3.5 完成後：**icloud-primary** 只剩 cutoff 後新照 · **local-arch
 
 **已完成**：download **4280/4281** · export **75 batch** · 第一輪 1615/1615
 
-**進行中（2026-06-16）**：
+**進行中（2026-06-18）**：
 
-- bulk import 多輪（最後一輪 ok=16 fail=2 skip=68）
-- delete-source phaseb retry（6/16）
+- bulk import 多輪已完成 · `tier-verify-staging.json` → `staging_items: 0`
+- 待完成：delete-source 本輪 · Recently Deleted purge（`photos_gui_ops.py` GUI 路徑已強化）
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
@@ -82,9 +84,11 @@ eval "$(./scripts/dev/load-env-from-op.sh)"
 
 ### P0 — 人工驗收
 
-- [ ] Web UI：兩相簿 + 時間軸 EXIF（v2.7.5）
-- [ ] LINE：「找在海邊的照片」「幫我找小蕊一歲半的照片」
-- [x] 後端 smoke：`smoke-photo-search-e2e.sh`（person rayna · scene beach ocean · 2026-06-15）
+- [x] 後端 smoke：`smoke-photo-search-e2e.sh`（person rayna · scene beach ocean · 2026-06-18）
+- [x] immich-sync dry-run：icloud **0 new** · local **9 new**（2026-06-18）
+- [x] reconcile dry-run：`orphan_candidates: 0`（2026-06-18）
+- [ ] Web UI：兩相簿 + 時間軸 EXIF
+- [ ] LINE：「找在海邊的照片」「幫我找小蕊一歲半的照片」（部署 Rich Menu 後驗）
 
 ### P2 — Similar images 驗證（bulk 空檔或下週）
 
@@ -106,6 +110,7 @@ jq .summary ~/Library/Logs/immich-photo-sync/reconcile/reconcile-*.json | tail -
 
 ## 🔗 相關
 
+- [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 - [BACKLOG.md](./BACKLOG.md)
 - [photo-sync/delete-reconcile/20_OPERATIONS.md](./photo-sync/delete-reconcile/20_OPERATIONS.md)
 - [photo-sync/tier-policy/](./photo-sync/tier-policy/)

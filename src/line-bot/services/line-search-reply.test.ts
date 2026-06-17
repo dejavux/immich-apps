@@ -49,6 +49,26 @@ describe("line-search-reply", () => {
     expect(messages[1].type).toBe("flex");
   });
 
+  it("adds quick reply for person disambiguation", () => {
+    const messages = buildSearchReplyMessages(
+      {
+        kind: "clarify",
+        message: "找到多位「小蕊」",
+        personCandidates: [
+          { id: "a", name: "rayna", birthDate: "2019-03-15" },
+          { id: "b", name: "rayna2" },
+        ],
+      },
+      "https://immich-bot.3q.fi",
+      "https://immich.3q.fi",
+    );
+    expect(messages).toHaveLength(1);
+    expect(messages[0].type).toBe("text");
+    if (messages[0].type === "text") {
+      expect(messages[0].quickReply?.items).toHaveLength(2);
+    }
+  });
+
   it("falls back to text-only when public URL missing", () => {
     const messages = buildSearchReplyMessages(
       {

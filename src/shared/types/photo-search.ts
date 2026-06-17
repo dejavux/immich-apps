@@ -43,6 +43,8 @@ export interface PhotoSearchResult {
   message: string;
   assets?: PhotoSearchAssetHit[];
   total?: number;
+  /** When kind=clarify and multiple people match — drives LINE Quick Reply. */
+  personCandidates?: ImmichPersonSummary[];
 }
 
 export interface MetadataSearchParams {

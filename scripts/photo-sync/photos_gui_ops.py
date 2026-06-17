@@ -47,8 +47,8 @@ def purge_recently_deleted(*, dry_run: bool) -> None:
         print("Nothing in Recently Deleted; skip GUI purge.")
         return
 
-    subprocess.run(["open", "-a", "Photos"], check=False)
-    time.sleep(3)
+    subprocess.run(["open", "-a", "Photos", str(expand("~/Pictures/Photos Library.photoslibrary"))], check=False)
+    time.sleep(4)
     script = r"""
 on run
     tell application "Photos" to activate
@@ -57,33 +57,59 @@ on run
         tell process "Photos"
             set frontmost to true
             delay 1
-            set sb to scroll area 1 of group 1 of group 1 of splitter group 1 of group 1 of window 1
-            set sidebar to UI element 1 of sb
-            set clicked to false
-            repeat with labelText in {"最近删除", "最近刪除", "Recently Deleted"}
+            set opened to false
+            try
+                click menu item "Recently Deleted" of menu "Utilities"
+                    of menu item "Utilities" of menu "View" of menu bar 1
+                set opened to true
+            end try
+            if opened is false then
                 try
-                    click static text labelText of sidebar
-                    set clicked to true
-                    exit repeat
+                    click (first static text whose name is "Recently Deleted") of window 1
+                    set opened to true
                 end try
-            end repeat
-            if clicked is false then
-                error "Could not open Recently Deleted sidebar item"
             end if
-            delay 2
-            set deleted to false
-            repeat with btnName in {"全部删除", "全部刪除", "Delete All"}
+            if opened is false then
+                set sb to scroll area 1 of group 1 of group 1 of splitter group 1 of group 1 of window 1
+                repeat with labelText in {"最近删除", "最近刪除", "Recently Deleted"}
+                    try
+                        click static text labelText of UI element 1 of sb
+                        set opened to true
+                        exit repeat
+                    end try
+                end repeat
+            end if
+            if opened is false then error "Could not open Recently Deleted sidebar"
+            delay 3
+            set purged to false
+            repeat with btnName in {"Delete All", "全部删除", "全部刪除", "Permanently Delete", "永久删除", "永久刪除"}
                 try
                     click button btnName of window 1
-                    set deleted to true
+                    set purged to true
                     exit repeat
                 end try
             end repeat
-            if deleted is false then
-                error "Could not find Delete All button"
+            if purged is false then
+                repeat with btnName in {"Delete All", "全部删除", "全部刪除"}
+                    try
+                        click button btnName of group 1 of window 1
+                        set purged to true
+                        exit repeat
+                    end try
+                end repeat
             end if
+            if purged is false then
+                repeat with menuPath in {"Erase Deleted Items", "清除已删除的项目…", "清除已刪除的項目…"}
+                    try
+                        click menu item menuPath of menu "Photos" of menu bar 1
+                        set purged to true
+                        exit repeat
+                    end try
+                end repeat
+            end if
+            if purged is false then error "Delete All / Erase Deleted Items not available"
             delay 1
-            repeat with confirmName in {"删除", "刪除", "Delete", "OK"}
+            repeat with confirmName in {"Delete", "删除", "刪除", "Erase", "OK"}
                 try
                     click button confirmName of sheet 1 of window 1
                     exit repeat

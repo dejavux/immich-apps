@@ -64,4 +64,6 @@ export const env = {
     "LINE_BOT_PUBLIC_URL",
     "https://immich-bot.3q.fi",
   ).replace(/\/$/, ""),
+  lineRichMenuAutoSetup:
+    optional("LINE_RICH_MENU_AUTO_SETUP", "false") === "true",
 };
