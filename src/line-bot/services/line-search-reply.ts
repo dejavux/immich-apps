@@ -4,6 +4,7 @@ import type {
   PhotoSearchAssetHit,
   PhotoSearchResult,
 } from "../../shared/types/photo-search";
+import type { ImmichPersonSummary } from "../../shared/types/immich";
 
 const CAROUSEL_MAX_BUBBLES = 10;
 const UUID_RE =
@@ -80,11 +81,45 @@ export function buildPhotoSearchFlexCarousel(params: {
   };
 }
 
+export function buildPersonQuickReply(
+  people: ImmichPersonSummary[],
+): messagingApi.QuickReply {
+  return {
+    items: people.slice(0, 13).map((person, index) => {
+      const label = person.birthDate
+        ? `${person.name} (${person.birthDate})`
+        : person.name;
+      return {
+        type: "action",
+        action: {
+          type: "message",
+          label: label.slice(0, 20),
+          text: String(index + 1),
+        },
+      };
+    }),
+  };
+}
+
 export function buildSearchReplyMessages(
   result: PhotoSearchResult,
   publicBotBaseUrl: string,
   immichWebUrl: string,
 ): messagingApi.Message[] {
+  if (
+    result.kind === "clarify" &&
+    result.personCandidates &&
+    result.personCandidates.length > 1
+  ) {
+    return [
+      {
+        type: "text",
+        text: result.message,
+        quickReply: buildPersonQuickReply(result.personCandidates),
+      },
+    ];
+  }
+
   if (
     result.kind === "results" &&
     result.assets?.length &&

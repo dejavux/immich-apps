@@ -4,6 +4,7 @@ import { middleware } from "@line/bot-sdk";
 import { env } from "./config/env";
 import { handleWebhookEvents } from "./handlers/line-webhook";
 import { registerMediaProxyRoutes } from "./routes/media-proxy";
+import { ensureDefaultRichMenu } from "./services/rich-menu";
 import { logger } from "../shared/logger";
 import { ImmichClient } from "../shared/immich-client";
 import { register } from "./metrics";
@@ -45,4 +46,10 @@ app.listen(env.port, () => {
     },
     "Immich LINE Bot started",
   );
+
+  if (env.lineRichMenuAutoSetup) {
+    void ensureDefaultRichMenu(env.lineAccessToken).catch((error) => {
+      logger.error({ error }, "Rich menu setup failed");
+    });
+  }
 });

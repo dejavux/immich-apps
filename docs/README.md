@@ -1,7 +1,8 @@
 # Immich Apps 文檔
 
 **Repo**: <https://github.com/dejavux/immich-apps>  
-**狀態**: Phase 2/3/3.6 ✅ 結案 · 🟡 Phase 3.5 Phase B 收尾 · Phase 3.6 M3.1 待 PR
+**狀態**: Phase 2/3/3.6 ✅ 結案 · 🟡 Phase 3.5 Phase B 收尾  
+**UX 檢視**: [00_planning/UX_PRODUCT_REVIEW.md](./00_planning/UX_PRODUCT_REVIEW.md)
 
 ---
 
@@ -13,6 +14,7 @@
 | **本週 Sprint** | [00_planning/HOW_TO_PROCEED.md](./00_planning/HOW_TO_PROCEED.md) |
 | **待辦優先序** | [00_planning/BACKLOG.md](./00_planning/BACKLOG.md) |
 | **規劃文件導覽** | [00_planning/DOCUMENTATION_INDEX.md](./00_planning/DOCUMENTATION_INDEX.md) |
+| **UX / 產品檢視** | [00_planning/UX_PRODUCT_REVIEW.md](./00_planning/UX_PRODUCT_REVIEW.md) |
 | **指令參考** | [20_guides/COMMAND_REFERENCE.md](./20_guides/COMMAND_REFERENCE.md) |
 | **已結案** | [60_completed/README.md](./60_completed/README.md) |
 | **Reconcile runbook** | [20_guides/photo-sync/runbooks/RECONCILE_OPERATIONS.md](./20_guides/photo-sync/runbooks/RECONCILE_OPERATIONS.md) |
@@ -40,4 +42,4 @@ docs/
 | 已結案規格 | `60_completed/` | Phase 2/3 `10_REQUIREMENTS.md` |
 | 架構決策 | `60_completed/phase0/` | REPO_CONSOLIDATION_PLAN |
 
-**最後更新**: 2026-06-17（清除根目錄 redirect stubs · Phase 3.6 歸檔）
+**最後更新**: 2026-06-18（UX 產品檢視 · Phase 3.6 歸檔完成）

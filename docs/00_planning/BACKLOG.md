@@ -2,7 +2,8 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-06-17（整體 review · P4/P5/V1.1 明確 defer）
+**最後更新**: 2026-06-18（UX 產品檢視 · reconcile 20 orphan · M3.1 已 merge）  
+**UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
 
@@ -18,23 +19,24 @@
 
 ---
 
-## 當前 Sprint（2026-06-17）
+## 當前 Sprint（2026-06-18）
 
 | 軌道 | 任務 | 狀態 | 負責 |
 |------|------|------|------|
 | **P0** | Web UI + LINE 人工 E2E | 🟡 進行中 | 人工 |
-| **P1** | Phase 3.5 Phase B bulk 收尾 | 🟡 import/verify/delete | 本機 + Photos |
-| **P1** | Reconcile M3.1 PR + purge 後 reconcile | 🟡 patch 待 PR | 本機 |
+| **P1** | Phase 3.5 Phase B 收尾 | 🟡 purge · delete-source · dry-run 0 new | 本機 + Photos |
+| **P1** | Reconcile apply（purge 後） | 🟡 dry-run 20 orphan ready | 本機 |
 | **P2** | Similar images 內建驗證 | 📋 待跑 runbook | 本機 |
+| **P2** | UX 拋光（下週） | 📋 Rich Menu · tier-status | Dev |
 
 ---
 
 ## 優先順序總覽
 
 ```text
-P0  並行     人工 E2E 驗收
-P1  本週     Phase B bulk 收尾 · reconcile M3.1 PR · Recently Deleted purge
-P2  空檔     reconcile diagnose 工具 · Similar images eval
+P0  並行     人工 E2E 驗收（Web 時間軸 + LINE 搜尋）
+P1  本週     Phase B 收尾 · Recently Deleted purge · reconcile apply（20 orphan）
+P2  下週     LINE UX（Rich Menu · Quick Reply）· tier-policy-status · Similar images eval
 P2  Q3       Phase 5 B2 備份 · Phase 4 SSD · LINE V1.1 Grafana
 P3  有空再做 Photo Edit AI · trashed=1 即 absent 決策
 ```
@@ -48,9 +50,10 @@ P3  有空再做 Photo Edit AI · trashed=1 即 absent 決策
 - [x] 週日 LaunchAgent dry-run reconcile
 - [x] M3 fswatch watch（PR #20 `d803a19`）
 - [x] 本機 apply **+17** orphan（2026-06-17 · 擴大 scope）
-- [ ] **M3.1 PR**：`photos_db_libraries` · `include_mac_uploads` · `grace_days: 0`
+- [x] M3.1 PR：`photos_db_libraries` · `include_mac_uploads` · `grace_days: 0`（PR #21）
+- [x] Phase 3.6 歸檔（PR #22）
 - [x] `immich-reconcile-diagnose.sh`（asset id → mac_ref 狀態）
-- [ ] purge Recently Deleted 後再 reconcile（6/16 四張等待中）
+- [ ] purge Recently Deleted 後 reconcile apply（dry-run **20** orphan，2026-06-18）
 
 **維運**：tier 搬移不刪 Immich；purge 前 reconcile skip；見 [20_OPERATIONS.md](./photo-sync/delete-reconcile/20_OPERATIONS.md)
 
@@ -73,10 +76,11 @@ P3  有空再做 Photo Edit AI · trashed=1 即 absent 決策
 
 - [x] `tier-policy-download-missing.sh` 全量 eligible（4280/4281 · 2026-06-15）
 - [x] bulk export **75 batch**（2026-06-15）
-- [ ] bulk import 收尾（含 fail retry · verify-staging）
-- [ ] `tier-policy-delete-source` 本輪完成
-- [ ] Recently Deleted **永久清除**（第一輪 1615 + 本輪合計）
-- [ ] immich-sync dry-run **0 new**
+- [x] bulk import + verify-staging（`staging_items: 0` · 2026-06-18）
+- [x] immich-sync dry-run icloud `0 new`
+- [ ] local-archive sync **9 new**
+- [ ] `tier-policy-delete-source-phaseb.sh` + GUI ⌘Delete（Terminal.app）
+- [ ] Recently Deleted purge（286）
 
 ### 待辦
 
@@ -132,6 +136,32 @@ P3  有空再做 Photo Edit AI · trashed=1 即 absent 決策
 
 ---
 
+## UX / 產品體驗（P1–P2）
+
+> 完整檢視：[UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
+
+### LINE Bot
+
+- [x] Rich Menu：找照片 · 上傳教學 · 使用說明（`setup-rich-menu.sh` · 2026-06-18）
+- [ ] 部署 LINE Bot（welcome · Quick Reply）· `make release-line-bot`
+- [ ] 首次對話 welcome 訊息（程式已實作 · 待 deploy）
+- [ ] 人物消歧 Quick Reply（程式已實作 · 待 deploy）
+- [ ] 上傳成功 Flex 單張預覽（與搜尋 carousel 一致）
+- [ ] 搜尋結果「查看更多」deep link 至 Immich
+
+### Immich Web（驗收導向）
+
+- [ ] P0：兩相簿時間軸 + EXIF 抽查
+- [ ] 人物命名與 LINE alias 對齊驗收
+
+### 維運者
+
+- [x] `tier-policy-status.sh` 單頁狀態摘要
+- [x] `photos_gui_ops.py` purge 多路徑（View 選單 · Erase Deleted Items）— 待實測
+- [ ] 互動式 `make tier-next` 建議下一步（P2）
+
+---
+
 ## 維運 / Tech Debt（P3 · **Defer**）
 
 - [ ] fswatch debounce / ignore
@@ -145,7 +175,9 @@ P3  有空再做 Photo Edit AI · trashed=1 即 absent 決策
 
 | 項目 | 完成日 |
 |------|--------|
-| Phase 3.5 M3 第一輪 1615 export/import | 2026-06-14 |
+| Phase 3.6 歸檔 + reconcile runbook 整理 | 2026-06-17 |
+| Reconcile M3.1 + diagnose CLI（PR #21） | 2026-06-17 |
+| UX 產品檢視文件 | 2026-06-18 |
 | tier-policy bulk 腳本 PR #18 | 2026-06-14 |
 | infra-bootstrap Immich v2.7.5 K8s `588ee55` | 2026-06-13 |
 | Phase 3 Photo Sync 全量 + 增量 | 2026-06-13 |

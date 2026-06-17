@@ -5,8 +5,9 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-17（整體 review · 收尾條件確認 · defer 清單定案）  
-**專案狀態**: ✅ Phase 2/3 結案 · 🟡 Phase 3.5 Phase B bulk 收尾 · Phase 3.6 M3.1 待 PR · Phase 4/5 **明確 defer P2**  
+**最後更新**: 2026-06-18（整體 review + UX 產品檢視 · reconcile 20 orphan ready）  
+**專案狀態**: ✅ Phase 2/3/3.6 結案 · 🟡 Phase 3.5 Phase B 收尾 · Phase 4/5 **明確 defer P2**  
+**UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
 
 ---
@@ -15,11 +16,11 @@
 
 | 指標 | 數值 | 說明 |
 |------|------|------|
-| 🔴 高優先級任務 | 1 | Sprint P0：E2E 驗收 |
-| 🟡 中優先級任務 | 4 | Phase 3.5 + Phase 5 規劃 |
+| 🔴 高優先級任務 | 2 | Sprint P0 E2E · P1 purge + reconcile apply |
+| 🟡 中優先級任務 | 5 | Phase 3.5 收尾 + UX 拋光規劃 |
 | 🟢 低優先級任務 | 6 | Phase 4 SSD · V1.1 · tech debt |
-| ✅ 本週完成 | 30+ | Phase 3 結案、docs 歸檔整理 |
-| 📈 整體進度 | **92%** | Phase 0–3: **100%** MVP · Phase 4/5: 0% |
+| ✅ 本週完成 | 35+ | Phase 3.6 歸檔 · M3.1 merge · diagnose CLI |
+| 📈 整體進度 | **94%** | Phase 0–3.6: **100%** · Phase 3.5: **~98%** |
 
 ---
 
@@ -31,7 +32,7 @@
 | **Phase 1** | 基礎設施 | ✅ 已部署 | 50% 完成 | █████░░░░░ 50% | 2025-10-06 |
 | **Phase 2** | LINE Bot | ✅ 結案 | MVP 100% | ██████████ 100% | 2026-06-12 |
 | **Phase 3** | Photo Sync | ✅ 結案 | 100% | ██████████ 100% | 2026-06-13 |
-| **Phase 3.5** | iCloud 分層 | 🟢 P1 | download gate ✅ · bulk 待跑 | █████████░ 92% | 2026-06-22 |
+| **Phase 3.5** | iCloud 分層 | 🟢 P1 | delete/purge 手動收尾 | █████████░ 98% | 2026-06-20 |
 | **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-05 |
 | **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-12 |
 
@@ -523,9 +524,11 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 - [x] `tier-policy-download-missing.sh` 全量 eligible（4280/4281）
 - [x] `tier-policy-monitor-ismissing.sh` 監控
-- [ ] `eligible_ismissing` → **0**（剩 1 張）
-- [ ] Phase B bulk export/import/delete（~**2665** 新張）
-- [ ] Recently Deleted 永久清除（1615 + 本輪）
+- [x] bulk import + verify-staging（`staging_items: 0` · 2026-06-18）
+- [x] immich-sync dry-run icloud **0 new**（2026-06-18）
+- [ ] local-archive 續傳 **9 new**（tier import 後）
+- [ ] `tier-policy-delete-source` Phase B（2313 ready · 1942 blocked · 需 Terminal.app）
+- [ ] Recently Deleted **永久清除**（286 張 · GUI）
 
 → 詳細步驟：[30_PHASE_B_ICLOUD_DOWNLOAD.md](./photo-sync/tier-policy/30_PHASE_B_ICLOUD_DOWNLOAD.md)
 
@@ -540,9 +543,9 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 ## ✅ P1 完成：Phase 3.6 — Delete Reconcile
 
-**狀態**: ✅ M1/M2/M3（PR #19 `39f8a66` · PR #20 `d803a19`）· 🟡 **M3.1** 本機 patch 待 PR  
-**規格**: [photo-sync/delete-reconcile/10_REQUIREMENTS.md](./photo-sync/delete-reconcile/10_REQUIREMENTS.md)  
-**維運**: [photo-sync/delete-reconcile/20_OPERATIONS.md](./photo-sync/delete-reconcile/20_OPERATIONS.md)
+**狀態**: ✅ M1/M2/M3/M3.1（PR #19–#22）· 歸檔 [60_completed](../60_completed/phase3-6-delete-reconcile/)  
+**規格**: [60_completed/phase3-6-delete-reconcile/10_REQUIREMENTS.md](../60_completed/phase3-6-delete-reconcile/10_REQUIREMENTS.md)  
+**維運**: [20_guides/photo-sync/runbooks/RECONCILE_OPERATIONS.md](../20_guides/photo-sync/runbooks/RECONCILE_OPERATIONS.md)
 
 ### 3.6.1 實作 ✅
 
@@ -552,7 +555,8 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 - [x] `immich-fix-dates.sh` 批量修復 CLI mtime 問題（~3500+ 筆）
 - [x] `install-reconcile-launchd.sh` 週日 04:00 dry-run
 - [x] M3 fswatch watch（PR #20）
-- [ ] M3.1 `photos_db_libraries` + `include_mac_uploads` + `grace_days: 0` → **待 commit/PR**
+- [x] M3.1 `photos_db_libraries` + `include_mac_uploads` + `grace_days: 0`（PR #21 merge）
+- [x] `immich-reconcile-diagnose.sh`（asset id → mac_ref 狀態）
 
 ### 3.6.2 實測 ✅
 
@@ -560,7 +564,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 |------|------|------|
 | 2026-06-15 | 首次 apply（album scope） | **484** trashed → dry-run **0** |
 | 2026-06-17 | apply（M3.1 scope） | **+17** trashed |
-| 2026-06-17 | dry-run（M3.1） | `orphan_candidates: 0` · `skipped_still_on_mac: 5277` · `skipped_tier_local_retains: 419` |
+| 2026-06-18 | dry-run（post-purge 前） | `orphan_candidates: 20` · `orphan_ready_for_apply: 20` |
 
 ### 3.6.3 維運要點（2026-06-17）
 

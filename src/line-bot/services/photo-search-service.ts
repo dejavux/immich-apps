@@ -27,6 +27,7 @@ import {
 import { QwenClient } from "./qwen-client";
 import { SearchSessionStore } from "./search-session-store";
 import { resolvePersonSearchName } from "./person-aliases";
+import { buildUploadHelpText, SEARCH_HELP_MESSAGE } from "./line-welcome";
 
 export interface PhotoSearchServiceOptions {
   immichClient: ImmichClient;
@@ -45,6 +46,17 @@ export class PhotoSearchService {
     userId: string,
     message: string,
   ): Promise<PhotoSearchResult> {
+    const trimmed = message.trim();
+    if (trimmed === "找照片") {
+      return { kind: "help", message: SEARCH_HELP_MESSAGE };
+    }
+    if (trimmed === "使用說明") {
+      return {
+        kind: "help",
+        message: `${buildUploadHelpText()}\n\n${SEARCH_HELP_MESSAGE}`,
+      };
+    }
+
     const session = this.options.sessionStore.get(userId);
     const plan = await this.resolvePlan(message, session);
 
@@ -264,7 +276,8 @@ export class PhotoSearchService {
           .join("\n");
         return {
           kind: "clarify",
-          message: `找到多位「${personName}」：\n${list}\n\n請回覆編號（例如 1）。`,
+          message: `找到多位「${personName}」：\n${list}\n\n請點選下方按鈕或回覆編號。`,
+          personCandidates: people,
         };
       }
       return this.searchWithPerson(userId, plan, people[0]);
@@ -544,16 +557,4 @@ export function formatResultsMessage(
       : "";
 
   return `${header}\n\n${lines.join("\n\n")}${more}`;
-}
-
-export function buildUploadHelpText(): string {
-  return (
-    "📸 上傳方式：\n" +
-    "• 一般照片：直接傳圖\n" +
-    "• 保留原檔：用「檔案」傳送 JPG/HEIC/PNG\n\n" +
-    "🔍 搜尋方式：\n" +
-    "• 幫我找小蕊一歲半的照片\n" +
-    "• 找在海邊的照片\n" +
-    "• 找 2024-06-01 的相片"
-  );
 }

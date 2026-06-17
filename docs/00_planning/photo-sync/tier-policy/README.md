@@ -1,6 +1,6 @@
 # Phase 3.5 — iCloud 分層（tier policy）
 
-**狀態**: 🟡 Phase B bulk 收尾（2026-06-17）  
+**狀態**: 🟡 Phase B 收尾（2026-06-18）  
 **優先級**: P1 主軌 · P0 E2E 並行  
 **SSOT**: [10_REQUIREMENTS.md](./10_REQUIREMENTS.md) · [PROGRESS_TRACKING §3.5](../../PROGRESS_TRACKING.md)
 
@@ -16,8 +16,9 @@
 | Phase 3.6 reconcile + API upload | ✅ PR #19/#20 · orphan **501** trashed |
 | Phase B download originals | ✅ **4280/4281** |
 | Phase B bulk export | ✅ **75 batch** |
-| Phase B bulk import / delete | 🟡 import 多輪 · delete-source retry（6/16） |
-| 永久清除 Recently Deleted | ⏳ verify 後 purge → reconcile |
+| Phase B bulk import + verify | ✅ staging `0`（2026-06-18） |
+| Phase B delete-source / purge | 🟡 待完成 |
+| 永久清除 Recently Deleted | ⏳ `photos_gui_ops.py` purge 後 reconcile |
 
 ## 問題
 
