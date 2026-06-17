@@ -51,17 +51,23 @@ def backup_database(photos_library: Path) -> Path:
 
 def quit_photos() -> None:
     subprocess.run(
-        ["osascript", "-e", 'tell application "Photos" to quit'],
+        ["osascript", "-e", 'tell application "Photos" to quit saving no'],
         capture_output=True,
         text=True,
         check=False,
     )
-    for _ in range(30):
+    for _ in range(20):
         proc = subprocess.run(["pgrep", "-x", "Photos"], capture_output=True, check=False)
         if proc.returncode != 0:
             return
         time.sleep(1)
-    raise RuntimeError("Photos did not quit within 30s; quit manually and retry.")
+    subprocess.run(["killall", "Photos"], capture_output=True, check=False)
+    for _ in range(10):
+        proc = subprocess.run(["pgrep", "-x", "Photos"], capture_output=True, check=False)
+        if proc.returncode != 0:
+            return
+        time.sleep(1)
+    raise RuntimeError("Photos did not quit; close Photos manually and retry.")
 
 
 def open_photos(photos_library: Path) -> None:
