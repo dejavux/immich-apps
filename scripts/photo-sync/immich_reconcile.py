@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -24,10 +25,16 @@ from photo_sync_lib import (
     log_dir,
     normalize_checksum,
     reconcile_album_names,
+    reconcile_immich_tags,
     reconcile_log_dir,
     reconcile_settings,
     save_reconcile_grace_state,
     utc_now,
+)
+
+MAC_UPLOAD_FILENAME_RE = re.compile(
+    r"^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}",
+    re.IGNORECASE,
 )
 
 
@@ -132,6 +139,47 @@ def list_tagged_assets(
     return assets
 
 
+def is_mac_upload_asset(asset: dict) -> bool:
+    name = asset.get("originalFileName") or ""
+    return bool(MAC_UPLOAD_FILENAME_RE.match(name))
+
+
+def list_mac_upload_assets(
+    base: str,
+    api_key: str,
+    *,
+    page_size: int,
+) -> list[dict]:
+    """Immich assets whose filename is a Mac Photos UUID (may lack album membership)."""
+    assets: list[dict] = []
+    page = 1
+    while True:
+        payload = api_request(
+            method="POST",
+            url=f"{base}/search/metadata",
+            api_key=api_key,
+            body={
+                "takenAfter": "1970-01-01T00:00:00.000Z",
+                "takenBefore": "2100-01-01T00:00:00.000Z",
+                "size": page_size,
+                "page": page,
+            },
+        )
+        if not isinstance(payload, dict):
+            break
+        chunk = payload.get("assets", {}).get("items", [])
+        if not chunk:
+            break
+        for asset in chunk:
+            if is_mac_upload_asset(asset):
+                assets.append(asset)
+        total = payload.get("assets", {}).get("total", len(assets))
+        if page * page_size >= total:
+            break
+        page += 1
+    return assets
+
+
 def find_album_id(base: str, api_key: str, album_name: str) -> str | None:
     albums = api_request(method="GET", url=f"{base}/albums", api_key=api_key)
     if not isinstance(albums, list):
@@ -157,7 +205,7 @@ def fetch_reconcile_assets(base: str, api_key: str, config: dict) -> tuple[list[
     reconcile = reconcile_settings(config)
     scope = reconcile.get("scope", "albums")
     by_id: dict[str, dict] = {}
-    meta = {"albums": [], "tags": []}
+    meta: dict = {"albums": [], "tags": [], "mac_uploads": 0}
 
     if scope in {"albums", "both"}:
         for album_name in reconcile_album_names(config):
@@ -168,7 +216,9 @@ def fetch_reconcile_assets(base: str, api_key: str, config: dict) -> tuple[list[
                 if asset_id:
                     by_id[asset_id] = asset
 
-    tag_names = list(reconcile.get("immich_tags") or [])
+    tag_names = reconcile_immich_tags(config) if scope in {"tags", "both"} else []
+    if not tag_names and scope in {"tags", "both"}:
+        tag_names = list(reconcile.get("immich_tags") or [])
     if scope in {"tags", "both"} and tag_names:
         tagged = list_tagged_assets(
             base,
@@ -178,6 +228,18 @@ def fetch_reconcile_assets(base: str, api_key: str, config: dict) -> tuple[list[
         )
         meta["tags"] = tag_names
         for asset in tagged:
+            asset_id = str(asset.get("id", ""))
+            if asset_id:
+                by_id[asset_id] = asset
+
+    if reconcile.get("include_mac_uploads", False):
+        mac_uploads = list_mac_upload_assets(
+            base,
+            api_key,
+            page_size=int(reconcile.get("fetch_page_size", 500)),
+        )
+        meta["mac_uploads"] = len(mac_uploads)
+        for asset in mac_uploads:
             asset_id = str(asset.get("id", ""))
             if asset_id:
                 by_id[asset_id] = asset
@@ -444,7 +506,11 @@ def main() -> int:
 
     reconcile = reconcile_settings(config)
     print("Scanning Mac originals/ checksum inventory…", flush=True)
-    mac_refcount, libraries_by_checksum = build_mac_refcount(config, library_ids=args.libraries)
+    mac_refcount, libraries_by_checksum = build_mac_refcount(
+        config,
+        library_ids=args.libraries,
+        reconcile=reconcile,
+    )
     print(f"Mac unique checksums: {len(mac_refcount)}", flush=True)
 
     base = immich_api_base(config)
@@ -465,7 +531,7 @@ def main() -> int:
         apply=args.apply,
     )
     grace_state = load_reconcile_grace_state(config)
-    grace_days = int(reconcile.get("grace_days", 7))
+    grace_days = int(reconcile.get("grace_days", 0))
     ready_orphans, pending_orphans, grace_state = filter_orphans_by_grace(
         orphans_for_apply,
         grace_state,
