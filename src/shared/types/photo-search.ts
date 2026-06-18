@@ -45,6 +45,8 @@ export interface PhotoSearchResult {
   total?: number;
   /** When kind=clarify and multiple people match — drives LINE Quick Reply. */
   personCandidates?: ImmichPersonSummary[];
+  /** Immich web deep-link to view all results (shown when results are truncated). */
+  viewAllUrl?: string;
 }
 
 export interface MetadataSearchParams {

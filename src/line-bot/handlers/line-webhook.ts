@@ -23,6 +23,7 @@ import {
   coordinateImageSetReply,
   type UploadSummaryItem,
 } from "./image-set-batch";
+import { assetPreviewUrl } from "../services/line-search-reply";
 import { handleTextMessage } from "./text-search";
 import {
   uploadDurationSeconds,
@@ -240,6 +241,7 @@ async function uploadLineMedia(
     summaryItem = {
       filename,
       assetUrl,
+      assetPreviewUrl: assetPreviewUrl(env.lineBotPublicUrl, asset.id),
       bytes: buffer.length,
       modeLabel,
       success: true,
@@ -270,11 +272,8 @@ async function uploadLineMedia(
     replyToken,
     imageSet,
     item: summaryItem,
-    sendReply: async (token, text) => {
-      await messagingClient.replyMessage({
-        replyToken: token,
-        messages: [{ type: "text", text }],
-      });
+    sendMessages: async (token, messages) => {
+      await messagingClient.replyMessage({ replyToken: token, messages });
     },
   });
 }

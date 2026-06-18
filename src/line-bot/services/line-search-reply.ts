@@ -101,6 +101,37 @@ export function buildPersonQuickReply(
   };
 }
 
+export function buildViewAllButtonMessage(
+  viewAllUrl: string,
+  remaining: number,
+): messagingApi.FlexMessage {
+  return {
+    type: "flex",
+    altText: `查看更多 ${remaining} 張 →`,
+    contents: {
+      type: "bubble",
+      size: "kilo",
+      body: {
+        type: "box",
+        layout: "vertical",
+        paddingAll: "10px",
+        contents: [
+          {
+            type: "button",
+            action: {
+              type: "uri",
+              label: `查看更多（共 ${remaining} 張）→`,
+              uri: viewAllUrl,
+            },
+            style: "primary",
+            height: "sm",
+          },
+        ],
+      },
+    },
+  };
+}
+
 export function buildSearchReplyMessages(
   result: PhotoSearchResult,
   publicBotBaseUrl: string,
@@ -125,13 +156,13 @@ export function buildSearchReplyMessages(
     result.assets?.length &&
     publicBotBaseUrl.trim().length > 0
   ) {
-    const more =
+    const remaining =
       result.total !== undefined && result.total > result.assets.length
-        ? `\n… 另有 ${result.total - result.assets.length} 張，點縮圖可在 Immich 查看`
-        : "";
+        ? result.total - result.assets.length
+        : 0;
 
-    return [
-      { type: "text", text: `${result.message}${more}` },
+    const messages: messagingApi.Message[] = [
+      { type: "text", text: result.message },
       buildPhotoSearchFlexCarousel({
         assets: result.assets,
         header: result.message,
@@ -139,6 +170,12 @@ export function buildSearchReplyMessages(
         immichWebUrl,
       }),
     ];
+
+    if (remaining > 0 && result.viewAllUrl) {
+      messages.push(buildViewAllButtonMessage(result.viewAllUrl, remaining));
+    }
+
+    return messages;
   }
 
   return [{ type: "text", text: result.message }];

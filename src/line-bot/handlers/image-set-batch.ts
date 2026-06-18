@@ -1,3 +1,5 @@
+import type { messagingApi } from "@line/bot-sdk";
+
 import { imageSetBatchesTotal } from "../metrics";
 
 /** LINE imageSet metadata (multi-photo upload batch). */
@@ -9,6 +11,8 @@ export type LineImageSet = {
 export type UploadSummaryItem = {
   filename: string;
   assetUrl?: string;
+  /** Bot-proxied preview URL (e.g. /media/assets/<id>/preview.jpg). Only set on success. */
+  assetPreviewUrl?: string;
   bytes: number;
   modeLabel: string;
   success: boolean;
@@ -85,19 +89,95 @@ export function buildSingleUploadText(item: UploadSummaryItem): string {
   return lines.join("\n");
 }
 
+export function buildSingleUploadFlexMessages(
+  item: UploadSummaryItem,
+): messagingApi.Message[] {
+  if (!item.success) {
+    return [{ type: "text", text: "❌ 照片上傳失敗，請稍後再試" }];
+  }
+
+  if (!item.assetPreviewUrl || !item.assetUrl) {
+    return [{ type: "text", text: buildSingleUploadText(item) }];
+  }
+
+  const bodyContents: messagingApi.FlexComponent[] = [
+    {
+      type: "text",
+      text: item.filename,
+      weight: "bold",
+      size: "sm",
+      wrap: true,
+    },
+    {
+      type: "text",
+      text: `${formatBytes(item.bytes)} · ${item.modeLabel}`,
+      size: "xs",
+      color: "#888888",
+    },
+  ];
+
+  if (item.metadataNote) {
+    bodyContents.push({
+      type: "text",
+      text: item.metadataNote,
+      size: "xs",
+      color: "#555555",
+      wrap: true,
+    });
+  }
+
+  const bubble: messagingApi.FlexBubble = {
+    type: "bubble",
+    hero: {
+      type: "image",
+      url: item.assetPreviewUrl,
+      size: "full",
+      aspectRatio: "1:1",
+      aspectMode: "cover",
+      action: { type: "uri", uri: item.assetUrl },
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      spacing: "sm",
+      contents: bodyContents,
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "button",
+          action: { type: "uri", label: "在 Immich 查看", uri: item.assetUrl },
+          style: "link",
+          height: "sm",
+        },
+      ],
+    },
+  };
+
+  return [
+    { type: "text", text: "✅ 照片已上傳到 Immich" },
+    { type: "flex", altText: `✅ ${item.filename} 已上傳`, contents: bubble },
+  ];
+}
+
 export async function coordinateImageSetReply(params: {
   userId: string;
   replyToken: string;
   imageSet?: LineImageSet;
   item: UploadSummaryItem;
-  sendReply: (replyToken: string, text: string) => Promise<void>;
+  sendMessages: (
+    replyToken: string,
+    messages: messagingApi.Message[],
+  ) => Promise<void>;
 }): Promise<void> {
   const { imageSet } = params;
 
   if (!imageSet?.id) {
-    await params.sendReply(
+    await params.sendMessages(
       params.replyToken,
-      buildSingleUploadText(params.item),
+      buildSingleUploadFlexMessages(params.item),
     );
     return;
   }
@@ -128,14 +208,14 @@ export async function coordinateImageSetReply(params: {
     }
 
     if (isBatchComplete(state)) {
-      await flushBatch(key, params.sendReply);
+      await flushBatch(key, params.sendMessages);
       return;
     }
 
     if (state.total === undefined) {
       state.flushTimer = setTimeout(() => {
         void withBatchLock(key, async () => {
-          await flushBatch(key, params.sendReply);
+          await flushBatch(key, params.sendMessages);
         });
       }, FLUSH_DELAY_MS);
     }
@@ -144,7 +224,10 @@ export async function coordinateImageSetReply(params: {
 
 async function flushBatch(
   key: string,
-  sendReply: (replyToken: string, text: string) => Promise<void>,
+  sendMessages: (
+    replyToken: string,
+    messages: messagingApi.Message[],
+  ) => Promise<void>,
 ): Promise<void> {
   const state = batches.get(key);
   if (!state || state.items.length === 0) {
@@ -152,12 +235,12 @@ async function flushBatch(
     return;
   }
 
-  const text =
+  const messages: messagingApi.Message[] =
     state.items.length === 1
-      ? buildSingleUploadText(state.items[0])
-      : buildBatchSummaryText(state.items);
+      ? buildSingleUploadFlexMessages(state.items[0])
+      : [{ type: "text", text: buildBatchSummaryText(state.items) }];
 
-  await sendReply(state.replyToken, text);
+  await sendMessages(state.replyToken, messages);
   if (state.items.length > 1) {
     imageSetBatchesTotal.inc();
   }

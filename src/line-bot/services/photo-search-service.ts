@@ -200,11 +200,21 @@ export class PhotoSearchService {
       };
     }
 
+    const viewAllUrl =
+      total > items.length
+        ? buildViewAllUrl(
+            this.options.immichWebUrl,
+            plan,
+            filters.personIds?.[0],
+          )
+        : undefined;
+
     return {
       kind: "results",
       message: formatResultsHeader(personName, criteriaLabel, total),
       assets: items,
       total,
+      viewAllUrl,
     };
   }
 
@@ -527,6 +537,22 @@ export function formatResultsHeader(
   return personName
     ? `🔍 找到 ${total} 張「${personName}」的照片（${criteriaLabel}）`
     : `🔍 找到 ${total} 張照片（${criteriaLabel}）`;
+}
+
+export function buildViewAllUrl(
+  immichWebUrl: string,
+  plan: Partial<PhotoSearchPlan>,
+  personId?: string,
+): string | undefined {
+  const base = immichWebUrl.replace(/\/$/, "");
+  if (personId) {
+    return `${base}/people/${personId}`;
+  }
+  const query = plan.sceneQueryEn?.trim() || plan.sceneQuery?.trim();
+  if (query) {
+    return `${base}/search?query=${encodeURIComponent(query)}`;
+  }
+  return undefined;
 }
 
 /** Text-only fallback when carousel is unavailable. */

@@ -159,27 +159,41 @@ def photos_db_tracked_uuids(photos_library: Path) -> set[str]:
 
 
 def scan_photos_db_inventory(library: dict, library_id: str) -> dict[str, set[str]]:
-    """Count checksum present only when Photos DB still tracks the UUID (not purged)."""
+    """Count checksum present only when Photos DB still tracks the UUID (not purged).
+
+    Scans both the primary originals/ tree and any scopes/*/originals/ subtrees
+    (e.g. scopes/momentshared/originals/) so that shared-moment assets are not
+    falsely reported as orphans by the reconcile.
+    """
     photos_lib = photos_library_path(library)
     tracked = photos_db_tracked_uuids(photos_lib)
     root = originals_root(library)
     inventory: dict[str, set[str]] = defaultdict(set)
-    if not root.is_dir():
-        return inventory
 
-    for dirpath, _, filenames in os.walk(root):
-        for name in filenames:
-            path = Path(dirpath) / name
-            if path.suffix.lower() not in MEDIA_EXT:
-                continue
-            uuid = uuid_from_originals_name(name)
-            if not uuid or uuid not in tracked:
-                continue
-            try:
-                checksum = sha1_file(path)
-            except OSError:
-                continue
-            inventory[checksum].add(library_id)
+    scan_roots: list[Path] = []
+    if root.is_dir():
+        scan_roots.append(root)
+    scopes_dir = photos_lib / "scopes"
+    if scopes_dir.is_dir():
+        for scope_subdir in scopes_dir.iterdir():
+            scope_originals = scope_subdir / "originals"
+            if scope_originals.is_dir():
+                scan_roots.append(scope_originals)
+
+    for scan_root in scan_roots:
+        for dirpath, _, filenames in os.walk(scan_root):
+            for name in filenames:
+                path = Path(dirpath) / name
+                if path.suffix.lower() not in MEDIA_EXT:
+                    continue
+                uuid = uuid_from_originals_name(name)
+                if not uuid or uuid not in tracked:
+                    continue
+                try:
+                    checksum = sha1_file(path)
+                except OSError:
+                    continue
+                inventory[checksum].add(library_id)
     return inventory
 
 
