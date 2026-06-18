@@ -2,6 +2,7 @@ import {
   assetPreviewUrl,
   buildPhotoSearchFlexCarousel,
   buildSearchReplyMessages,
+  buildViewAllButtonMessage,
 } from "./line-search-reply";
 
 describe("line-search-reply", () => {
@@ -82,5 +83,50 @@ describe("line-search-reply", () => {
     );
     expect(messages).toHaveLength(1);
     expect(messages[0].type).toBe("text");
+  });
+
+  it("appends view-all button when results are truncated and viewAllUrl set", () => {
+    const messages = buildSearchReplyMessages(
+      {
+        kind: "results",
+        message: "🔍 找到 20 張照片",
+        assets,
+        total: 20,
+        viewAllUrl: "https://immich.3q.fi/search?query=beach",
+      },
+      "https://immich-bot.3q.fi",
+      "https://immich.3q.fi",
+    );
+    expect(messages).toHaveLength(3);
+    expect(messages[2].type).toBe("flex");
+  });
+
+  it("does not append view-all button when results not truncated", () => {
+    const messages = buildSearchReplyMessages(
+      {
+        kind: "results",
+        message: "🔍 找到 1 張照片",
+        assets,
+        total: 1,
+        viewAllUrl: "https://immich.3q.fi/search?query=beach",
+      },
+      "https://immich-bot.3q.fi",
+      "https://immich.3q.fi",
+    );
+    expect(messages).toHaveLength(2);
+  });
+});
+
+describe("buildViewAllButtonMessage", () => {
+  it("builds flex button message with correct remaining count", () => {
+    const msg = buildViewAllButtonMessage(
+      "https://immich.3q.fi/people/abc",
+      15,
+    );
+    expect(msg.type).toBe("flex");
+    expect(msg.altText).toContain("15");
+    if (msg.type === "flex" && msg.contents.type === "bubble") {
+      expect(JSON.stringify(msg.contents)).toContain("15");
+    }
   });
 });
