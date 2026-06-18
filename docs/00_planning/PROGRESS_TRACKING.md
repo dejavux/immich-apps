@@ -5,8 +5,8 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-18（整體 review + UX 產品檢視 · reconcile 20 orphan ready）  
-**專案狀態**: ✅ Phase 2/3/3.6 結案 · 🟡 Phase 3.5 Phase B 收尾 · Phase 4/5 **明確 defer P2**  
+**最後更新**: 2026-06-18（iCloud 災難復原完成 · PR #24 merged · 相簿/日期全對齊）  
+**專案狀態**: ✅ Phase 2/3/3.6 結案 · 🟡 Phase 3.5 **收尾（Recently Deleted purge + reconcile）** · Phase 4/5 **明確 defer P2**  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
 
@@ -16,11 +16,11 @@
 
 | 指標 | 數值 | 說明 |
 |------|------|------|
-| 🔴 高優先級任務 | 2 | Sprint P0 E2E · P1 purge + reconcile apply |
-| 🟡 中優先級任務 | 5 | Phase 3.5 收尾 + UX 拋光規劃 |
+| 🔴 高優先級任務 | 1 | Phase 3.5 收尾：23 張手動還原 + Recently Deleted purge |
+| 🟡 中優先級任務 | 2 | reconcile dry-run 確認 + local-archive 9 new sync |
 | 🟢 低優先級任務 | 6 | Phase 4 SSD · V1.1 · tech debt |
-| ✅ 本週完成 | 35+ | Phase 3.6 歸檔 · M3.1 merge · diagnose CLI |
-| 📈 整體進度 | **94%** | Phase 0–3.6: **100%** · Phase 3.5: **~98%** |
+| ✅ 本週完成 | 50+ | iCloud 災難復原 · 相簿對帳 · 日期校正 450 筆 · PR #24 |
+| 📈 整體進度 | **97%** | Phase 0–3.6: **100%** · Phase 3.5: **~99%** |
 
 ---
 
@@ -32,7 +32,7 @@
 | **Phase 1** | 基礎設施 | ✅ 已部署 | 50% 完成 | █████░░░░░ 50% | 2025-10-06 |
 | **Phase 2** | LINE Bot | ✅ 結案 | MVP 100% | ██████████ 100% | 2026-06-12 |
 | **Phase 3** | Photo Sync | ✅ 結案 | 100% | ██████████ 100% | 2026-06-13 |
-| **Phase 3.5** | iCloud 分層 | 🟢 P1 | delete/purge 手動收尾 | █████████░ 98% | 2026-06-20 |
+| **Phase 3.5** | iCloud 分層 | 🟢 P1 | purge + reconcile 手動收尾 | ██████████ 99% | 2026-06-22 |
 | **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-05 |
 | **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-12 |
 
@@ -514,7 +514,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | LOCAL 總數 | 3000 → **4616** |
 | `make release` | ✅ **2217530**（Tekton label fix） |
 
-### 3.5.3 Phase B（2026-06-15）🟢 download gate
+### 3.5.3 Phase B（2026-06-15）✅ 主流程完成
 
 | 指標 | baseline（早） | 最新（16:21） |
 |------|----------------|---------------|
@@ -527,8 +527,44 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 - [x] bulk import + verify-staging（`staging_items: 0` · 2026-06-18）
 - [x] immich-sync dry-run icloud **0 new**（2026-06-18）
 - [ ] local-archive 續傳 **9 new**（tier import 後）
-- [ ] `tier-policy-delete-source` Phase B（2313 ready · 1942 blocked · 需 Terminal.app）
-- [ ] Recently Deleted **永久清除**（286 張 · GUI）
+- [x] ~~`tier-policy-delete-source` Phase B~~ → **6/16-6/17 手動刪除（見災難復原紀錄）**
+- [ ] Recently Deleted **永久清除**（288 張 · GUI；⚠️ 先手動還原 23 張，見 §3.5.5）
+
+### 3.5.4 iCloud 災難復原（2026-06-16–18）✅
+
+**事件**：`tier-policy-delete-source` Phase B 後手動在 Photos GUI 刪除，**4,277** 張被送入 Recently Deleted，導致 icloud-primary 個人圖庫幾近清空。
+
+| 步驟 | 結果 |
+|------|------|
+| LOCAL PHOTO LIBRARY | ✅ **9,009 張** 完整無損（~146 GB）|
+| Immich 備份 | ✅ **6,961** active assets（union 完整） |
+| 從 Immich 回復 icloud-primary | ✅ 638 張（近 1 年照片）|
+| Immich `Mac Photos (iCloud)` 相簿對帳 | ✅ stale=0 · missing=0 · mac_not_in_immich=0 |
+| icloud-primary 日期校正 | ✅ **450** 筆（suspicious 5 + import-mismatch 445）|
+
+**新增工具（PR #24 · `73b1d06`）**：
+
+- `immich_import_to_icloud.py` / `.sh` — Immich → icloud-primary 補缺
+- `immich_icloud_album_reconcile.py` / `.sh` — 相簿雙向對帳 + trash 還原 + 補上傳
+- `photos_fix_dates_from_immich.py` / `.sh` — Mac Photos 日期校正
+
+**目前 icloud-primary 狀態（2026-06-18）**：
+
+| 指標 | 數值 |
+|------|------|
+| 個人可見 | **638** |
+| Recently Deleted | **288**（含 23 張 1y 內未入 Immich）|
+| Immich iCloud 相簿 | **638**（100% 對齊）|
+
+### 3.5.5 收尾 checklist（2026-06-18）
+
+- [ ] 手動還原 Recently Deleted 中 23 張（capture < 1y 且**不在 Immich**）→ 報告：`recovery/trashed-restore-23.json`
+- [ ] 確認 23 張已在 icloud-primary 後 → Recently Deleted **全部永久清除**（Photos GUI）
+- [ ] `immich-sync.sh --library icloud-primary --dry-run` → **0 new**
+- [ ] `immich-icloud-album-reconcile.sh --dry-run` → stale=0 · missing=0
+- [ ] local-archive 補傳 **9 new**（`immich-sync.sh --library local-archive`）
+- [ ] `immich-reconcile.sh --dry-run` → 確認 orphan 數量合理
+- [ ] 更新本節狀態 → ✅ Phase 3.5 結案
 
 → 詳細步驟：[30_PHASE_B_ICLOUD_DOWNLOAD.md](./photo-sync/tier-policy/30_PHASE_B_ICLOUD_DOWNLOAD.md)
 
@@ -765,23 +801,21 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 > 詳細步驟見 [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-### 本週收尾清單（2026-06-17）
+### 本週收尾清單（2026-06-18）
 
-**進行中** 🚧:
+**完成** ✅:
 
-1. **Phase 3.5 Phase B bulk** — export ✅（75 batch）· import 多輪（含 fail 待 retry）· delete-source retry（6/16）
-2. **Reconcile M3.1** — 本機 patch 驗證 ✅ · **待 lint → PR**
-3. **P0 人工 E2E**（Web UI + LINE 場景搜尋 · 與 bulk 並行）
+1. **Phase 3.5 Phase B** — bulk export ✅ · import+verify ✅ · delete-source（6/16–17 手動） · iCloud 災難復原 ✅
+2. **iCloud 相簿對帳**（PR #24）— 移除 2,155 stale + 補 402 + 還原 9 trash + 上傳 2 → **638/638 對齊**
+3. **日期校正** — suspicious 5 + import-mismatch 445 = **450** 筆全修
+4. **PR #24 merge + release `73b1d06`** ✅
 
-**Phase 3.5 結案 checklist**（bulk verify + purge 後）:
+**待完成** 🚧:
 
-1. `tier-policy-retry-failed-import.sh` + `verify-staging` → 確認 import 完整
-2. `tier-policy-delete-source.sh` → Photos GUI 清 TierPolicy-Delete 相簿
-3. Photos **最近刪除 → 全部删除**（第一輪 1615 + Phase B 本輪 + 手動 6/16 四張）
-4. `immich-reconcile.sh` dry-run → `orphan_candidates: 0`
-5. `immich-sync.sh --dry-run` → 兩 library **0 new** ✅
-6. Reconcile M3.1 lint → PR → merge
-7. 更新本節 Phase 3.5 狀態 → ✅ 結案
+1. **手動還原 23 張**：Recently Deleted 中 1y 內未入 Immich → `recovery/trashed-restore-23.json`
+2. **Recently Deleted 永久清除**（288 張 · GUI）→ 釋放 iCloud 配額
+3. **local-archive 9 new**：`immich-sync.sh --library local-archive`
+4. **reconcile dry-run** 確認 orphan 數量（`immich-reconcile.sh --dry-run`）
 
 **明確 Defer（不計入本輪，以下列入 Backlog）**:
 
@@ -800,6 +834,9 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 **已完成** ✅（近期）:
 
+- **iCloud 災難復原** — 從 Immich 回復 638 張 · 相簿對齊 638/638 · 日期修正 450 筆（2026-06-18）
+- **PR #24 merge** `73b1d06` — 新增 immich_import_to_icloud / album_reconcile / fix_dates 工具組（2026-06-18）
+- Phase 3.5 Phase B bulk import+verify ✅（staging 0 · 2026-06-18）
 - Phase 3.6 reconcile **501** orphan trashed（484 + 17）· dry-run **0**（2026-06-17）
 - Phase 3.6 M3 fswatch + Phase B bulk 工具（PR #20 · `d803a19`）
 - Phase 3.6 delete reconcile + API upload（PR #19 · `39f8a66`）
@@ -843,12 +880,12 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 ---
 
-**專案狀態**: ✅ Phase 2/3/3.6-M3 結案 · 🟡 Phase 3.5 Phase B 收尾中 · Phase 3.6 M3.1 待 PR  
-**當前重點**: bulk import retry/verify → Recently Deleted purge → reconcile M3.1 PR  
-**下一里程碑**: Phase 3.5 結案 + reconcile M3.1 merge（目標 2026-06-22）  
+**專案狀態**: ✅ Phase 2/3/3.6 結案 · 🟡 Phase 3.5 收尾（purge + reconcile）  
+**當前重點**: 手動還原 23 張 → Recently Deleted purge → local-archive 9 new → reconcile dry-run  
+**下一里程碑**: Phase 3.5 結案（目標 2026-06-22）  
 **Defer（P2/P3）**: Phase 4 SSD · Phase 5 B2 · LINE V1.1 Grafana · Similar Images · Photo Edit  
 **Infra**: immich v2.7.5 K8s 已 merge → `infra-bootstrap` **`588ee55`**
 
-**最後更新**: 2026-06-17  
+**最後更新**: 2026-06-18  
 **維護者**: Infrastructure Team + App Dev Team  
 **更新頻率**: Phase 里程碑或全量 sync 階段變更時

@@ -1,10 +1,10 @@
 # Phase 3.5 — iCloud 分層（tier policy）
 
-**狀態**: 🟡 Phase B 收尾（2026-06-18）  
-**優先級**: P1 主軌 · P0 E2E 並行  
+**狀態**: 🟡 收尾（2026-06-18）— 手動還原 23 張 + purge + reconcile  
+**優先級**: P1 主軌  
 **SSOT**: [10_REQUIREMENTS.md](./10_REQUIREMENTS.md) · [PROGRESS_TRACKING §3.5](../../PROGRESS_TRACKING.md)
 
-## 進度摘要（2026-06-17）
+## 進度摘要（2026-06-18）
 
 | 階段 | 狀態 |
 |------|------|
@@ -17,12 +17,20 @@
 | Phase B download originals | ✅ **4280/4281** |
 | Phase B bulk export | ✅ **75 batch** |
 | Phase B bulk import + verify | ✅ staging `0`（2026-06-18） |
-| Phase B delete-source / purge | 🟡 待完成 |
-| 永久清除 Recently Deleted | ⏳ `photos_gui_ops.py` purge 後 reconcile |
+| Phase B delete-source | ✅ 6/16–17 **手動刪除 4,277 張**（觸發災難復原）|
+| iCloud 災難復原 | ✅ 638 張從 Immich 回復 · 相簿 638/638 · 日期 450 修 |
+| 手動還原 Recently Deleted 23 張 | 🟡 待完成（`recovery/trashed-restore-23.json`）|
+| 永久清除 Recently Deleted（288 張） | ⏳ 還原 23 張後執行（Photos GUI）|
+| local-archive 9 new 補傳 | ⏳ `immich-sync.sh --library local-archive` |
+| reconcile dry-run 確認 | ⏳ purge 後 |
 
 ## 問題
 
 iCloud 空間有限；舊照片應從 `icloud-primary` 移到 `local-archive`，兩邊仍 sync 至 Immich（hash dedupe）。
+
+### 災難復原（2026-06-16–18）
+
+Phase B delete-source 後手動刪除超出預期，**4,277** 張進入 Recently Deleted，導致 icloud-primary 個人圖庫幾近清空。已透過 Immich 備份還原 638 張（近 1 年）；LOCAL PHOTO LIBRARY 9,009 張安全無損；相簿與日期已全數對齊。待收尾：23 張手動還原 + 288 張 purge。
 
 ## 文件
 
