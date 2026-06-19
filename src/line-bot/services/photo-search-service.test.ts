@@ -138,6 +138,26 @@ describe("parseSearchPlanFallback", () => {
     expect(plan.intent).toBe("search_photos");
     expect(plan.anyDate).toBe(true);
   });
+
+  it("parses bare 7歲 follow-up as ageYears", () => {
+    const plan = parseSearchPlanFallback("7歲");
+    expect(plan.intent).toBe("search_photos");
+    expect(plan.ageYears).toBe(7);
+    expect(plan.personNames).toEqual([]);
+  });
+
+  it("parses bare 一歲半 follow-up as ageYears=1.5", () => {
+    const plan = parseSearchPlanFallback("一歲半");
+    expect(plan.intent).toBe("search_photos");
+    expect(plan.ageYears).toBe(1.5);
+  });
+
+  it("parses bare 18個月 follow-up as ageMonths", () => {
+    const plan = parseSearchPlanFallback("18個月");
+    expect(plan.intent).toBe("search_photos");
+    expect(plan.ageMonths).toBe(18);
+    expect(plan.personNames).toEqual([]);
+  });
 });
 
 describe("sanitizeSearchPlan", () => {

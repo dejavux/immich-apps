@@ -651,6 +651,29 @@ export function parseSearchPlanFallback(
     return { intent: "search_photos", personNames: [], anyDate: true };
   }
 
+  // Bare age reply ("7歲", "一歲半", "18個月") as follow-up to bot's age question
+  const bareHalf =
+    /^一歲半$/.test(trimmed) || /^1\s*\.?\s*5\s*歲$/.test(trimmed);
+  if (bareHalf) {
+    return { intent: "search_photos", personNames: [], ageYears: 1.5 };
+  }
+  const bareAge = trimmed.match(/^(?:大約|約)?\s*(\d+(?:\.\d+)?)\s*歲$/);
+  if (bareAge) {
+    return {
+      intent: "search_photos",
+      personNames: [],
+      ageYears: Number.parseFloat(bareAge[1]),
+    };
+  }
+  const bareMonths = trimmed.match(/^(\d+)\s*個月$/);
+  if (bareMonths) {
+    return {
+      intent: "search_photos",
+      personNames: [],
+      ageMonths: Number.parseInt(bareMonths[1], 10),
+    };
+  }
+
   const rel = detectRelativeDateInText(trimmed, now);
   const working = rel ? stripRelativeDateTokens(trimmed) : trimmed;
 
