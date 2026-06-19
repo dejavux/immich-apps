@@ -8,7 +8,9 @@ import {
   ensureAgeFromText,
   ensureSceneQueryEn,
   parseSearchPlanFallback,
+  parseLlmSearchResponse,
   sanitizeSearchPlan,
+  stripParenthesizedSuffix,
   translateSceneQueryFallback,
   tryParsePersonAge,
   tryParsePersonScenePhoto,
@@ -124,6 +126,18 @@ describe("parseSearchPlanFallback", () => {
     expect(plan.personNames).toEqual([]);
     expect(plan.country).toBe("Japan");
   });
+
+  it("parses 年齡不限 as anyDate=true", () => {
+    const plan = parseSearchPlanFallback("年齡不限");
+    expect(plan.intent).toBe("search_photos");
+    expect(plan.anyDate).toBe(true);
+  });
+
+  it("parses 不限年齡 as anyDate=true", () => {
+    const plan = parseSearchPlanFallback("不限年齡");
+    expect(plan.intent).toBe("search_photos");
+    expect(plan.anyDate).toBe(true);
+  });
 });
 
 describe("sanitizeSearchPlan", () => {
@@ -139,6 +153,56 @@ describe("sanitizeSearchPlan", () => {
     expect(plan.personNames).toEqual([]);
     expect(plan.sceneQuery).toBe("海邊");
     expect(plan.sceneQueryEn).toContain("beach");
+  });
+
+  it("strips （年齡不限） from person name", () => {
+    const plan = sanitizeSearchPlan(
+      {
+        intent: "search_photos",
+        personNames: ["小蕊（年齡不限）"],
+        country: "Japan",
+      },
+      "找小蕊（年齡不限）在日本的照片",
+    );
+    expect(plan.personNames).toEqual(["小蕊"]);
+  });
+});
+
+describe("stripParenthesizedSuffix", () => {
+  it("strips full-width parentheses qualifier", () => {
+    expect(stripParenthesizedSuffix("小蕊（年齡不限）")).toBe("小蕊");
+  });
+
+  it("strips half-width parentheses qualifier", () => {
+    expect(stripParenthesizedSuffix("小蕊(年齡不限)")).toBe("小蕊");
+  });
+
+  it("does not modify plain name", () => {
+    expect(stripParenthesizedSuffix("小蕊")).toBe("小蕊");
+  });
+});
+
+describe("parseLlmSearchResponse", () => {
+  it("reads anyDate from LLM response", () => {
+    const plan = parseLlmSearchResponse({
+      intent: "search_photos",
+      personNames: ["小蕊"],
+      country: "Japan",
+      anyDate: true,
+    });
+    expect(plan.anyDate).toBe(true);
+    expect(plan.personNames).toEqual(["小蕊"]);
+    expect(plan.country).toBe("Japan");
+  });
+
+  it("strips parenthesized suffix from person names via LLM", () => {
+    const plan = parseLlmSearchResponse({
+      intent: "search_photos",
+      personNames: ["小蕊（年齡不限）"],
+      country: "Japan",
+      anyDate: true,
+    });
+    expect(plan.personNames).toEqual(["小蕊"]);
   });
 });
 
@@ -202,6 +266,22 @@ describe("mergePlans", () => {
     expect(merged.personNames).toEqual(["小蕊"]);
     expect(merged.ageYears).toBe(1.5);
     expect(merged.birthDate).toBe("2019-03-15");
+  });
+
+  it("propagates anyDate when follow-up says 年齡不限", () => {
+    const session = {
+      personNames: ["小蕊"],
+      country: "Japan",
+      intent: "search_photos" as const,
+    };
+    const merged = mergePlans(session, {
+      intent: "search_photos",
+      personNames: [],
+      anyDate: true,
+    });
+    expect(merged.anyDate).toBe(true);
+    expect(merged.personNames).toEqual(["小蕊"]);
+    expect(merged.country).toBe("Japan");
   });
 });
 

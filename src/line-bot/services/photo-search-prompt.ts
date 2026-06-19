@@ -24,7 +24,7 @@ intent 取值：
 - unknown：無法理解
 
 欄位（缺省用 null）：
-- personNames: string[]  人物暱稱/姓名（勿把「不」或地名併入人名；「小蕊不在台灣」→ personNames=["小蕊"]；「找在日本的照片」→ personNames=[]）
+- personNames: string[]  人物暱稱/姓名（勿把「不」或地名或「年齡不限」等修飾語併入人名；「小蕊不在台灣」→ personNames=["小蕊"]；「找在日本的照片」→ personNames=[]；「小蕊（年齡不限）」→ personNames=["小蕊"]）
 - ageYears: number|null   年齡（7歲 → 7，一歲半 → 1.5）；年齡不是 sceneQuery
 - ageMonths: number|null  月齡（優先於 ageYears 若兩者皆有）
 - dateFrom: string|null    YYYY-MM-DD 起始拍攝日
@@ -35,6 +35,7 @@ intent 取值：
 - city: string|null      拍攝城市（英文，如 Tokyo / Taipei；無→null）
 - sceneQuery: string|null    非地名的場景/行為/穿著（海邊、吃飯、穿裙子、國外、不在台灣）；若只有地名則 sceneQuery=null
 - sceneQueryEn: string|null  給 Immich CLIP 的英文關鍵字（只在 sceneQuery 非 null 時填）
+- anyDate: boolean  使用者明確說「年齡不限」/「不限年齡」/「全部年齡」/「任何時間」→ true；否則 false
 
 重要：有地名時優先填 country/city，sceneQuery 僅保留非地名部分。
 
@@ -66,8 +67,14 @@ intent 取值：
 使用者「找跳舞的照片」→
 {"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":"跳舞","sceneQueryEn":"dancing dance performance"}
 
+使用者「年齡不限」或「不限年齡」（通常是回覆之前詢問年齡的問題）→
+{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":null,"sceneQueryEn":null,"anyDate":true}
+
+使用者「找小蕊（年齡不限）在日本的照片」→
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":"Japan","city":null,"sceneQuery":null,"sceneQueryEn":null,"anyDate":true}
+
 使用者「2」且前文在選人物 →
-{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":2,"country":null,"city":null,"sceneQuery":null,"sceneQueryEn":null}`;
+{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":2,"country":null,"city":null,"sceneQuery":null,"sceneQueryEn":null,"anyDate":false}`;
 }
 
 /** @deprecated use buildPhotoSearchSystemPrompt() */
@@ -116,6 +123,9 @@ export function summarizeSessionForPrompt(session: {
   if (plan.city) {
     parts.push(`城市：${plan.city}`);
   }
+  if (plan.anyDate) {
+    parts.push("年齡不限：是");
+  }
   if (plan.sceneQuery) {
     parts.push(`場景：${plan.sceneQuery}`);
   }
@@ -144,15 +154,19 @@ export interface RawLlmSearchResponse {
   city?: string | null;
   sceneQuery?: string | null;
   sceneQueryEn?: string | null;
+  anyDate?: boolean | null;
 }
 
 export function parseLlmSearchResponse(
   raw: RawLlmSearchResponse,
 ): PhotoSearchPlan {
   const intent = normalizeIntent(raw.intent);
+  const rawNames = (raw.personNames ?? [])
+    .filter(Boolean)
+    .map(stripParenthesizedSuffix);
   const plan: PhotoSearchPlan = {
     intent,
-    personNames: (raw.personNames ?? []).filter(Boolean),
+    personNames: rawNames,
     ageYears: raw.ageYears ?? undefined,
     ageMonths: raw.ageMonths ?? undefined,
     dateFrom: raw.dateFrom ?? undefined,
@@ -163,6 +177,7 @@ export function parseLlmSearchResponse(
     city: raw.city ?? undefined,
     sceneQuery: raw.sceneQuery ?? undefined,
     sceneQueryEn: raw.sceneQueryEn ?? undefined,
+    anyDate: raw.anyDate ?? undefined,
   };
   return ensureSceneQueryEn(plan);
 }
@@ -259,6 +274,14 @@ export function tryParseSceneOnlyPhoto(
   return undefined;
 }
 
+/**
+ * Strip trailing （...） qualifiers from a person name, e.g.
+ * "小蕊（年齡不限）" → "小蕊", "小蕊（不限年齡）" → "小蕊".
+ */
+export function stripParenthesizedSuffix(name: string): string {
+  return name.replace(/[（(][^）)]*[）)]\s*$/, "").trim();
+}
+
 export function sanitizeSearchPlan(
   plan: PhotoSearchPlan,
   message: string,
@@ -274,16 +297,23 @@ export function sanitizeSearchPlan(
     });
   }
 
-  const names = plan.personNames?.filter(Boolean) ?? [];
+  const names = (plan.personNames?.filter(Boolean) ?? []).map(
+    stripParenthesizedSuffix,
+  );
+  const cleanedPlan =
+    names.join(",") !== (plan.personNames ?? []).join(",")
+      ? { ...plan, personNames: names.filter(Boolean) }
+      : plan;
+
   if (
     names.length === 1 &&
     isPersonStopword(names[0]) &&
-    plan.sceneQuery?.trim()
+    cleanedPlan.sceneQuery?.trim()
   ) {
-    return ensureSceneQueryEn({ ...plan, personNames: [] });
+    return ensureSceneQueryEn({ ...cleanedPlan, personNames: [] });
   }
 
-  return plan;
+  return cleanedPlan;
 }
 
 export function tryParsePersonAge(
@@ -611,6 +641,14 @@ export function parseSearchPlanFallback(
   }
   if (/上傳|怎麼傳|如何使用|help/i.test(trimmed)) {
     return { intent: "upload_help", personNames: [] };
+  }
+  // "年齡不限" / "不限年齡" / "任何年齡" as a standalone reply → anyDate=true
+  if (
+    /^(?:年齡不限|不限年齡|任何年齡|全部年齡|無年齡限制|不限|全部)$/.test(
+      trimmed,
+    )
+  ) {
+    return { intent: "search_photos", personNames: [], anyDate: true };
   }
 
   const rel = detectRelativeDateInText(trimmed, now);
