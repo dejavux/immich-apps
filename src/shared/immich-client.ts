@@ -273,6 +273,12 @@ export class ImmichClient {
     if (params.takenBefore) {
       body.takenBefore = params.takenBefore;
     }
+    if (params.country) {
+      body.country = params.country;
+    }
+    if (params.city) {
+      body.city = params.city;
+    }
 
     const response = await axios.post<{
       assets?: {
@@ -316,6 +322,12 @@ export class ImmichClient {
     }
     if (params.takenBefore) {
       body.takenBefore = params.takenBefore;
+    }
+    if (params.country) {
+      body.country = params.country;
+    }
+    if (params.city) {
+      body.city = params.city;
     }
 
     const response = await axios.post<{

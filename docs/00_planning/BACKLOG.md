@@ -143,11 +143,11 @@ P3  有空再做 Photo Edit AI · trashed=1 即 absent 決策
 ### LINE Bot
 
 - [x] Rich Menu：找照片 · 上傳教學 · 使用說明（`setup-rich-menu.sh` · 2026-06-18）
-- [ ] 部署 LINE Bot（welcome · Quick Reply）· `make release-line-bot`
-- [ ] 首次對話 welcome 訊息（程式已實作 · 待 deploy）
-- [ ] 人物消歧 Quick Reply（程式已實作 · 待 deploy）
-- [ ] 上傳成功 Flex 單張預覽（與搜尋 carousel 一致）
-- [ ] 搜尋結果「查看更多」deep link 至 Immich
+- [x] 部署 LINE Bot（welcome · Quick Reply）· PR #25 · 2026-06-18
+- [x] 首次對話 welcome 訊息（follow event → WELCOME_MESSAGE · 已上線）
+- [x] 人物消歧 Quick Reply（buildPersonQuickReply · 已上線）
+- [x] 上傳成功 Flex 單張預覽（hero 縮圖 + 在 Immich 查看按鈕 · PR #25）
+- [x] 搜尋結果「查看更多」deep link 至 Immich（人物頁 or `/search?query=` · PR #25）
 
 ### Immich Web（驗收導向）
 

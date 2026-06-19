@@ -24,6 +24,10 @@ export interface PhotoSearchPlan {
   sceneQueryEn?: string;
   /** Display label for relative dates, e.g. 今年、去年 */
   dateRangeLabel?: string;
+  /** Immich country name extracted from user query (e.g. "Japan", "Taiwan, Province of China"). */
+  country?: string;
+  /** Immich city name extracted from user query (e.g. "Tokyo", "Taipei"). */
+  city?: string;
 }
 
 export interface ImmichPersonSummary {

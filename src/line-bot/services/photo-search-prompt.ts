@@ -24,37 +24,50 @@ intent 取值：
 - unknown：無法理解
 
 欄位（缺省用 null）：
-- personNames: string[]  人物暱稱/姓名（勿把「不」併入人名；「小蕊不在台灣」→ personNames=["小蕊"]）
+- personNames: string[]  人物暱稱/姓名（勿把「不」或地名併入人名；「小蕊不在台灣」→ personNames=["小蕊"]；「找在日本的照片」→ personNames=[]）
 - ageYears: number|null   年齡（7歲 → 7，一歲半 → 1.5）；年齡不是 sceneQuery
 - ageMonths: number|null  月齡（優先於 ageYears 若兩者皆有）
 - dateFrom: string|null    YYYY-MM-DD 起始拍攝日
 - dateTo: string|null      YYYY-MM-DD 結束拍攝日
 - birthDate: string|null   使用者提供的生日 YYYY-MM-DD
 - personChoice: number|null  使用者選擇的人物編號（1-based）
-- sceneQuery: string|null    場景/行為/穿著/地點（海邊、吃飯、穿裙子、國外、不在台灣）
-- sceneQueryEn: string|null  給 Immich CLIP 的英文關鍵字
+- country: string|null   拍攝國家（英文，如 Japan / South Korea / Norway；台灣→"Taiwan, Province of China"；無地名→null）
+- city: string|null      拍攝城市（英文，如 Tokyo / Taipei；無→null）
+- sceneQuery: string|null    非地名的場景/行為/穿著（海邊、吃飯、穿裙子、國外、不在台灣）；若只有地名則 sceneQuery=null
+- sceneQueryEn: string|null  給 Immich CLIP 的英文關鍵字（只在 sceneQuery 非 null 時填）
+
+重要：有地名時優先填 country/city，sceneQuery 僅保留非地名部分。
 
 範例：
 使用者「找小蕊7歲的照片」→
-{"intent":"search_photos","personNames":["小蕊"],"ageYears":7,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":null,"sceneQueryEn":null}
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":7,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":null,"sceneQueryEn":null}
 
 使用者「找小蕊穿裙子的照片」→
-{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"穿裙子","sceneQueryEn":"wearing dress skirt girl"}
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":"穿裙子","sceneQueryEn":"wearing dress skirt girl"}
+
+使用者「找小蕊在日本的照片」→
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":"Japan","city":null,"sceneQuery":null,"sceneQueryEn":null}
+
+使用者「找在日本的照片」（純地點，無人物）→
+{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":"Japan","city":null,"sceneQuery":null,"sceneQueryEn":null}
+
+使用者「找小蕊在日本海邊的照片」→
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":"Japan","city":null,"sceneQuery":"海邊","sceneQueryEn":"beach ocean seaside japan"}
 
 使用者「找小蕊在國外的照片」→
-{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"國外","sceneQueryEn":"abroad overseas foreign country travel"}
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":"國外","sceneQueryEn":"abroad overseas foreign country travel"}
 
 使用者「找小蕊不在台灣的照片」→
-{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"不在台灣","sceneQueryEn":"abroad overseas foreign travel not Taiwan"}
-
-使用者「小蕊在吃飯的照片」→
-{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"吃飯","sceneQueryEn":"eating meal food dining"}
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":"不在台灣","sceneQueryEn":"abroad overseas foreign travel not Taiwan"}
 
 使用者「找在海邊的照片」（純場景，無人物）→
-{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"sceneQuery":"海邊","sceneQueryEn":"beach ocean seaside"}
+{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":"海邊","sceneQueryEn":"beach ocean seaside"}
+
+使用者「找跳舞的照片」→
+{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":"跳舞","sceneQueryEn":"dancing dance performance"}
 
 使用者「2」且前文在選人物 →
-{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":2}`;
+{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":2,"country":null,"city":null,"sceneQuery":null,"sceneQueryEn":null}`;
 }
 
 /** @deprecated use buildPhotoSearchSystemPrompt() */
@@ -97,6 +110,12 @@ export function summarizeSessionForPrompt(session: {
   if (plan.dateRangeLabel) {
     parts.push(`相對日期：${plan.dateRangeLabel}`);
   }
+  if (plan.country) {
+    parts.push(`國家：${plan.country}`);
+  }
+  if (plan.city) {
+    parts.push(`城市：${plan.city}`);
+  }
   if (plan.sceneQuery) {
     parts.push(`場景：${plan.sceneQuery}`);
   }
@@ -121,6 +140,8 @@ export interface RawLlmSearchResponse {
   dateTo?: string | null;
   birthDate?: string | null;
   personChoice?: number | null;
+  country?: string | null;
+  city?: string | null;
   sceneQuery?: string | null;
   sceneQueryEn?: string | null;
 }
@@ -138,6 +159,8 @@ export function parseLlmSearchResponse(
     dateTo: raw.dateTo ?? undefined,
     birthDate: raw.birthDate ?? undefined,
     personChoice: raw.personChoice ?? undefined,
+    country: raw.country ?? undefined,
+    city: raw.city ?? undefined,
     sceneQuery: raw.sceneQuery ?? undefined,
     sceneQueryEn: raw.sceneQueryEn ?? undefined,
   };
@@ -408,6 +431,87 @@ export function ensureActivityFromText(
   };
 }
 
+/**
+ * Maps Chinese location keywords to Immich country names (from reverse geocoding).
+ * The values must match what Immich stores in exifInfo.country.
+ */
+export const COUNTRY_LOOKUP: Array<[RegExp, string]> = [
+  [/台灣|臺灣/, "Taiwan, Province of China"],
+  [/日本/, "Japan"],
+  [/韓國|南韓|首爾/, "South Korea"],
+  [/挪威/, "Norway"],
+  [/新加坡/, "Singapore"],
+  [/美國|紐約|洛杉磯|舊金山/, "United States"],
+  [/英國|倫敦/, "United Kingdom"],
+  [/法國|巴黎/, "France"],
+  [/德國/, "Germany"],
+  [/義大利|羅馬|威尼斯/, "Italy"],
+  [/澳洲|雪梨/, "Australia"],
+  [/泰國|曼谷/, "Thailand"],
+  [/香港/, "Hong Kong"],
+  [/中國|北京|上海/, "China"],
+];
+
+/**
+ * Maps Chinese city keywords to Immich city names.
+ */
+export const CITY_LOOKUP: Array<[RegExp, string]> = [
+  [/台北|臺北/, "Taipei"],
+  [/台中|臺中/, "Taichung"],
+  [/高雄/, "Kaohsiung"],
+  [/東京/, "Tokyo"],
+  [/大阪/, "Osaka"],
+  [/京都/, "Kyoto"],
+  [/首爾/, "Seoul"],
+  [/釜山/, "Busan"],
+  [/新加坡市/, "Singapore"],
+  [/香港/, "Hong Kong"],
+  [/奧斯陸/, "Oslo"],
+];
+
+/**
+ * Tries to extract a country or city from a Chinese location phrase.
+ * Returns the matched Immich country/city names, or undefined if nothing matches.
+ */
+export function extractLocationFromQuery(query: string): {
+  country?: string;
+  city?: string;
+} {
+  const result: { country?: string; city?: string } = {};
+  for (const [pattern, cityName] of CITY_LOOKUP) {
+    if (pattern.test(query)) {
+      result.city = cityName;
+      break;
+    }
+  }
+  for (const [pattern, countryName] of COUNTRY_LOOKUP) {
+    if (pattern.test(query)) {
+      result.country = countryName;
+      break;
+    }
+  }
+  return result;
+}
+
+/**
+ * Returns true if the query string represents a known (positive) country/city location.
+ * Negative phrases like "不在台灣" are excluded and should remain as CLIP scene queries.
+ */
+export function isKnownLocation(query: string): boolean {
+  const trimmed = query.trim();
+  // "不在X" / "非X" / "國外" etc. are negative/relative – do not promote to country filter
+  if (
+    /^(?:不在|非|不是|不去|沒在)/.test(trimmed) ||
+    /國外|海外/.test(trimmed)
+  ) {
+    return false;
+  }
+  return (
+    COUNTRY_LOOKUP.some(([p]) => p.test(trimmed)) ||
+    CITY_LOOKUP.some(([p]) => p.test(trimmed))
+  );
+}
+
 const SCENE_TRANSLATIONS: Array<[RegExp, string]> = [
   [/不在台灣|不是台灣|非台灣/, "abroad overseas foreign travel not Taiwan"],
   [/國外|海外|國外旅行/, "abroad overseas foreign country travel"],
@@ -428,6 +532,7 @@ const SCENE_TRANSLATIONS: Array<[RegExp, string]> = [
   [/學校|校園|教室|補習/, "school classroom campus"],
   [/讀書|看書/, "reading book study"],
   [/跑步/, "running jogging"],
+  [/跳舞|舞蹈/, "dancing dance performance"],
   [/畫畫|寫字/, "drawing writing art"],
   [/穿裙子|裙子|洋裝|連身裙/, "wearing dress skirt girl"],
   [/穿.*褲/, "wearing pants trousers"],
@@ -452,14 +557,47 @@ export function ensureSceneQueryEn(plan: PhotoSearchPlan): PhotoSearchPlan {
   const cleaned = cleanScenePhrase(plan.sceneQuery);
   const withCleanScene =
     cleaned !== plan.sceneQuery ? { ...plan, sceneQuery: cleaned } : plan;
+
+  const scene = withCleanScene.sceneQuery ?? "";
+
+  // When sceneQuery is a pure known location, promote to country/city filter
+  // instead of using it as a CLIP scene query.
+  if (isKnownLocation(scene)) {
+    const { country, city } = extractLocationFromQuery(scene);
+    return {
+      ...withCleanScene,
+      country: withCleanScene.country ?? country,
+      city: withCleanScene.city ?? city,
+      sceneQuery: undefined,
+      sceneQueryEn: undefined,
+    };
+  }
+
   if (withCleanScene.sceneQueryEn?.trim()) {
     return withCleanScene;
   }
-  const scene = withCleanScene.sceneQuery ?? "";
+
   return {
     ...withCleanScene,
     sceneQueryEn: translateSceneQueryFallback(scene),
   };
+}
+
+/**
+ * Attempt to parse a standalone activity / scene without 照片 suffix.
+ * e.g. "找跳舞的", "找跳舞的影片" → { sceneQuery: "跳舞" }
+ */
+function tryParseActivityOnly(
+  text: string,
+): { sceneQuery: string } | undefined {
+  const trimmed = text.trim();
+  const match = trimmed.match(
+    new RegExp(`^${SEARCH_PREFIX}(${ACTIVITY_WORDS})(?:的|影片|video)?$`, "i"),
+  );
+  if (match) {
+    return { sceneQuery: match[1] };
+  }
+  return undefined;
 }
 
 /** Rule-based fallback when LLM is unavailable. */
@@ -523,14 +661,13 @@ export function parseSearchPlanFallback(
     return ensureSceneQueryEn(plan);
   }
 
-  const sceneMatch = working.match(
-    /(?:找|搜|查).*?(?:在|有|是)(.+?)(?:的)?(?:照片|相片|圖)/,
-  );
-  if (sceneMatch) {
+  // Activity without 照片 suffix (e.g. "找跳舞的")
+  const activityOnly = tryParseActivityOnly(working);
+  if (activityOnly) {
     const plan: PhotoSearchPlan = {
       intent: "search_photos",
       personNames: [],
-      sceneQuery: cleanScenePhrase(sceneMatch[1]),
+      sceneQuery: activityOnly.sceneQuery,
     };
     if (rel) {
       plan.dateFrom = rel.dateFrom;
@@ -538,6 +675,25 @@ export function parseSearchPlanFallback(
       plan.dateRangeLabel = rel.label;
     }
     return ensureSceneQueryEn(plan);
+  }
+
+  const sceneMatch = working.match(
+    /(?:找|搜|查).*?(?:在|有|是)(.+?)(?:的)?(?:照片|相片|圖)/,
+  );
+  if (sceneMatch) {
+    const sceneText = cleanScenePhrase(sceneMatch[1]);
+    const { country, city } = extractLocationFromQuery(sceneText);
+    const plan: PhotoSearchPlan = {
+      intent: "search_photos",
+      personNames: [],
+      ...(country || city ? { country, city } : { sceneQuery: sceneText }),
+    };
+    if (rel) {
+      plan.dateFrom = rel.dateFrom;
+      plan.dateTo = rel.dateTo;
+      plan.dateRangeLabel = rel.label;
+    }
+    return country || city ? plan : ensureSceneQueryEn(plan);
   }
 
   const birthMatch = trimmed.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
@@ -557,9 +713,16 @@ export function parseSearchPlanFallback(
       /(?:找|搜|查)+(?:找)?(?:我)?(.{1,10}?)(?:的)?(?:照片|相片|圖)/,
     );
     const rawName = nameMatch ? nameMatch[1].replace(/的$/, "").trim() : "";
+    const cleanedName = rawName ? cleanPersonName(rawName) : "";
     const plan: PhotoSearchPlan = {
       intent: "search_photos",
-      personNames: rawName ? [cleanPersonName(rawName)] : [],
+      // Guard: do not use stopwords or location names as person names
+      personNames:
+        cleanedName &&
+        !isPersonStopword(cleanedName) &&
+        !isKnownLocation(cleanedName)
+          ? [cleanedName]
+          : [],
     };
     if (rel) {
       plan.dateFrom = rel.dateFrom;
