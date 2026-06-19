@@ -242,18 +242,26 @@ export class PhotoSearchService {
     }
 
     const personName = plan.personNames?.[0];
-    const sceneOnly =
-      this.hasSceneQuery(plan) &&
-      !personName &&
+    const hasLocation = Boolean(plan.country || plan.city);
+    const noDateConstraint =
       !plan.dateFrom &&
       plan.ageYears === undefined &&
       plan.ageMonths === undefined;
+    const locationOrSceneOnly =
+      (this.hasSceneQuery(plan) || hasLocation) &&
+      !personName &&
+      noDateConstraint;
 
-    if (sceneOnly) {
+    if (locationOrSceneOnly) {
       return this.searchBySceneOnly(userId, plan);
     }
 
-    if (!personName && !plan.dateFrom && !this.hasSceneQuery(plan)) {
+    if (
+      !personName &&
+      !plan.dateFrom &&
+      !this.hasSceneQuery(plan) &&
+      !hasLocation
+    ) {
       return {
         kind: "clarify",
         message: "請告訴我想找誰的照片，或指定日期（例如 2024-06-01）。",
@@ -308,16 +316,20 @@ export class PhotoSearchService {
     plan: Partial<PhotoSearchPlan>,
   ): Promise<PhotoSearchResult> {
     const query = this.sceneClipQuery(plan);
-    if (!query) {
+    const hasLocation = Boolean(plan.country || plan.city);
+
+    if (!query && !hasLocation) {
       return {
         kind: "clarify",
         message: "請描述想找什麼場景（例如：在海邊、生日蛋糕）。",
       };
     }
 
-    const scene = this.sceneLabel(plan);
+    const locationLabel = [plan.country, plan.city].filter(Boolean).join(" · ");
+    const scene = query ? this.sceneLabel(plan) : undefined;
     const { label: dateLabel, ...dateRange } = this.planDateFilters(plan);
-    const labelText = dateLabel ? `${dateLabel} · ${scene}` : scene;
+    const labelParts = [locationLabel, scene, dateLabel].filter(Boolean);
+    const labelText = labelParts.join(" · ") || "地點";
     return this.finishAssetSearch(
       userId,
       undefined,
@@ -369,6 +381,27 @@ export class PhotoSearchService {
     const range = resolveTakenRange(plan, person, this.options.ageWindowDays);
 
     if (!range.ok) {
+      // When location or "anyDate" is set, skip the age requirement entirely.
+      if (plan.country || plan.city || plan.anyDate) {
+        const { label: dateLabel, ...dateRange } = this.planDateFilters(plan);
+        const locationLabel = [plan.country, plan.city]
+          .filter(Boolean)
+          .join(" · ");
+        const labelParts = [
+          displayName,
+          locationLabel,
+          dateLabel,
+          this.hasSceneQuery(plan) ? this.sceneLabel(plan) : undefined,
+        ].filter(Boolean);
+        return this.finishAssetSearch(
+          userId,
+          displayName,
+          labelParts.join(" · "),
+          plan,
+          { personIds: [person.id], ...dateRange },
+        );
+      }
+
       if (hasAge || !hasScene) {
         this.options.sessionStore.save(userId, {
           plan: {
@@ -463,6 +496,9 @@ export function mergePlans(
   }
   if (!incoming.sceneQueryEn && base?.sceneQueryEn) {
     merged.sceneQueryEn = base.sceneQueryEn;
+  }
+  if (incoming.anyDate) {
+    merged.anyDate = true;
   }
   return merged;
 }

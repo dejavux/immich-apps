@@ -28,6 +28,8 @@ export interface PhotoSearchPlan {
   country?: string;
   /** Immich city name extracted from user query (e.g. "Tokyo", "Taipei"). */
   city?: string;
+  /** User explicitly said "年齡不限" / "不限年齡" — skip age/date requirement. */
+  anyDate?: boolean;
 }
 
 export interface ImmichPersonSummary {
