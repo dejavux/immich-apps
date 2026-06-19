@@ -157,12 +157,17 @@ export class PhotoSearchService {
       takenBefore?: string;
     },
   ): Promise<{ items: PhotoSearchAssetHit[]; total: number }> {
+    const country = plan.country ?? undefined;
+    const city = plan.city ?? undefined;
+
     if (this.hasSceneQuery(plan)) {
       return this.options.immichClient.searchSmart({
         query: this.sceneClipQuery(plan),
         personIds: filters.personIds,
         takenAfter: filters.takenAfter,
         takenBefore: filters.takenBefore,
+        country,
+        city,
         size: this.options.maxResults,
       });
     }
@@ -170,6 +175,8 @@ export class PhotoSearchService {
       personIds: filters.personIds,
       takenAfter: filters.takenAfter,
       takenBefore: filters.takenBefore,
+      country,
+      city,
       size: this.options.maxResults,
     });
   }
@@ -551,6 +558,10 @@ export function buildViewAllUrl(
   const query = plan.sceneQueryEn?.trim() || plan.sceneQuery?.trim();
   if (query) {
     return `${base}/search?query=${encodeURIComponent(query)}`;
+  }
+  // Country-only search: link to Immich explore/search (no country param in web URL)
+  if (plan.country || plan.city) {
+    return `${base}/explore`;
   }
   return undefined;
 }

@@ -91,6 +91,39 @@ describe("parseSearchPlanFallback", () => {
     expect(plan.sceneQuery).toBe("不在台灣");
     expect(plan.sceneQueryEn).toContain("not Taiwan");
   });
+
+  it("extracts country filter for 在日本 query", () => {
+    const plan = parseSearchPlanFallback("找在日本的照片");
+    expect(plan.intent).toBe("search_photos");
+    expect(plan.personNames).toEqual([]);
+    expect(plan.country).toBe("Japan");
+    expect(plan.sceneQuery).toBeUndefined();
+  });
+
+  it("extracts country filter for person+location query", () => {
+    const plan = parseSearchPlanFallback("找小蕊在日本的照片");
+    expect(plan.personNames).toEqual(["小蕊"]);
+    expect(plan.country).toBe("Japan");
+    expect(plan.sceneQuery).toBeUndefined();
+  });
+
+  it("extracts Taiwan country with correct Immich name", () => {
+    const plan = parseSearchPlanFallback("找在台灣的照片");
+    expect(plan.country).toBe("Taiwan, Province of China");
+  });
+
+  it("parses 找跳舞的 without 照片 suffix", () => {
+    const plan = parseSearchPlanFallback("找跳舞的");
+    expect(plan.intent).toBe("search_photos");
+    expect(plan.sceneQuery).toBe("跳舞");
+    expect(plan.sceneQueryEn).toContain("dance");
+  });
+
+  it("does not treat location name as person name", () => {
+    const plan = parseSearchPlanFallback("找在日本的照片");
+    expect(plan.personNames).toEqual([]);
+    expect(plan.country).toBe("Japan");
+  });
 });
 
 describe("sanitizeSearchPlan", () => {

@@ -57,6 +57,10 @@ export interface MetadataSearchParams {
   personIds?: string[];
   takenAfter?: string;
   takenBefore?: string;
+  /** Immich reverse-geocoded country name, e.g. "Japan", "Taiwan, Province of China". */
+  country?: string;
+  /** Immich city name, e.g. "Taipei", "Tokyo". */
+  city?: string;
   size?: number;
   page?: number;
 }
@@ -66,6 +70,10 @@ export interface SmartSearchParams {
   personIds?: string[];
   takenAfter?: string;
   takenBefore?: string;
+  /** Immich reverse-geocoded country name. */
+  country?: string;
+  /** Immich city name. */
+  city?: string;
   size?: number;
   page?: number;
 }
