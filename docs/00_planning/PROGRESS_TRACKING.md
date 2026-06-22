@@ -5,7 +5,7 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-18（iCloud 災難復原完成 · PR #24 merged · 相簿/日期全對齊）  
+**最後更新**: 2026-06-22（Agent Prompts 文件庫 · Phase 3.5 gate 評估 FAIL · purge 待完成）  
 **專案狀態**: ✅ Phase 2/3/3.6 結案 · 🟡 Phase 3.5 **收尾（Recently Deleted purge + reconcile）** · Phase 4/5 **明確 defer P2**  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
@@ -35,6 +35,21 @@
 | **Phase 3.5** | iCloud 分層 | 🟢 P1 | purge + reconcile 手動收尾 | ██████████ 99% | 2026-06-22 |
 | **Phase 4** | Storage 優化 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-05 |
 | **Phase 5** | Backup 監控 | 🟢 P2 | 📋 規劃中 | ░░░░░░░░░░ 0% | 2026-07-12 |
+
+---
+
+## 🤖 Agent Prompts（Multi-task Orchestration）
+
+**文件庫**：[agent-prompts/README.md](./agent-prompts/README.md)  
+**Gate 狀態**：[agent-prompts/GATE_STATUS.md](./agent-prompts/GATE_STATUS.md)（2026-06-22 評估）
+
+| 依賴 | 類型 | 說明 |
+|------|------|------|
+| 3.5 → 5a | **BLOCK** | tier/reconcile 收尾前不啟動 B2 / CronJob |
+| 5a → 4 | **BLOCK** | 還原演練通過後才 SSD 遷移 |
+| 1 ∥ 5a | **PARALLEL** | manifest/PR 可平行；prod deploy 錯開 |
+
+**當前 Gate**：Phase 3.5 **FAIL** — reconcile orphan 0 ✅ · Recently Deleted **103** ❌ · 23 張還原未確認 · 建議 **Wave W0**（Task A only）
 
 ---
 
@@ -886,6 +901,6 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 **Defer（P2/P3）**: Phase 4 SSD · Phase 5 B2 · LINE V1.1 Grafana · Similar Images · Photo Edit  
 **Infra**: immich v2.7.5 K8s 已 merge → `infra-bootstrap` **`588ee55`**
 
-**最後更新**: 2026-06-18  
+**最後更新**: 2026-06-22  
 **維護者**: Infrastructure Team + App Dev Team  
 **更新頻率**: Phase 里程碑或全量 sync 階段變更時

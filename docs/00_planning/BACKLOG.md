@@ -2,7 +2,7 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-06-18（UX 產品檢視 · reconcile 20 orphan · M3.1 已 merge）  
+**最後更新**: 2026-06-22（Agent Prompts · Phase 3.5 gate FAIL · purge 103 待清）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
@@ -15,7 +15,8 @@
 | **HOW_TO_PROCEED** | 本週 Sprint 該做什麼 |
 | **BACKLOG（本檔）** | 細項、tech debt、未排進 Sprint 的候選 |
 
-**已結案規格** → [60_completed/](../60_completed/) · **維運 runbook** → [20_guides/](../20_guides/)
+**已結案規格** → [60_completed/](../60_completed/) · **維運 runbook** → [20_guides/](../20_guides/)  
+**Multi-task 派工** → [agent-prompts/README.md](./agent-prompts/README.md)
 
 ---
 
