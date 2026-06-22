@@ -1,7 +1,7 @@
 # Phase 3.5 Gate 狀態（Handoff）
 
-**評估時間**：2026-06-22  
-**評估者**：Orchestrator subagent（唯讀檢查，**無** cluster/deploy 變更）
+**評估時間**：2026-06-22 20:33 CST  
+**評估者**：Orchestrator subagent（W0 復工驗證，**無** cluster/deploy/reconcile --apply）
 
 ---
 
@@ -19,13 +19,13 @@
 
 | 準則 | 狀態 | 證據 |
 |------|------|------|
-| reconcile dry-run `orphan_ready_for_apply: 0` | ✅ PASS | `reconcile-20260621-040155.json`：`orphan_candidates: 0`，`orphan_ready_for_apply: 0` |
-| tier verify `staging_items: 0` | ✅ PASS | `tier-verify-staging.json`：`staging_items: 0` |
-| icloud-primary dry-run `0 new` | ⚠️ UNKNOWN | `immich-sync.sh --dry-run` 被 lock 阻擋（PID 17779） |
-| local-archive dry-run / 9 new | ⚠️ UNKNOWN | 同上 lock；§3.5.5 仍列「9 new」待辦 |
-| album reconcile stale=0 missing=0 | ⚠️ 未重跑 | 2026-06-18 曾 PASS；本次未執行（需 API） |
-| Recently Deleted 永久清除 | ❌ FAIL | `ZTRASHEDSTATE=1`：**103** 筆（文檔 6/18 為 288；已減少但未清零） |
-| 23 張手動還原 | ❌ FAIL | `recovery/trashed-restore-23.json` 存在（23 items），無 `restored` 狀態欄位；需使用者 GUI 確認 |
+| reconcile dry-run `orphan_ready_for_apply: 0` | ✅ PASS | `reconcile-20260622-203149.json`：`orphan_candidates: 0`，`orphan_ready_for_apply: 0`（本次重跑 dry-run） |
+| tier verify `staging_items: 0` | ✅ PASS | `tier-policy-status.sh`（2026-06-22 20:28 CST）：`staging_items: 0` |
+| icloud-primary dry-run `0 new` | ⚠️ BLOCKED | `immich-sync.sh --library icloud-primary --dry-run` → `Another sync running (PID 17779)`；`/bin/ps`：`bash …/immich-sync.sh`（子行程 `python3.12`）— lock **有效**，未清除 |
+| local-archive dry-run / 9 new | ⚠️ BLOCKED | 同上 lock（PID 17779）；§3.5.5 仍列 local-archive 待上傳 |
+| album reconcile stale=0 missing=0 | ❌ FAIL | `immich-icloud-album-reconcile.sh --dry-run`（2026-06-22 20:32 UTC）：`stale_to_remove: 27`，`missing_on_mac_to_add: 123`（非 0/0） |
+| Recently Deleted 永久清除 | ❌ FAIL | sqlite `ZTRASHEDSTATE=1`：**103**（與 tier-policy-status 一致） |
+| 23 張手動還原 | ❌ FAIL | `recovery/trashed-restore-23.json`：`items` 23 筆，無 `restored` 狀態；需使用者 GUI 確認 |
 
 ---
 
@@ -96,14 +96,14 @@ sqlite3 "$HOME/Pictures/Photos Library.photoslibrary/database/Photos.sqlite" \
 
 ## 與 PROGRESS_TRACKING §3.5.5 對照
 
-| §3.5.5 待辦 | 本次評估 |
+| §3.5.5 待辦 | 本次評估（2026-06-22 復工） |
 |-------------|----------|
 | 手動還原 23 張 | ❌ 未確認完成 |
 | Recently Deleted 永久清除 | ❌ 仍 103 筆 |
-| icloud dry-run 0 new | ⚠️ 未測（lock） |
-| album reconcile dry-run | ⚠️ 未重跑 |
-| local-archive 9 new | ⚠️ 未測（lock） |
-| reconcile dry-run | ✅ orphan 0 |
+| icloud dry-run 0 new | ⚠️ sync lock（PID 17779 執行中） |
+| album reconcile dry-run | ❌ stale=27 · missing=123 |
+| local-archive 9 new | ⚠️ sync lock（未 dry-run） |
+| reconcile dry-run | ✅ orphan 0（`reconcile-20260622-203149.json`） |
 | Phase 3.5 結案 | ❌ |
 
 ---

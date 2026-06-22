@@ -49,7 +49,7 @@
 | 5a → 4 | **BLOCK** | 還原演練通過後才 SSD 遷移 |
 | 1 ∥ 5a | **PARALLEL** | manifest/PR 可平行；prod deploy 錯開 |
 
-**當前 Gate**：Phase 3.5 **FAIL** — reconcile orphan 0 ✅ · Recently Deleted **103** ❌ · 23 張還原未確認 · 建議 **Wave W0**（Task A only）
+**當前 Gate**：Phase 3.5 **FAIL** — reconcile orphan 0 ✅（`reconcile-20260622-203149`）· Recently Deleted **103** ❌ · album reconcile **stale=27 / missing=123** ❌ · sync dry-run **lock PID 17779** · 23 張還原未確認 · **Wave W0**
 
 ---
 
