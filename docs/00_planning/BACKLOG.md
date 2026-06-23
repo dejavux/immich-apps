@@ -2,7 +2,7 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-06-23（Mac NFS backlog · OP bootstrap 腳本）  
+**最後更新**: 2026-06-23（NFS 首次 rsync Complete · Grafana apply）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
@@ -25,7 +25,7 @@
 | 軌道 | 任務 | 狀態 | 備註 |
 | ------ | ------ | ------ | ------ |
 | — | **Immich Enhancement** | ✅ 結案 | Phase 0–3.6 + 3.5（purge 豁免） |
-| **Ops W1** | Phase 5a B2 + pg_dump | 🟡 **PARTIAL** | pg 排程 **1/2** ✅ · 還原演練 ✅ · B2 待 item + data Job |
+| **Ops W1** | Phase 5a NFS + pg_dump | 🟡 **~90%** | pg **1/2** · NFS Job ✅ **157.8G** · B2 已刪 |
 | **Ops** | Phase 1 probes/Redis | ✅ **已 deploy** | probes + NetworkPolicy · Redis item 待建 |
 | **P2** | album reconcile | 📋 可選 | stale 27 / missing 123 |
 | **Ops W2** | Mac library → delta NFS | 📋 **已排期** | 5a PASS 後 · Q3 2026 · 見下方 |
@@ -36,8 +36,8 @@
 
 ```text
 ✅  結案     Immich Enhancement（Phase 0–3.6 + 3.5 豁免）
-Ops W1       Phase 5a pg 1/2 排程 ✅ · B2 異地待 item（bootstrap 腳本就緒）
-Ops W2       Mac .photoslibrary originals → delta NFS（本機冷備；不取代 B2）
+Ops W1       Phase 5a NFS ✅ · pg 1/2（06-24 03:00）· B2 已廢止
+Ops W2       Mac .photoslibrary → delta NFS（5a PASS 後 · Q3）
 Ops          Phase 1 deploy ✅ · 5b 告警規則 ✅ · Grafana dashboard JSON
 Ops W4       Phase 4 SSD prep runbook ✅ · 執行待 5a PASS + 停機批准
 Observability 統一整合（Prometheus/Grafana SSOT）→ **延後**獨立專案，見 OBSERVABILITY_ROADMAP.md
@@ -48,7 +48,7 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 
 ## Phase 5a+ — Mac Photos Library → delta NFS（已排期）
 
-**優先級**: P1（5a B2 PASS 後）  
+**優先級**: P1（5a PASS 後）  
 **目標視窗**: Q3 2026  
 **Runbook**: [MAC_LIBRARY_BACKUP.md](../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)
 
@@ -58,7 +58,7 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 - [ ] 還原演練：抽樣檔案 checksum 對照
 - [ ] 文件化於 PROGRESS_TRACKING Phase 5a+
 
-**不取代**：Immich `/data/upload` → B2 異地備份（3-2-1 第 3 副本）。
+**不取代**：Immich `/data/upload` → NFS 週備份（已 deploy）。
 
 ---
 
@@ -116,10 +116,10 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 - [x] v2.7.5 升級時 **手動** pg_dump 一次（非自動化）
 - [x] pg_dump CronJob（每日）+ 本機 PVC 備份驗證（93MB gzip）
 - [x] 還原 runbook + 演練（`asset` count 13759 = prod）
-- [x] bootstrap 腳本（`infra-bootstrap/60_apps/immich/scripts/`）
-- [ ] B2 bucket + 1Password `Immich-B2-Backup` item → `bootstrap-immich-secrets.sh --trigger-data-backup`
-- [ ] 照片上傳週備份至 B2（需 secret）
-- [ ] 連續 2 次**排程** pg CronJob Success（**1/2**）
+- [x] pg_dump CronJob + NFS rsync CronJob（PR #174）
+- [x] `Immich-B2-Backup` 已刪（改 NFS）
+- [ ] 連續 2 次**排程** pg Success（**1/2**；下次 06-24 03:00）
+- [x] NFS data Job Complete（`immich-data-backup-nfs-test-1782176320` · **157.8G** · 7h34m）
 
 ### Phase 4 — Storage SSD（prompt ✅ · prep ✅ · 執行 ❌）
 
@@ -136,7 +136,8 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 - [x] PrometheusRule（backup failed · pod not ready · LINE bot 5xx）
 - [x] Dashboard 規格文件
 - [x] Dashboard JSON（UID `immich-ops`）in ConfigMap
-- [ ] cluster apply + deep link 驗證
+- [x] cluster apply + rollout（2026-06-23）
+- [ ] deep link 驗證 `https://grafana.3q.fi/d/immich-ops`
 - [ ] Telegram smoke test 告警
 
 ---
