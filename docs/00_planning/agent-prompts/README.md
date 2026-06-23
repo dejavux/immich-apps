@@ -16,7 +16,7 @@ flowchart TB
     P36[Phase 3.6 Reconcile]
   end
 
-  P35[Phase 3.5 收尾<br/>purge · reconcile · 23 張還原]
+  P35[Phase 3.5 收尾<br/>✅ 結案 purge 豁免]
   P1[Phase 1 基礎設施強化<br/>probes · Redis · NetworkPolicy]
   P5a[Phase 5a 備份基礎<br/>B2 · pg_dump CronJob]
   P5b[Phase 5b 監控<br/>Grafana · 告警]
@@ -51,8 +51,8 @@ flowchart TB
 
 | Wave | 平行 Tasks | 條件 |
 |------|------------|------|
-| **W0** | 3.5-A + 3.5-C（checklist） | 現在 |
-| **W1** | 5a-A + 5a-B + 5a-C +（可選）1-A + 1-C | 3.5 gate PASS |
+| **W0** | 3.5-A gate 評估 | ✅ 完成（2026-06-22 · purge 豁免） |
+| **W1** | 5a-A + 5a-B + 5a-C +（可選）1-A + 1-C | 3.5 結案 · 可派 Ops |
 | **W2** | 5a-D 還原演練 + 1-B deploy | 5a 首次備份成功 |
 | **W3** | 5b-A + 5b-B | 與 W2 尾端可重疊 |
 | **W4** | 4-prep-* → 4-1…4-6 序列 | 5a gate PASS + 使用者批准停機窗 |
@@ -69,7 +69,18 @@ flowchart TB
 | [phase-5a-backup.md](./phase-5a-backup.md) | Phase 5a 備份 | B2 + pg_dump CronJob + 還原 runbook |
 | [phase-5b-monitoring.md](./phase-5b-monitoring.md) | Phase 5b 監控 | Grafana dashboard + 告警 |
 | [phase-4-storage-ssd.md](./phase-4-storage-ssd.md) | Phase 4 Storage | Postgres/thumbs SSD 遷移（硬依賴 5a） |
-| [GATE_STATUS.md](./GATE_STATUS.md) | Gate 評估 handoff | Orchestrator 每次評估後更新 |
+| [GATE_STATUS.md](./GATE_STATUS.md) | Gate 評估 handoff | Phase 3.5 **PASS**；Ops 執行狀態表 |
+
+---
+
+## 執行狀態摘要（2026-06-22）
+
+| 類別 | 狀態 |
+|------|------|
+| **文件（prompt）** | ✅ 8 檔 committed（`b66f3ee` · `54363b1`） |
+| **Phase 3.5** | ✅ gate PASS（purge 豁免） |
+| **Phase 1/4/5 cluster** | ❌ **0%** — 僅規劃，待派 Wave W1+ |
+| **Phase 1 基線 50%** | ✅ 2025-10 K8s 部署（與 agent 無關） |
 
 ---
 

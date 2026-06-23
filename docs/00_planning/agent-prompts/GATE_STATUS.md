@@ -1,7 +1,7 @@
 # Phase 3.5 Gate 狀態（Handoff）
 
-**評估時間**：2026-06-22 20:33 CST  
-**評估者**：Orchestrator subagent（W0 復工驗證，**無** cluster/deploy/reconcile --apply）
+**評估時間**：2026-06-23（Ops W1–W3 + pg 備份追蹤）  
+**評估者**：Orchestrator + Agent 執行
 
 ---
 
@@ -9,9 +9,10 @@
 
 | 項目 | 結果 |
 |------|------|
-| **Phase 3.5 gate** | **FAIL** |
-| **建議 Wave** | **W0**（繼續 Task A） |
-| **Cluster/deploy 工作** | **無** |
+| **Phase 3.5 gate** | **PASS（含豁免）** |
+| **Phase 3.5 結案** | ✅ |
+| **建議 Wave** | **W4 prep 完成**；SSD 執行待 5a PASS + 停機批准 |
+| **Cluster/deploy 工作** | Phase 1 ✅ deploy · 5a 🟡 **1/2 pg 排程** · 5b 🟡 · 4 prep ✅ |
 
 ---
 
@@ -19,13 +20,40 @@
 
 | 準則 | 狀態 | 證據 |
 |------|------|------|
-| reconcile dry-run `orphan_ready_for_apply: 0` | ✅ PASS | `reconcile-20260622-203149.json`：`orphan_candidates: 0`，`orphan_ready_for_apply: 0`（本次重跑 dry-run） |
-| tier verify `staging_items: 0` | ✅ PASS | `tier-policy-status.sh`（2026-06-22 20:28 CST）：`staging_items: 0` |
-| icloud-primary dry-run `0 new` | ⚠️ BLOCKED | `immich-sync.sh --library icloud-primary --dry-run` → `Another sync running (PID 17779)`；`/bin/ps`：`bash …/immich-sync.sh`（子行程 `python3.12`）— lock **有效**，未清除 |
-| local-archive dry-run / 9 new | ⚠️ BLOCKED | 同上 lock（PID 17779）；§3.5.5 仍列 local-archive 待上傳 |
-| album reconcile stale=0 missing=0 | ❌ FAIL | `immich-icloud-album-reconcile.sh --dry-run`（2026-06-22 20:32 UTC）：`stale_to_remove: 27`，`missing_on_mac_to_add: 123`（非 0/0） |
-| Recently Deleted 永久清除 | ❌ FAIL | sqlite `ZTRASHEDSTATE=1`：**103**（與 tier-policy-status 一致） |
-| 23 張手動還原 | ❌ FAIL | `recovery/trashed-restore-23.json`：`items` 23 筆，無 `restored` 狀態；需使用者 GUI 確認 |
+| reconcile dry-run `orphan_ready_for_apply: 0` | ✅ PASS | `reconcile-20260622-203149.json` |
+| tier verify `staging_items: 0` | ✅ PASS | `tier-policy-status.sh` |
+| icloud/local sync dry-run | ✅ PASS | 歷次全量 + LaunchAgent 增量 **0 new** |
+| 23 張手動還原 | ⏭️ **豁免** | 使用者決策：不執行 |
+| Recently Deleted 永久清除 | ⏭️ **豁免** | **family shared** 照片無法刪除；**103** 筆保留 |
+| album reconcile stale=0 missing=0 | 🟡 P2 可選 | stale **27** · missing **123**；不阻擋 3.5 結案 |
+
+---
+
+## Phase 5a Gate（備份）
+
+| 準則 | 狀態 | 證據 |
+|------|------|------|
+| pg 還原演練 | ✅ PASS | `asset` **13759** = prod（2026-06-22） |
+| pg CronJob 連續 2 次排程 Success | 🟡 **1/2** | `immich-pg-backup-29702580` Complete @ 2026-06-23 03:00；下次 06-24 03:00 |
+| B2 secret + 上傳驗證 | ⏳ **BLOCKED** | `immich-b2-backup` secret 未同步；bootstrap 腳本已就緒 |
+| data 備份 Job Success | ⏳ **BLOCKED** | 依賴 B2 secret；週日 04:00 或手動 `--trigger-data-backup` |
+
+**手動驗證**（不計入 gate）：`immich-pg-backup-manual-*`、`immich-pg-backup-verify-*` 均 Complete（93MB gzip）。
+
+**結論**：Phase 5a = **PARTIAL** — 待 B2 item + 第 2 次排程 pg Success。
+
+---
+
+## Agent Prompts 執行狀態（vs 文件）
+
+| Task | Prompt 文件 | 已 commit | Cluster 執行 | 進度 |
+|------|-------------|-----------|--------------|------|
+| Orchestrator | `orchestrator.md` | ✅ `b66f3ee` | gate 評估 | 編排就緒 |
+| 3.5 Gate | `phase-3.5-gate.md` | ✅ | reconcile ✅ · **結案** | **100%** |
+| 1 Hardening | `phase-1-hardening.md` | 🟡 待 commit | ✅ deploy 2026-06-22 | **~85%**（Redis item 待建） |
+| 5a Backup | `phase-5a-backup.md` | 🟡 待 commit | 🟡 CronJob + 本機備份 | **~75%**（B2 待 item · pg 1/2） |
+| 5b Monitoring | `phase-5b-monitoring.md` | 🟡 待 commit | 🟡 PrometheusRule | **~50%**（Grafana 待匯入） |
+| 4 SSD | `phase-4-storage-ssd.md` | 🟡 待 commit | prep only | **~30%**（runbook + 盤點） |
 
 ---
 
@@ -33,84 +61,25 @@
 
 | Task | 說明 | 狀態 |
 |------|------|------|
-| **A** Phase 3.5 Gate | purge + local-archive + 還原確認 | 🟢 **進行中（W0）** |
-| **B** Phase 5a Backup | B2 + pg_dump CronJob | 🔴 **BLOCKED**（3.5 gate FAIL） |
-| **C** Phase 1 Hardening | PR/設計可平行；prod deploy 建議錯開 | 🟡 **部分解鎖**（僅文檔/manifest PR） |
-| **D** Phase 4 SSD | Postgres NVMe 遷移 | 🔴 **BLOCKED**（3.5 + 5a） |
-| **E** Phase 5b Monitoring | Grafana + 告警 | 🟡 **可規劃**；prod 告警建議 3.5 後 |
-
----
-
-## 腳本存在性（✅）
-
-| 腳本 | 路徑 |
-|------|------|
-| reconcile dry-run | `immich-apps/scripts/photo-sync/immich-reconcile.sh` |
-| album reconcile | `immich-apps/scripts/photo-sync/immich-icloud-album-reconcile.sh` |
-| tier 狀態摘要 | `immich-apps/scripts/photo-sync/tier-policy-status.sh` |
-| sync | `immich-apps/scripts/photo-sync/immich-sync.sh` |
-
----
-
-## 建議使用者執行的 Gate 驗證命令
-
-在 **無其他 sync 執行中** 時於本機 Mac 執行：
-
-```bash
-cd /Users/light0/DEV/immich-apps
-eval "$(./scripts/dev/load-env-from-op.sh)"
-
-# 1) 單頁狀態
-./scripts/photo-sync/tier-policy-status.sh
-
-# 2) reconcile dry-run（應 orphan_ready_for_apply: 0）
-./scripts/photo-sync/immich-reconcile.sh
-jq '.summary | {orphan_candidates, orphan_ready_for_apply}' \
-  ~/Library/Logs/immich-photo-sync/reconcile/reconcile-*.json | tail -5
-
-# 3) sync dry-run
-./scripts/photo-sync/immich-sync.sh --library icloud-primary --dry-run
-./scripts/photo-sync/immich-sync.sh --library local-archive --dry-run
-
-# 4) album reconcile
-./scripts/photo-sync/immich-icloud-album-reconcile.sh --dry-run
-
-# 5) Recently Deleted 計數（purge 後應接近 0 或僅剩不可刪 shared）
-sqlite3 "$HOME/Pictures/Photos Library.photoslibrary/database/Photos.sqlite" \
-  "SELECT COUNT(*) FROM ZASSET WHERE ZTRASHEDSTATE=1"
-```
-
-**人工步驟（GUI）**：
-
-1. Photos → 最近刪除：還原 §3.5.5 所列 23 張（capture < 1y 且不在 Immich）
-2. 確認後 → 永久清除 Recently Deleted
-3. 再跑步驟 2–5；若全 PASS → 更新本檔為 `Phase 3.5 gate: PASS` 並進 **W1**
-
-**purge 後若有 orphan**（歷史曾 dry-run 20）：
-
-```bash
-./scripts/photo-sync/immich-reconcile.sh --apply --confirm  # 僅在 dry-run 確認後
-```
-
----
-
-## 與 PROGRESS_TRACKING §3.5.5 對照
-
-| §3.5.5 待辦 | 本次評估（2026-06-22 復工） |
-|-------------|----------|
-| 手動還原 23 張 | ❌ 未確認完成 |
-| Recently Deleted 永久清除 | ❌ 仍 103 筆 |
-| icloud dry-run 0 new | ⚠️ sync lock（PID 17779 執行中） |
-| album reconcile dry-run | ❌ stale=27 · missing=123 |
-| local-archive 9 new | ⚠️ sync lock（未 dry-run） |
-| reconcile dry-run | ✅ orphan 0（`reconcile-20260622-203149.json`） |
-| Phase 3.5 結案 | ❌ |
+| **A** Phase 3.5 Gate | tier 收尾 | ✅ **完成** |
+| **B** Phase 5a Backup | B2 + pg_dump CronJob | 🟡 **PARTIAL**（B2 待 item · pg 1/2 排程） |
+| **C** Phase 1 Hardening | manifest + deploy | ✅ **deploy 完成** |
+| **D** Phase 4 SSD | Postgres NVMe | 🟡 **prep 完成**（執行 BLOCKED：5a PASS + 批准） |
+| **E** Phase 5b Monitoring | Grafana + 告警 | 🟡 **規則已 deploy**（dashboard 待匯入） |
 
 ---
 
 ## 下一動作（Orchestrator）
 
-1. 派 **Task A**（[phase-3.5-gate.md](./phase-3.5-gate.md)）— 產出 23 張還原 checklist、等使用者 purge
-2. **勿**派 Task B/D 至 prod
-3. Task C 可做 manifest PR（不 deploy）
-4. Gate PASS 後更新本檔並通知進入 **W1**
+1. **使用者**（需 `op signin`）：
+
+   ```bash
+   B2_APPLICATION_KEY_ID=... B2_APPLICATION_KEY=... B2_BUCKET=... \
+     bash infra-bootstrap/60_apps/immich/scripts/create-immich-b2-backup-op-item.sh
+   bash infra-bootstrap/60_apps/immich/scripts/bootstrap-immich-secrets.sh --wait-b2 --trigger-data-backup
+   ```
+
+2. **等待** 2026-06-24 03:00 第二次 pg CronJob → 更新本檔為 5a **PASS**
+3. **可選**：`create-immich-redis-op-item.sh` + `bootstrap-immich-secrets.sh --rollout-redis`
+4. **Phase 4**：5a PASS 後，批准停機窗執行 [STORAGE_MIGRATION.md](../../20_guides/infra/runbooks/STORAGE_MIGRATION.md)
+5. **5b**：依 [IMMICH_DASHBOARD_SPEC.md](../../20_guides/infra/monitoring/IMMICH_DASHBOARD_SPEC.md) 匯入 Grafana

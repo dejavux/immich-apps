@@ -2,7 +2,7 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-06-22（Agent Prompts · Phase 3.5 gate FAIL · purge 103 待清）  
+**最後更新**: 2026-06-23（pg 1/2 排程 · B2 bootstrap 腳本就緒）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
@@ -20,26 +20,26 @@
 
 ---
 
-## 當前 Sprint（2026-06-18）
+## 當前 Sprint（2026-06-22 · 增強專案已結案）
 
-| 軌道 | 任務 | 狀態 | 負責 |
+| 軌道 | 任務 | 狀態 | 備註 |
 |------|------|------|------|
-| **P0** | Web UI + LINE 人工 E2E | 🟡 進行中 | 人工 |
-| **P1** | Phase 3.5 Phase B 收尾 | 🟡 purge · delete-source · dry-run 0 new | 本機 + Photos |
-| **P1** | Reconcile apply（purge 後） | 🟡 dry-run 20 orphan ready | 本機 |
-| **P2** | Similar images 內建驗證 | 📋 待跑 runbook | 本機 |
-| **P2** | UX 拋光（下週） | 📋 Rich Menu · tier-status | Dev |
+| — | **Immich Enhancement** | ✅ 結案 | Phase 0–3.6 + 3.5（purge 豁免） |
+| **Ops W1** | Phase 5a B2 + pg_dump | 🟡 **PARTIAL** | pg 排程 **1/2** ✅ · 還原演練 ✅ · B2 待 item + data Job |
+| **Ops** | Phase 1 probes/Redis | ✅ **已 deploy** | probes + NetworkPolicy · Redis item 待建 |
+| **P2** | album reconcile | 📋 可選 | stale 27 / missing 123 |
+| **P2** | Similar images | 📋 | runbook 待跑 |
 
 ---
 
 ## 優先順序總覽
 
 ```text
-P0  並行     人工 E2E 驗收（Web 時間軸 + LINE 搜尋）
-P1  本週     Phase B 收尾 · Recently Deleted purge · reconcile apply（20 orphan）
-P2  下週     LINE UX（Rich Menu · Quick Reply）· tier-policy-status · Similar images eval
-P2  Q3       Phase 5 B2 備份 · Phase 4 SSD · LINE V1.1 Grafana
-P3  有空再做 Photo Edit AI · trashed=1 即 absent 決策
+✅  結案     Immich Enhancement（Phase 0–3.6 + 3.5 豁免）
+Ops W1       Phase 5a pg 1/2 排程 ✅ · B2 異地待 item（bootstrap 腳本就緒）
+Ops          Phase 1 deploy ✅ · 5b 告警規則 ✅ · Grafana dashboard 規格
+Ops W4       Phase 4 SSD prep runbook ✅ · 執行待 5a PASS + 停機批准
+P2  可選     album reconcile · Similar images · LINE V1.1 vision
 ```
 
 ---
@@ -54,39 +54,9 @@ P3  有空再做 Photo Edit AI · trashed=1 即 absent 決策
 - [x] M3.1 PR：`photos_db_libraries` · `include_mac_uploads` · `grace_days: 0`（PR #21）
 - [x] Phase 3.6 歸檔（PR #22）
 - [x] `immich-reconcile-diagnose.sh`（asset id → mac_ref 狀態）
-- [ ] purge Recently Deleted 後 reconcile apply（dry-run **20** orphan，2026-06-18）
+- [x] reconcile dry-run orphan **0**（2026-06-22；purge 後若再出現 orphan 再 apply）
 
 **維運**：tier 搬移不刪 Immich；purge 前 reconcile skip；見 [20_OPERATIONS.md](./photo-sync/delete-reconcile/20_OPERATIONS.md)
-
----
-
-## Phase 3.5 — tier policy（P1 · Phase B）
-
-**規格**: [photo-sync/tier-policy/](./photo-sync/tier-policy/)
-
-### 已完成
-
-- [x] M1 PoC + spot-check（577 local → **100%** Immich SHA1 dup）
-- [x] M2 跨 library 研究 → [20_CROSS_LIBRARY_MOVE_RESEARCH.md](./photo-sync/tier-policy/20_CROSS_LIBRARY_MOVE_RESEARCH.md)
-- [x] M3 bulk export/import **1615/1615** verify（2026-06-14）
-- [x] 人工刪 source → Recently Deleted
-- [x] runbook [TIER_POLICY.md](../20_guides/photo-sync/runbooks/TIER_POLICY.md)
-- [x] `tier-policy-monitor-ismissing.sh` · `tier-policy-download-missing.sh`（Phase B）
-
-### 進行中（Phase B）
-
-- [x] `tier-policy-download-missing.sh` 全量 eligible（4280/4281 · 2026-06-15）
-- [x] bulk export **75 batch**（2026-06-15）
-- [x] bulk import + verify-staging（`staging_items: 0` · 2026-06-18）
-- [x] immich-sync dry-run icloud `0 new`
-- [ ] local-archive sync **9 new**
-- [ ] `tier-policy-delete-source-phaseb.sh` + GUI ⌘Delete（Terminal.app）
-- [ ] Recently Deleted purge（286）
-
-### 待辦
-
-- [ ] rollback 實測文件
-- [ ] LaunchAgent / cron 排程（tier 全量完成後）
 
 ---
 
@@ -103,24 +73,66 @@ P3  有空再做 Photo Edit AI · trashed=1 即 absent 決策
 
 ---
 
-## Phase 5 — Backup（P2 · **Defer Q3**）
+## Immich Ops（Phase 1 / 4 / 5 — 獨立 backlog）
 
-> 📋 Phase 3.5 結案後再開始
+> **釐清**：2026-06-22 [agent-prompts/](./agent-prompts/) 派工文件已 commit；**2026-06-22** manifest deploy 至 cluster（probes、NetworkPolicy、CronJob、PrometheusRule）。5a gate 仍 PARTIAL（B2 + pg 2/2 排程）。
 
-- [ ] pg_dump CronJob（K8s · namespace `immich`）
-- [ ] B2 bucket + 1Password 憑證
-- [ ] 還原 runbook（年度演練）
+### Phase 1 — 基礎設施強化（prompt ✅ · 執行 ✅ deploy）
+
+→ [agent-prompts/phase-1-hardening.md](./agent-prompts/phase-1-hardening.md)
+
+- [x] 基線：Immich K8s · GPU ML · 1Password · MetalLB · Caddy
+- [x] probes（server/postgres/redis/ml）— 2026-06-22 deploy
+- [x] NetworkPolicy（`immich` namespace）
+- [x] `immich-configmap.yaml` 文檔化（legacy nginx，未掛載）
+- [ ] Redis/Valkey 密碼（`Immich-Redis` 1Password item 待建）
+
+### Phase 5 — Backup（prompt ✅ · 執行 🟡 PARTIAL）
+
+→ [agent-prompts/phase-5a-backup.md](./agent-prompts/phase-5a-backup.md) · [BACKUP_RESTORE.md](../20_guides/infra/runbooks/BACKUP_RESTORE.md)
+
+- [x] v2.7.5 升級時 **手動** pg_dump 一次（非自動化）
+- [x] pg_dump CronJob（每日）+ 本機 PVC 備份驗證（93MB gzip）
+- [x] 還原 runbook + 演練（`asset` count 13759 = prod）
+- [x] bootstrap 腳本（`infra-bootstrap/60_apps/immich/scripts/`）
+- [ ] B2 bucket + 1Password `Immich-B2-Backup` item → `bootstrap-immich-secrets.sh --trigger-data-backup`
+- [ ] 照片上傳週備份至 B2（需 secret）
+- [ ] 連續 2 次**排程** pg CronJob Success（**1/2**）
+
+### Phase 4 — Storage SSD（prompt ✅ · prep ✅ · 執行 ❌）
+
+→ [agent-prompts/phase-4-storage-ssd.md](./agent-prompts/phase-4-storage-ssd.md) · [STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md)
+
+- [x] 4-prep-A：lama NVMe/HDD 盤點（2026-06-22 ssh）
+- [x] 4-prep-B：`STORAGE_MIGRATION.md` runbook
+- [ ] Postgres → NVMe（依賴 5a gate PASS + 停機批准）
+
+### Phase 5b — Monitoring（prompt ✅ · 執行 🟡 PARTIAL）
+
+→ [agent-prompts/phase-5b-monitoring.md](./agent-prompts/phase-5b-monitoring.md) · [IMMICH_DASHBOARD_SPEC.md](../20_guides/infra/monitoring/IMMICH_DASHBOARD_SPEC.md)
+
+- [x] PrometheusRule（backup failed · pod not ready · LINE bot 5xx）
+- [x] Dashboard 規格文件
+- [x] Dashboard JSON（UID `immich-ops`）in ConfigMap
+- [ ] cluster apply + deep link 驗證
+- [ ] Telegram smoke test 告警
 
 ---
 
-## Phase 4 — Storage 優化（P2 · **Defer Q3**）
+## Phase 3.5 — tier policy（✅ 結案）
 
-> 📋 需停機計畫；Immich 資料已在 HDD，非緊急
+**規格**: [photo-sync/tier-policy/](./photo-sync/tier-policy/)
 
-- [ ] PostgreSQL → SSD 遷移計畫 + downtime
-- [ ] `/data/upload` 遷移策略
+### 已完成
 
----
+- [x] M1–M3 bulk · Phase B download/import · 災難復原 · 相簿 638/638
+- [x] reconcile orphan **0** · staging **0**
+- [x] purge/還原 → **豁免**（family shared，2026-06-22）
+
+### 可選 P2
+
+- [ ] album reconcile stale/missing → 0/0
+- [ ] rollback 實測文件 · tier LaunchAgent/cron
 
 ## LINE Bot V1.1（P2/P3 · **Defer**）
 
@@ -176,10 +188,10 @@ P3  有空再做 Photo Edit AI · trashed=1 即 absent 決策
 
 | 項目 | 完成日 |
 |------|--------|
+| 專案結案 · purge 豁免 · Ops 狀態釐清 | 2026-06-22 |
+| LINE 搜尋地點/anyDate/追問（PR #26–#28） | 2026-06-19 |
+| iCloud 災難復原 + 相簿 638/638 + 日期 450 筆（PR #24） | 2026-06-18 |
 | Phase 3.6 歸檔 + reconcile runbook 整理 | 2026-06-17 |
 | Reconcile M3.1 + diagnose CLI（PR #21） | 2026-06-17 |
-| UX 產品檢視文件 | 2026-06-18 |
-| tier-policy bulk 腳本 PR #18 | 2026-06-14 |
 | infra-bootstrap Immich v2.7.5 K8s `588ee55` | 2026-06-13 |
 | Phase 3 Photo Sync 全量 + 增量 | 2026-06-13 |
-| docs 目錄重整 PR #14 | 2026-06-13 |
