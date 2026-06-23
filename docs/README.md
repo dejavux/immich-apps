@@ -9,7 +9,7 @@
 ## 快速入口
 
 | 用途 | 文件 |
-|------|------|
+| ------ | ------ |
 | **任務 SSOT** | [00_planning/PROGRESS_TRACKING.md](./00_planning/PROGRESS_TRACKING.md) |
 | **本週 Sprint** | [00_planning/HOW_TO_PROCEED.md](./00_planning/HOW_TO_PROCEED.md) |
 | **待辦優先序** | [00_planning/BACKLOG.md](./00_planning/BACKLOG.md) |
@@ -36,7 +36,7 @@ docs/
 ## 文件分類
 
 | 類型 | 位置 | 範例 |
-|------|------|------|
+| ------ | ------ | ------ |
 | 進行中需求 | `00_planning/` | line-bot V1.1 |
 | 維運指南 | `20_guides/` | K8S_DEPLOYMENT、STORAGE_AUDIT |
 | 已結案規格 | `60_completed/` | Phase 2/3 `10_REQUIREMENTS.md` |

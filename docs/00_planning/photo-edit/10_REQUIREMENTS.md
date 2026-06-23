@@ -10,7 +10,7 @@
 ## 問題陳述
 
 | 現況 | 痛點 |
-|------|------|
+| ------ | ------ |
 | Immich 內建 `/assets/{id}/edits` | 僅 crop / rotate / mirror（非破壞性） |
 | ML pipeline（Smart Search、人臉、OCR） | 偏搜尋／標籤，**不能改圖** |
 | Workflow / Plugin（WASM） | 早期；偏自動化分類，非完整 editor SDK |
@@ -32,7 +32,7 @@
 ## Immich 能力邊界（v2.7.5）
 
 | 層級 | API / 能力 | 本專案用途 |
-|------|------------|------------|
+| ------ | ------------ | ------------ |
 | 下載原圖 | `GET /assets/{id}/original` | edit pipeline 輸入 |
 | 幾何編輯 | `PUT /assets/{id}/edits` | crop / rotate / mirror only |
 | 上傳新圖 | `POST /assets`（multipart） | AI 結果回寫（**首選**） |
@@ -59,7 +59,7 @@ Web / LINE / CLI
 **首版工具（擇一或並行 PoC）**：
 
 | 工具 | 用途 | GPU |
-|------|------|-----|
+| ------ | ------ | ----- |
 | rembg | 去背 | worker3 |
 | Real-ESRGAN | 超解析 | worker3 |
 | CodeFormer | 人臉修復 | worker3 |
@@ -138,7 +138,7 @@ photo_edit:
 ## 驗收（Phase A MVP）
 
 | 項目 | 標準 |
-|------|------|
+| ------ | ------ |
 | 單張去背 E2E | API 觸發 → 60s 內 Immich 可見新 asset |
 | 追溯 | 新 asset 含 `source:{原 asset id}` tag |
 | 原圖 | 原 asset checksum 不變 |
@@ -149,7 +149,7 @@ photo_edit:
 ## 風險
 
 | 風險 | 緩解 |
-|------|------|
+| ------ | ------ |
 | GPU 與 ML pod 搶資源 | 排程 / 低優先 Job · toleration 分離 |
 | 大圖 OOM | 下采樣預覽 + 原尺寸 async queue |
 | 重複 upload | hash dedupe（同 photo-sync）；tag 區分「編輯版」 |

@@ -7,7 +7,7 @@
 ## 釐清：目前 Phase 5a 備了什麼？
 
 | CronJob | 範圍 | 是否「原始檔」 |
-|---------|------|----------------|
+| --------- | ------ | ---------------- |
 | `immich-pg-backup` | PostgreSQL dump | ❌ 僅 metadata／索引 |
 | `immich-data-backup` | Immich PVC **`/data/upload`** | ✅ **Immich 內的原圖**（photo-sync + LINE 上傳後的檔案） |
 
@@ -26,7 +26,7 @@ Photo-sync 已把兩庫內容 **上傳至 Immich**（5023 + 3512），因此 B2 
 **可以**，且對「我要原始檔」是合理 **第二層本機冷備**。
 
 | 方案 | 優點 | 缺點 |
-|------|------|------|
+| ------ | ------ | ------ |
 | **Mac → delta NFS**（rsync `originals/` 或整庫） | 大檔走內網、速度快、可還原 Photos 結構 | 與 lama **同機房**；delta 故障 = 副本失效 |
 | **Immich → B2**（現有 CronJob） | 異地 3-2-1、與服務一致 | 僅 Immich 已 ingest 的檔案 |
 | **僅 pg_dump** | 小、快 | **不含**照片位元組 |
@@ -64,7 +64,7 @@ icloud-primary 同理；**先 dry-run**（`--dry-run -i`）。
 ## 與 Immich Enhancement 的關係
 
 | 資料 | SSOT |
-|------|------|
+| ------ | ------ |
 | 日常瀏覽／搜尋 | Immich |
 | Mac Photos 編輯／相簿 | Photos.app |
 | 異地災備 | B2 |

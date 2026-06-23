@@ -9,7 +9,7 @@
 ## 先釐清：你要哪一種「重複」？
 
 | 需求 | 適用工具 | 本 runbook |
-|------|----------|------------|
+| ------ | ---------- | ------------ |
 | 檔案 byte 完全相同 | CLI checksum / L2 duplicateId | ❌ 已用 audit-local-duplicates 驗過 |
 | 看起來同一張（重編碼、縮圖、連拍） | **L3 Duplicate Detection** + Stacks | ✅ 本 runbook |
 | 語意相似（「海邊 sunset」） | Smart Search | ❌ 非 duplicate |
@@ -60,7 +60,7 @@ Web UI：**Utilities → Duplicates**（或側欄 Duplicate 工具，依 v2.7 UI
 人工建立對照表（Google Sheet 或 JSON），每組含 **2+ asset id**：
 
 | 類型 | 範例 | 預期 |
-|------|------|------|
+| ------ | ------ | ------ |
 | **連拍** | 同一秒 3 張 | L3 應同 group |
 | **重編碼** | audit 中 hash-miss 已知對 | L3 應同 group |
 | **跨 library** | icloud + local 各一份（若存在） | L3 或 smart-search |
@@ -94,9 +94,8 @@ echo "$DUP" | jq --arg a "$ID_A" --arg b "$ID_B" \
 填表：
 
 | 組別 | 類型 | Immich 同 group? | 備註 |
-|------|------|------------------|------|
+| ------ | ------ | ------------------ | ------ |
 | GT-01 | 連拍 | ✅/❌ | |
-| … | | | |
 
 **Recall** = 應同 group 且 Immich 有抓到 / 應同 group 總數  
 **Precision（抽樣）** = 隨機 10 個 Immich group 人工看是否真 duplicate / 10
@@ -125,7 +124,7 @@ curl -fsS -H "x-api-key: $IMMICH_API_KEY" \
 ## Step 5 — 決策矩陣
 
 | Recall | Precision | 決策 |
-|--------|-----------|------|
+| -------- | ----------- | ------ |
 | ≥ 80% | ≥ 90% | ✅ **用 Immich 內建**；必要時調 `maxDistance` |
 | 50–80% | 可接受 | 🟡 內建 + 人工 spot-check；watch v2.8 |
 | < 50% | — | 🔴 建 **similar-images-audit.py**（見規格 Phase A） |

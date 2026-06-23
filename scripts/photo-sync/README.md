@@ -56,14 +56,14 @@ tail -f ~/Library/Logs/immich-photo-sync/sync.log
 ## 多 Library
 
 | ID | 路徑 | Album | 狀態 |
-|----|------|-------|------|
+| ---- | ------ | ------- | ------ |
 | `local-archive` | `LOCAL PHOTO LIBRARY.photoslibrary/originals` | Mac Photos (Local Archive) | ✅ 5023/5023 |
 | `icloud-primary` | `Photos Library.photoslibrary/originals` | Mac Photos (iCloud) | ✅ 3512/3512 |
 
 ## 憑證
 
 | 方式 | 用途 |
-|------|------|
+| ------ | ------ |
 | `photo-sync.env` | LaunchAgent / 減少 1Password 彈窗 |
 | `load-env-from-op.sh` | 手動 dev |
 | `ensure-immich-creds.sh` | 腳本內部；略過 `.env` placeholder |

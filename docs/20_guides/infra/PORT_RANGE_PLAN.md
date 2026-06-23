@@ -8,7 +8,7 @@
 ## 🎯 推薦方案（調整後）
 
 | Repo | Port Range | 保留數量 | 用途 | 備註 |
-|------|-----------|---------|------|------|
+| ------ | ----------- | --------- | ------ | ------ |
 | **fuqi-asset-manager** | 30400-30419 | 20 | crypto-data, price, wallet, bff, notify, bridge, prometheus, grafana, 1password | 已使用 9 個 |
 | **infra-apps** | 30420-30439 | 20 | qwen, docker-registry, 其他基礎設施服務 | 已使用 2 個 |
 | **immich-apps** | **30450-30479** | **30** | **LINE Bot, Photo Sync API, Immich server, ML, 未來服務** ⭐ | 預留更多空間 |

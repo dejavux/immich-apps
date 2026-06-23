@@ -10,7 +10,7 @@
 ### 集群 GPU 配置
 
 | Node | Total GPU | Model | Used | Available | 備註 |
-|------|-----------|-------|------|-----------|------|
+| ------ | ----------- | ------- | ------ | ----------- | ------ |
 | **lama** | 4 | NVIDIA | 1 | 3 | qwen-coder (1 GPU) |
 | **worker3** | 4 | NVIDIA | 1 | 3 | immich-machine-learning (1 GPU) |
 | alpha | 0 | - | - | - | 無 GPU |
@@ -211,7 +211,7 @@ kubectl exec -n local-llm deployment/qwen-coder -- nvidia-smi
 ### 可能的新服務
 
 | 服務 | GPU 需求 | 建議節點 | 原因 |
-|------|----------|----------|------|
+| ------ | ---------- | ---------- | ------ |
 | **Immich 額外 ML** | 1 GPU | lama | 利用空餘 GPU |
 | **Stable Diffusion** | 1-2 GPU | lama 或 worker3 | 兩節點都可 |
 | **Whisper (語音)** | 1 GPU | lama | 與 qwen 相關 |

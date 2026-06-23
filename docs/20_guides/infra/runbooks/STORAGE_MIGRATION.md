@@ -19,7 +19,7 @@ ssh lama 'df -h /mnt/immich; lsblk'
 ```
 
 | 裝置 | 大小 | 掛載 | 用途 |
-|------|------|------|------|
+| ------ | ------ | ------ | ------ |
 | `sda2` | 1T | `/mnt/immich` | **現況** Immich PVC hostPath（HDD） |
 | `nvme0n1p3` → LVM | ~928G | `/` | 系統根目錄（NVMe，**有空間**） |
 | `sda1` | ~931G | PhotoPrism storage | 無關 |

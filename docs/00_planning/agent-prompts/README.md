@@ -36,7 +36,7 @@ flowchart TB
 ## 依賴關係表
 
 | 關係 | Phase A → B | 類型 | 說明 |
-|------|-------------|------|------|
+| ------ | ------------- | ------ | ------ |
 | **BLOCK** | 3.5 → 5 | 硬 | bulk/tier 未收尾時，備份會含不一致狀態 |
 | **BLOCK** | 5a → 4 | 硬 | SSD 遷移前需有 **已驗證** pg_dump + 還原 runbook |
 | **PARALLEL** | 1 ∥ 5a | 軟 | Phase 1 改 manifest 不影響備份設計；**deploy 錯開** |
@@ -50,7 +50,7 @@ flowchart TB
 ## Wave 執行表
 
 | Wave | 平行 Tasks | 條件 |
-|------|------------|------|
+| ------ | ------------ | ------ |
 | **W0** | 3.5-A gate 評估 | ✅ 完成（2026-06-22 · purge 豁免） |
 | **W1** | 5a-A + 5a-B + 5a-C +（可選）1-A + 1-C | 3.5 結案 · 可派 Ops |
 | **W2** | 5a-D 還原演練 + 1-B deploy | 5a 首次備份成功 |
@@ -62,7 +62,7 @@ flowchart TB
 ## Prompt 索引
 
 | 檔案 | 角色 | 何時派工 |
-|------|------|----------|
+| ------ | ------ | ---------- |
 | [orchestrator.md](./orchestrator.md) | 主 session 編排 agent | 拆 Task A/B/C/D、派 subagent |
 | [phase-3.5-gate.md](./phase-3.5-gate.md) | Phase 3.5 Gate | purge / reconcile / local-archive 收尾 |
 | [phase-1-hardening.md](./phase-1-hardening.md) | Phase 1 基礎設施 | probes、Redis 密碼、NetworkPolicy |
@@ -76,7 +76,7 @@ flowchart TB
 ## 執行狀態摘要（2026-06-22）
 
 | 類別 | 狀態 |
-|------|------|
+| ------ | ------ |
 | **文件（prompt）** | ✅ 8 檔 committed（`b66f3ee` · `54363b1`） |
 | **Phase 3.5** | ✅ gate PASS（purge 豁免） |
 | **Phase 1/4/5 cluster** | ❌ **0%** — 僅規劃，待派 Wave W1+ |
@@ -87,7 +87,7 @@ flowchart TB
 ## Repos 與路徑
 
 | Repo | 路徑 | 職責 |
-|------|------|------|
+| ------ | ------ | ------ |
 | **immich-apps** | `/Users/light0/DEV/immich-apps` | docs、photo-sync scripts、LINE bot Helm |
 | **infra-bootstrap** | `infra-bootstrap/60_apps/immich/` | Immich K8s manifests、deploy 腳本 |
 

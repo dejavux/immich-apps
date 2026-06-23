@@ -23,7 +23,7 @@
 ## Multi-task 可平行子任務
 
 | ID | 任務 | Repo | 可平行 |
-|----|------|------|--------|
+| ---- | ------ | ------ | -------- |
 | 1-A | liveness/readiness probes（server/postgres/redis/ml） | infra-bootstrap | ✅ |
 | 1-B | Redis/Valkey 密碼 + Secret 同步 | infra-bootstrap + 1Password | 須在 1-A 後 deploy |
 | 1-C | NetworkPolicy（`immich` namespace） | infra-bootstrap | ✅ |

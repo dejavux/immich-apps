@@ -8,7 +8,7 @@
 ## 全量同步
 
 | Library | 檔數 | dry-run |
-|---------|------|---------|
+| --------- | ------ | --------- |
 | icloud-primary | 3512 | 0 new / 2789 dup |
 | local-archive | 5023 | 0 new / 5023 dup |
 

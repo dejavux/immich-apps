@@ -11,7 +11,7 @@
 ## 文件索引
 
 | 文件 | 說明 |
-|------|------|
+| ------ | ------ |
 | [10_REQUIREMENTS.md](./10_REQUIREMENTS.md) | **MVP 完整規格（凍結）** |
 | [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) | 實作總結 |
 | [K8S_DEPLOYMENT.md](../../20_guides/infra/K8S_DEPLOYMENT.md) | 部署 runbook |

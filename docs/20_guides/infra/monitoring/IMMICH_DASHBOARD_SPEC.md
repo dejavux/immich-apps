@@ -8,7 +8,7 @@
 ## Dashboard 概要
 
 | 項目 | 值 |
-|------|-----|
+| ------ | ----- |
 | 建議 UID | `immich-ops` |
 | 建議標題 | Immich Ops |
 | Folder | Applications |
@@ -21,7 +21,7 @@
 ### Row 1 — Server SLO
 
 | Panel | 類型 | PromQL / 說明 |
-|-------|------|----------------|
+| ------- | ------ | ---------------- |
 | Server Up | Stat | `up{job="immich-server-metrics"}` 或 `kube_pod_status_ready{namespace="immich",pod=~"immich-server.*"}` |
 | API Ping | Stat | `probe_success`（若已設外部探測） |
 | Assets (info) | Text | 手動或 Immich API；metric 若可用：`immich_assets_total` |
@@ -31,7 +31,7 @@
 Immich server 已 annotate `prometheus.io/scrape: "true"` port `8081` path `/metrics`。
 
 | Panel | 類型 | 範例 PromQL |
-|-------|------|-------------|
+| ------- | ------ | ------------- |
 | HTTP request rate | Graph | `rate(http_requests_total{namespace="immich"}[5m])` |
 | HTTP 5xx rate | Graph | `rate(http_requests_total{namespace="immich",status=~"5.."}[5m])` |
 | Request duration p95 | Graph | `histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{namespace="immich"}[5m]))` |
@@ -42,7 +42,7 @@ Immich server 已 annotate `prometheus.io/scrape: "true"` port `8081` path `/met
 ### Row 3 — Backup
 
 | Panel | 類型 | PromQL |
-|-------|------|--------|
+| ------- | ------ | -------- |
 | PG backup last success | Stat | `time() - kube_job_status_completion_time{namespace="immich",job_name=~"immich-pg-backup.*"}` |
 | Data backup last success | Stat | 同上 `immich-data-backup` |
 | Backup job failed | Alert list | 見 `prometheus-rules.yaml` `ImmichBackupJobFailed` |
@@ -50,7 +50,7 @@ Immich server 已 annotate `prometheus.io/scrape: "true"` port `8081` path `/met
 ### Row 4 — LINE Bot（選用）
 
 | Panel | 類型 | 說明 |
-|-------|------|------|
+| ------- | ------ | ------ |
 | Upload success rate | Graph | `line_bot_upload_success_total / line_bot_upload_total`（helm `/metrics`） |
 | Search latency p95 | Graph | histogram from line-bot metrics |
 | 5xx rate | Graph | `rate(http_requests_total{app="immich-line-bot",status=~"5.."}[5m])` |

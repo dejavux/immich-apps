@@ -15,7 +15,7 @@
 ## Phase 3.5 收尾實測（2026-06-18）
 
 | 項目 | 結果 |
-|------|------|
+| ------ | ------ |
 | staging verify | `staging_items: 0` ✅ |
 | icloud dry-run | `0 new` ✅ |
 | local-archive dry-run | `9 new`（tier import 後續傳；可 `./scripts/photo-sync/immich-sync.sh`） |
@@ -230,7 +230,7 @@ IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-bulk-import-staging.sh
 ## 疑難排解
 
 | 問題 | 處理 |
-|------|------|
+| ------ | ------ |
 | `tier_policy.enabled is false` | config 設 `enabled: true` 或 `--force` |
 | import hang 在 0% | 改 `--import-mode manual`；Photos 前台 File → Import |
 | import 顯示成功但 verify 失敗 | 常見：Photos 被 killall / 寫錯 library；用 import-staging 重試 |

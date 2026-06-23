@@ -9,7 +9,7 @@
 ## 執行摘要
 
 | 維度 | 現況 | 評分 | 說明 |
-|------|------|------|------|
+| ------ | ------ | ------ | ------ |
 | **後端 / 資料正確性** | 強 | ★★★★☆ | Photo sync、reconcile、tier policy 腳本鏈完整；Immich v2.7.5 穩定 |
 | **LINE 上傳** | 可用 | ★★★☆☆ | E2E 通過；但「照片 vs 原檔」認知負擔高 |
 | **LINE 搜尋** | 進步中 | ★★★★☆ | Qwen + CLIP + Flex carousel 已上線；追問/disambiguation 仍偏文字 |
@@ -39,7 +39,7 @@ graph LR
 ```
 
 | 表面 | 主要任務 | 設計掌控度 |
-|------|----------|------------|
+| ------ | ---------- | ------------ |
 | LINE Bot | 快速分享、自然語言找照片 | **高**（自有程式） |
 | Immich Web | 瀏覽、人臉命名、時間軸 | **低**（upstream；僅 config / 相簿策略） |
 | Mac Photos + CLI | 分層搬移、purge、reconcile | **中**（GUI 自動化脆弱） |
@@ -51,7 +51,7 @@ graph LR
 ### 上傳流程
 
 | 步驟 | 現況 | 痛點 | 建議 |
-|------|------|------|------|
+| ------ | ------ | ------ | ------ |
 | 選擇管道 | 「照片」壓縮 vs「檔案」原檔 | 使用者不知差異；iPhone 無法從照片 App 選檔 | **P1** Rich Menu：「分享照片」「分享原檔」+ 一則圖文教學 |
 | 等待回覆 | imageSet 批次 summary | 多張時仍可能覺得慢 | **P2** 處理中 typing indicator / 「上傳中 3/8」 |
 | 成功回覆 | 連結 + metadata note | 連結在 LINE 內開瀏覽器體驗一般 | **P2** Flex bubble 單張預覽（與搜尋 carousel 一致） |
@@ -62,7 +62,7 @@ graph LR
 ### 搜尋流程
 
 | 步驟 | 現況 | 痛點 | 建議 |
-|------|------|------|------|
+| ------ | ------ | ------ | ------ |
 | 意圖解析 | Qwen JSON plan + fallback | 偶發誤解口語 | 維持；加 **P2** 意圖確認：「要找小蕊 1.5 歲的照片嗎？」 |
 | 人物消歧 | 文字列表 1.2.3 | 無頭像、難辨識 | **P1** Quick Reply 按鈕或 Flex 人名卡片 |
 | 結果呈現 | 文字 + Flex carousel 10 張 | 超過 10 張只有文字提示 | **P2** 「查看更多」deep link 到 Immich 預填搜尋 |
@@ -82,7 +82,7 @@ graph LR
 > 不 fork Immich UI；透過 **相簿策略、命名、驗收 checklist** 優化。
 
 | 區域 | 現況 | 建議 |
-|------|------|------|
+| ------ | ------ | ------ |
 | 相簿結構 | `LINE Inbox`、Mac Photos 相簿 | **P1** 固定相簿命名規範文件 + Web 驗收：兩相簿時間軸 |
 | 人物命名 | Smart Search / 人臉依賴命名 | **P0** 人工 E2E：確認「小蕊」等 alias 與 LINE 一致 |
 | 時間軸 | v2.7.5 EXIF 修復後 | **P0** 抽查 tier 搬移前後日期是否正確 |
@@ -110,7 +110,7 @@ graph LR
 ### 建議（按優先序）
 
 | 優先 | 項目 | 說明 |
-|------|------|------|
+| ------ | ------ | ------ |
 | **P1** | `tier-policy-status.sh` 單頁摘要 | 輸出：ismissing、staging、verify、Recently Deleted 數、上次 reconcile orphan 數 |
 | **P1** | purge GUI 強化 | `photos_gui_ops.py` 多路徑（View 選單 / Erase Deleted Items）— 進行中 |
 | **P2** | 互動式 wizard | `make tier-next` 建議下一步（唯讀建議，不取代 runbook） |
@@ -134,7 +134,7 @@ status → 缺什麼一目了然
 ## 未來功能與 UX（Photo Edit · V1.1）
 
 | 功能 | UX 要點 | 階段 |
-|------|---------|------|
+| ------ | --------- | ------ |
 | Qwen 繁中描述 | LINE 回覆多一段「AI 描述」；Web 看 description | V1.1 P3 |
 | Photo Edit BFF | **Before/After** 並排；明確「不覆蓋原圖」 | Phase C |
 | LINE「幫這張去背」 | 回傳新 asset Flex + 原圖連結 | Photo Edit A |

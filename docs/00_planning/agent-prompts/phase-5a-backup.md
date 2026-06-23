@@ -25,7 +25,7 @@
 ## Multi-task 可平行子任務
 
 | ID | 任務 | 可平行 | 備註 |
-|----|------|--------|------|
+| ---- | ------ | -------- | ------ |
 | 5a-A | B2 bucket + 1Password item 設計 | ✅ | 需使用者確認後建立 |
 | 5a-B | pg_dump CronJob manifest | ✅ | 參考 v2.7.5 手動 dump 流程 |
 | 5a-C | 照片上傳目錄備份 CronJob（restic/rclone） | ✅ | 可與 B 平行 |

@@ -11,7 +11,7 @@ Immich 有多層「重複」概念（checksum、Duplicate Detection job、Stacks
 ## 文件
 
 | 文件 | 用途 |
-|------|------|
+| ------ | ------ |
 | [10_REQUIREMENTS.md](./10_REQUIREMENTS.md) | 需求、Immich 能力邊界、自建工具方案 |
 | [SIMILAR_IMAGES_EVAL.md](../../../20_guides/photo-sync/runbooks/SIMILAR_IMAGES_EVAL.md) | **如何驗證**內建功能是否夠用（runbook） |
 

@@ -11,7 +11,7 @@
 ## 📍 當前狀態
 
 | 項目 | 狀態 |
-|------|------|
+| ------ | ------ |
 | **Immich Enhancement** | ✅ **結案**（Phase 0/2/3/3.5/3.6） |
 | Phase 3.5 | ✅ PASS（purge/還原 **豁免** — family shared） |
 | Immich server | **v2.7.5** @ `https://immich.3q.fi` |

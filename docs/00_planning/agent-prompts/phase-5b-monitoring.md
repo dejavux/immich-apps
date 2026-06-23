@@ -22,7 +22,7 @@ Grafana dashboard + Prometheus 告警，覆蓋 Immich server 與 LINE bot SLO。
 ## Multi-task 可平行子任務
 
 | ID | 任務 | 可平行 |
-|----|------|--------|
+| ---- | ------ | -------- |
 | 5b-A | Immich server dashboard（assets、ML queue、disk） | ✅ |
 | 5b-B | LINE bot dashboard（上傳成功率、搜尋延遲） | ✅ |
 | 5b-C | Alertmanager 規則（backup failed、pod not ready） | 須 A/B 有 metric 名稱 |

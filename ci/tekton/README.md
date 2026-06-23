@@ -5,7 +5,7 @@
 ## Status
 
 | Component | Status |
-|-----------|--------|
+| ----------- | -------- |
 | `ci/tekton/release/` | ✅ Pipeline + Tasks |
 | `ci/tekton/pr/` | ✅ L0（typecheck + eslint + helm lint） |
 | `ci/tekton/triggers/` | ✅ GitHub PR → `immich-l0` |

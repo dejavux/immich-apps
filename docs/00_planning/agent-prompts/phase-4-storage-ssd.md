@@ -14,7 +14,7 @@
 ## 依賴（全部為硬依賴）
 
 | 依賴 | 說明 |
-|------|------|
+| ------ | ------ |
 | Phase 3.5 gate | PASS |
 | Phase 5a gate | PASS（還原演練成功） |
 | Phase 1 probes | 建議完成（遷移後驗收 rollout） |
@@ -25,7 +25,7 @@
 ## Multi-task（遷移當日序列執行，不可平行）
 
 | 步驟 | 任務 | 停機 |
-|------|------|------|
+| ------ | ------ | ------ |
 | 4-1 | 維護公告 + 最終 pg_dump | 否 |
 | 4-2 | scale down server/ml | 是 |
 | 4-3 | stop postgres · rsync postgres-data → NVMe | 是 |
@@ -36,7 +36,7 @@
 **遷移前可平行（準備階段）**：
 
 | ID | 任務 |
-|----|------|
+| ---- | ------ |
 | 4-prep-A | lama 上確認 NVMe 掛載點與剩餘空間（`df`, `lsblk`） |
 | 4-prep-B | 撰寫 `STORAGE_MIGRATION.md` runbook |
 | 4-prep-C | staging 演練（可選：temp pod 掛載測試） |

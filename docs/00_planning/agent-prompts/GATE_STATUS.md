@@ -8,7 +8,7 @@
 ## 總結
 
 | 項目 | 結果 |
-|------|------|
+| ------ | ------ |
 | **Phase 3.5 gate** | **PASS（含豁免）** |
 | **Phase 3.5 結案** | ✅ |
 | **建議 Wave** | **W4 prep 完成**；SSD 執行待 5a PASS + 停機批准 |
@@ -19,7 +19,7 @@
 ## Gate Criteria 逐項
 
 | 準則 | 狀態 | 證據 |
-|------|------|------|
+| ------ | ------ | ------ |
 | reconcile dry-run `orphan_ready_for_apply: 0` | ✅ PASS | `reconcile-20260622-203149.json` |
 | tier verify `staging_items: 0` | ✅ PASS | `tier-policy-status.sh` |
 | icloud/local sync dry-run | ✅ PASS | 歷次全量 + LaunchAgent 增量 **0 new** |
@@ -32,7 +32,7 @@
 ## Phase 5a Gate（備份）
 
 | 準則 | 狀態 | 證據 |
-|------|------|------|
+| ------ | ------ | ------ |
 | pg 還原演練 | ✅ PASS | `asset` **13759** = prod（2026-06-22） |
 | pg CronJob 連續 2 次排程 Success | 🟡 **1/2** | `immich-pg-backup-29702580` Complete @ 2026-06-23 03:00；下次 06-24 03:00 |
 | B2 secret + 上傳驗證 | ⏳ **BLOCKED** | `immich-b2-backup` secret 未同步；bootstrap 腳本已就緒 |
@@ -47,7 +47,7 @@
 ## Agent Prompts 執行狀態（vs 文件）
 
 | Task | Prompt 文件 | 已 commit | Cluster 執行 | 進度 |
-|------|-------------|-----------|--------------|------|
+| ------ | ------------- | ----------- | -------------- | ------ |
 | Orchestrator | `orchestrator.md` | ✅ `b66f3ee` | gate 評估 | 編排就緒 |
 | 3.5 Gate | `phase-3.5-gate.md` | ✅ | reconcile ✅ · **結案** | **100%** |
 | 1 Hardening | `phase-1-hardening.md` | 🟡 待 commit | ✅ deploy 2026-06-22 | **~85%**（Redis item 待建） |
@@ -60,7 +60,7 @@
 ## Task 解鎖狀態
 
 | Task | 說明 | 狀態 |
-|------|------|------|
+| ------ | ------ | ------ |
 | **A** Phase 3.5 Gate | tier 收尾 | ✅ **完成** |
 | **B** Phase 5a Backup | B2 + pg_dump CronJob | 🟡 **PARTIAL**（B2 待 item · pg 1/2 排程） |
 | **C** Phase 1 Hardening | manifest + deploy | ✅ **deploy 完成** |

@@ -148,7 +148,7 @@ make logs              # 查看 k8s logs
 ### Port Range
 
 | Service | Port | 用途 |
-|---------|------|------|
+| --------- | ------ | ------ |
 | LINE Bot | 30450 | Webhook server |
 | (預留) | 30431-30439 | 未來服務 |
 
@@ -159,7 +159,7 @@ make logs              # 查看 k8s logs
 → **[docs/README.md](./docs/README.md)** — 完整導覽
 
 | 用途 | 連結 |
-|------|------|
+| ------ | ------ |
 | 任務 SSOT | [PROGRESS_TRACKING.md](./docs/00_planning/PROGRESS_TRACKING.md) |
 | 執行指南 | [HOW_TO_PROCEED.md](./docs/00_planning/HOW_TO_PROCEED.md) |
 | UX / 產品檢視 | [UX_PRODUCT_REVIEW.md](./docs/00_planning/UX_PRODUCT_REVIEW.md) |

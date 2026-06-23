@@ -8,7 +8,7 @@
 ## 版本
 
 | 元件 | 升級前 | 升級後 |
-|------|--------|--------|
+| ------ | -------- | -------- |
 | immich-server | v2.0.1 | **v2.7.5** |
 | immich-machine-learning | :release | **v2.7.5** |
 | immich-apps OpenAPI | 2.0.1 | **2.7.5** |

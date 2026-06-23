@@ -20,7 +20,7 @@
 ## Multi-task 可平行子任務
 
 | ID | 任務 | 可平行 | 備註 |
-|----|------|--------|------|
+| ---- | ------ | -------- | ------ |
 | 3.5-A | `immich-reconcile.sh` dry-run 驗證 | ✅ | 與 B 可同時 |
 | 3.5-B | local-archive `immich-sync.sh --library local-archive` | ⚠️ | 與 reconcile apply 錯開 |
 | 3.5-C | Recently Deleted 23 張手動還原（GUI） | ✅ | 人工；agent 只產 checklist |

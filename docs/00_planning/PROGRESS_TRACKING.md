@@ -16,7 +16,7 @@
 ## 📊 總體狀態
 
 | 指標 | 數值 | 說明 |
-|------|------|------|
+| ------ | ------ | ------ |
 | 🔴 高優先級任務 | 0 | — |
 | 🟡 中優先級任務 | 2 | album reconcile 對齊（可選）· Phase 5a 備份（Wave W1） |
 | 🟢 低優先級任務 | 6 | Phase 1 強化 · Phase 4 SSD · Grafana · Similar images |
@@ -28,7 +28,7 @@
 ## 🎯 Phase 概覽
 
 | Phase | 名稱 | 優先級 | 狀態 | 進度 | 預估完成 |
-|-------|------|--------|------|------|----------|
+| ------- | ------ | -------- | ------ | ------ | ---------- |
 | **Phase 0** | Repo 整合 | ✅ 完成 | 100% | ██████████ 100% | 2026-05-27 |
 | **Phase 1** | 基礎設施 | 🟡 P2 | 強化已 deploy | ████████░░ ~85% | 見 §Phase 1 |
 | **Phase 2** | LINE Bot | ✅ 結案 | MVP 100% | ██████████ 100% | 2026-06-12 |
@@ -45,7 +45,7 @@
 **Gate 狀態**：[agent-prompts/GATE_STATUS.md](./agent-prompts/GATE_STATUS.md)（2026-06-22 評估）
 
 | 依賴 | 類型 | 說明 |
-|------|------|------|
+| ------ | ------ | ------ |
 | 3.5 → 5a | **BLOCK** | tier/reconcile 收尾前不啟動 B2 / CronJob |
 | 5a → 4 | **BLOCK** | 還原演練通過後才 SSD 遷移 |
 | 1 ∥ 5a | **PARALLEL** | manifest/PR 可平行；prod deploy 錯開 |
@@ -57,7 +57,7 @@
 > **釐清**：2026-06-22 Ops 執行 — manifest + cluster deploy（2026-06-22 23:59 CST）。
 
 | Prompt 檔 | 文件 | Cluster / 腳本執行 | 進度 |
-|-----------|------|-------------------|------|
+| ----------- | ------ | ------------------- | ------ |
 | [orchestrator.md](./agent-prompts/orchestrator.md) | ✅ | W1–W3 執行 | 編排就緒 |
 | [phase-3.5-gate.md](./agent-prompts/phase-3.5-gate.md) | ✅ | reconcile dry-run ✅；purge **豁免** | **結案** |
 | [phase-1-hardening.md](./agent-prompts/phase-1-hardening.md) | ✅ | ✅ probes · NetworkPolicy · deploy | **~85%** |
@@ -189,7 +189,7 @@ npm run dev
 **狀態**: ✅ 已驗證（實測 + Immich API）
 
 | 管道 | 解析度範例 | 相機 EXIF | 適用途 |
-|------|------------|-----------|--------|
+| ------ | ------------ | ----------- | -------- |
 | LINE「照片」/ 相機 | 960×1706、~280KB | ❌ 無 make/model/GPS | 快速分享 |
 | LINE「檔案」（經「檔案」App） | 較大、保留檔名 | ⚠️ 視來源 | 少數原檔 |
 | iPhone 直接選「檔案」 | — | — | ❌ 無法從「照片」App 選 |
@@ -341,7 +341,7 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 ### 架構決策
 
 | 層 | SSOT | 說明 |
-|----|------|------|
+| ---- | ------ | ------ |
 | Mac | `.photoslibrary` | iCloud + Local 兩個 library |
 | Immich | union + hash dedupe | 兩 library 都 sync，Immich 去重 |
 | 分層 | **Phase 3.5** | iCloud 超量→Local · [tier-policy 規格](./photo-sync/tier-policy/10_REQUIREMENTS.md) 🟢 Kickoff |
@@ -420,14 +420,14 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 **進度摘要**：
 
 | Library | 狀態 | 最終 CLI |
-|---------|------|----------|
+| --------- | ------ | ---------- |
 | local-archive | ✅ | `0 new / 5023 dup` |
 | icloud-primary | ✅ | `0 new / 3512 dup`（dry-run 2026-06-12 09:21） |
 
 **icloud 上傳歷程**：
 
 | 跑次 | 結果 |
-|------|------|
+| ------ | ------ |
 | 首跑（04:11） | +3396 assets，**115 failed**（502 album update） |
 | 續傳（09:10） | +114 assets，**0 failed** |
 | dry-run 驗收 | **0 new / 3512 dup** ✅ |
@@ -502,10 +502,10 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 **實測結果**：
 
 | 步驟 | 結果 |
-|------|------|
+| ------ | ------ |
 | fswatch 觸發 | `watch.log` 09:26:30 detected → 09:27:00 sync |
 | icloud-primary | `0 new / 3512 dup` ✅ |
-| local-archive | 意外 `1894 new / 3129 dup`（見上方 Local 重複驗證）|
+| local-archive | 意外 `1894 new / 3129 dup`（見上方 Local 重複驗證） |
 
 **任務**:
 
@@ -544,7 +544,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 ### 3.5.2 第一輪 bulk 執行（2026-06-14）✅
 
 | 指標 | 數值 |
-|------|------|
+| ------ | ------ |
 | cutoff | `--cutoff-days 365` → **2025-06-14** |
 | export | **1615** 張（33 batch · local-path only） |
 | import verify | **1615 / 1615** ✅ |
@@ -555,7 +555,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 ### 3.5.3 Phase B（2026-06-15）✅ 主流程完成
 
 | 指標 | baseline（早） | 最新（16:21） |
-|------|----------------|---------------|
+| ------ | ---------------- | --------------- |
 | eligible_ismissing | **4119** | **1** |
 | export_ready_now | 1 | **4280** |
 | local_path | ~160 | **4818** |
@@ -573,12 +573,12 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 **事件**：`tier-policy-delete-source` Phase B 後手動在 Photos GUI 刪除，**4,277** 張被送入 Recently Deleted，導致 icloud-primary 個人圖庫幾近清空。
 
 | 步驟 | 結果 |
-|------|------|
-| LOCAL PHOTO LIBRARY | ✅ **9,009 張** 完整無損（~146 GB）|
+| ------ | ------ |
+| LOCAL PHOTO LIBRARY | ✅ **9,009 張** 完整無損（~146 GB） |
 | Immich 備份 | ✅ **6,961** active assets（union 完整） |
-| 從 Immich 回復 icloud-primary | ✅ 638 張（近 1 年照片）|
+| 從 Immich 回復 icloud-primary | ✅ 638 張（近 1 年照片） |
 | Immich `Mac Photos (iCloud)` 相簿對帳 | ✅ stale=0 · missing=0 · mac_not_in_immich=0 |
-| icloud-primary 日期校正 | ✅ **450** 筆（suspicious 5 + import-mismatch 445）|
+| icloud-primary 日期校正 | ✅ **450** 筆（suspicious 5 + import-mismatch 445） |
 
 **新增工具（PR #24 · `73b1d06`）**：
 
@@ -589,15 +589,15 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 **目前 icloud-primary 狀態（2026-06-18）**：
 
 | 指標 | 數值 |
-|------|------|
+| ------ | ------ |
 | 個人可見 | **638** |
-| Recently Deleted | **103**（**保留**；含 family shared 無法刪除 · 2026-06-22 使用者決策）|
-| Immich iCloud 相簿 | **638**（100% 對齊）|
+| Recently Deleted | **103**（**保留**；含 family shared 無法刪除 · 2026-06-22 使用者決策） |
+| Immich iCloud 相簿 | **638**（100% 對齊） |
 
 ### 3.5.5 收尾 checklist（2026-06-22 · 結案）
 
 | 項目 | 狀態 | 備註 |
-|------|------|------|
+| ------ | ------ | ------ |
 | 手動還原 23 張 | ⏭️ **豁免** | 使用者決策：不執行 |
 | Recently Deleted 永久清除 | ⏭️ **豁免** | 含 **family shared** 照片無法刪除；**103** 筆保留 |
 | icloud-primary dry-run 0 new | ✅ | 歷次驗證通過（LaunchAgent 增量） |
@@ -645,7 +645,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 ### 3.6.2 實測 ✅
 
 | 日期 | 項目 | 結果 |
-|------|------|------|
+| ------ | ------ | ------ |
 | 2026-06-15 | 首次 apply（album scope） | **484** trashed → dry-run **0** |
 | 2026-06-17 | apply（M3.1 scope） | **+17** trashed |
 | 2026-06-18 | dry-run（post-purge 前） | `orphan_candidates: 20` · `orphan_ready_for_apply: 20` |
@@ -666,7 +666,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 **規格**: [photo-edit/10_REQUIREMENTS.md](./photo-edit/10_REQUIREMENTS.md)
 
 | 階段 | 內容 | 狀態 |
-|------|------|------|
+| ------ | ------ | ------ |
 | A | Sidecar `photo-edit-bff` + rembg / Real-ESRGAN PoC | 📋 |
 | B | ComfyUI workflow + Immich Workflow hook | 📋 |
 | C | Web before/after + 批次 queue | 📋 |
@@ -682,7 +682,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 **Runbook**: [SIMILAR_IMAGES_EVAL.md](../20_guides/photo-sync/runbooks/SIMILAR_IMAGES_EVAL.md)
 
 | 步驟 | 狀態 |
-|------|------|
+| ------ | ------ |
 | 啟用 Duplicate Detection + job 完成 | 📋 |
 | Ground truth 20 組 + recall/precision | 📋 |
 | 決策：內建 vs `similar-images-audit.py` | 📋 |
@@ -753,7 +753,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 ### Phase 2 - LINE Bot
 
 | 指標 | 目標 | 當前 | 狀態 |
-|------|------|------|------|
+| ------ | ------ | ------ | ------ |
 | 上傳成功率 | > 95% | - | ⏳ 待測試 |
 | P95 延遲 | < 5s | - | ⏳ 待測試 |
 | AI 標註覆蓋率 | 100% | - | ⏳ 待測試 |
@@ -762,7 +762,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 ### Phase 3 - Photo Sync
 
 | 指標 | 目標 | 當前 | 狀態 |
-|------|------|------|------|
+| ------ | ------ | ------ | ------ |
 | local-archive 覆蓋 | 5023/5023 | 5023/5023 | ✅ |
 | icloud-primary 覆蓋 | 3512/3512 | 3512/3512 | ✅ |
 | hash dup（跨 library） | 預期低 | **1**（dry-run 3512 dup） | ✅ |
@@ -818,7 +818,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 ### 開放問題
 
 | ID | 問題 | 狀態 |
-|----|------|------|
+| ---- | ------ | ------ |
 | #4 | icloud-primary 全量 | ✅ 2026-06-12（0 new dry-run） |
 | #5 | Immich server v2.0.1 → v2.7.5 升級 | ✅ 2026-06-12 |
 | #9 | LaunchAgent 增量實測 | ✅ 2026-06-12 |
@@ -828,7 +828,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 ### 已解決問題
 
 | ID | 問題 | 解決方案 | 解決日期 |
-|----|------|----------|----------|
+| ---- | ------ | ---------- | ---------- |
 | #1 | lama GPU 是否都給 qwen 了？ | 否，lama 有 4 個 GPU，qwen 只用 1 個 | 2026-05-27 |
 | #2 | immich-ml 是否可在不同 node？ | 是，當前在 worker3（與 qwen 隔離） | 2026-05-27 |
 | #3 | 優先級不明確 | LINE Bot (P0) > Photo Sync (P1) | 2026-05-27 |
@@ -886,7 +886,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 **明確 Defer（獨立維運 backlog，不阻擋核心結案）**:
 
 | 項目 | 優先 | 預計 |
-|------|------|------|
+| ------ | ------ | ------ |
 | Phase 4 PostgreSQL → SSD | P2 | Q3 |
 | Phase 5 B2 備份 | P2 | Q3 |
 | LINE Bot Grafana / 7 天 SLO | P2 | Q3 |
@@ -914,7 +914,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 ### 能否「整個專案」結案？
 
 | 層級 | 範圍 | 狀態 | 說明 |
-|------|------|------|------|
+| ------ | ------ | ------ | ------ |
 | **L1 核心產品** | Phase 0/2/3/3.6 | ✅ **已結案** | LINE · sync · reconcile 工具鏈上線 |
 | **L2 tier 分層** | Phase 3.5 | ✅ **已結案** | bulk/import/reconcile 完成；purge **豁免**（family shared） |
 | **L3 維運增強** | Phase 1/4/5 | 📋 **獨立 backlog** | **僅 agent prompt 文件**；cluster **0%**；不阻擋增強專案結案 |

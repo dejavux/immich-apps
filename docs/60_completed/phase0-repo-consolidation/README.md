@@ -12,7 +12,7 @@
 ## 文件索引
 
 | 文件 | 說明 |
-|------|------|
+| ------ | ------ |
 | [MIGRATION_SUMMARY.md](./MIGRATION_SUMMARY.md) | 遷移過程紀錄 |
 | [COMPLETION_SUMMARY.md](./COMPLETION_SUMMARY.md) | Phase 0 完成總結 |
 | [REPO_CONSOLIDATION_PLAN.md](./REPO_CONSOLIDATION_PLAN.md) | 整合方案 |

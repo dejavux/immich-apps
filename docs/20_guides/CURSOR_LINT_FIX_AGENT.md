@@ -8,7 +8,7 @@ Upstream 通用文件：[`docs/CONSUMER_ONBOARDING.md`](https://github.com/dejav
 ## 指令對照
 
 | 指令 | 用途 | 依賴 |
-|------|------|------|
+| ------ | ------ | ------ |
 | `make lint` | 變更檔 lint + Cursor agent 自動修復 | cursor-lint-fix-agent、`.env` |
 | `make lint-mechanical` | 僅腳本 lint（無 SDK；CI / 離線） | npm、eslint |
 | `make lint-all` | 全庫 lint + agent | 同上 |
@@ -99,7 +99,7 @@ IMMICH_RELEASE_SKIP_DEPLOY=1 make release-build
 ## 疑難排解
 
 | 症狀 | 處理 |
-|------|------|
+| ------ | ------ |
 | `cursor-lint-fix-agent not found` | clone + `npm install`（見上方） |
 | `CURSOR_API_KEY 未設定` | 編輯 `.env` |
 | Agent quota / ERROR | `LINT_FIX_ARGS="--model default" make lint` |

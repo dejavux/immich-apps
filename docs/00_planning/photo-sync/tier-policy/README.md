@@ -7,7 +7,7 @@
 ## 進度摘要（2026-06-18）
 
 | 階段 | 狀態 |
-|------|------|
+| ------ | ------ |
 | M1 PoC + spot-check | ✅ 577 local eligible 100% Immich dup |
 | M2 跨 library 研究 | ✅ export→import 可行 |
 | M3 bulk export（第一輪） | ✅ **1615** 張（cutoff 一年前 · local-path） |
@@ -17,10 +17,10 @@
 | Phase B download originals | ✅ **4280/4281** |
 | Phase B bulk export | ✅ **75 batch** |
 | Phase B bulk import + verify | ✅ staging `0`（2026-06-18） |
-| Phase B delete-source | ✅ 6/16–17 **手動刪除 4,277 張**（觸發災難復原）|
+| Phase B delete-source | ✅ 6/16–17 **手動刪除 4,277 張**（觸發災難復原） |
 | iCloud 災難復原 | ✅ 638 張從 Immich 回復 · 相簿 638/638 · 日期 450 修 |
-| 手動還原 Recently Deleted 23 張 | 🟡 待完成（`recovery/trashed-restore-23.json`）|
-| 永久清除 Recently Deleted（288 張） | ⏳ 還原 23 張後執行（Photos GUI）|
+| 手動還原 Recently Deleted 23 張 | 🟡 待完成（`recovery/trashed-restore-23.json`） |
+| 永久清除 Recently Deleted（288 張） | ⏳ 還原 23 張後執行（Photos GUI） |
 | local-archive 9 new 補傳 | ⏳ `immich-sync.sh --library local-archive` |
 | reconcile dry-run 確認 | ⏳ purge 後 |
 
@@ -35,7 +35,7 @@ Phase B delete-source 後手動刪除超出預期，**4,277** 張進入 Recently
 ## 文件
 
 | 文件 | 用途 |
-|------|------|
+| ------ | ------ |
 | [10_REQUIREMENTS.md](./10_REQUIREMENTS.md) | 需求、PoC、驗收 |
 | [20_CROSS_LIBRARY_MOVE_RESEARCH.md](./20_CROSS_LIBRARY_MOVE_RESEARCH.md) | M2 跨 library 研究 |
 | [30_PHASE_B_ICLOUD_DOWNLOAD.md](./30_PHASE_B_ICLOUD_DOWNLOAD.md) | Phase B ismissing 下載 |

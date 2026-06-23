@@ -8,7 +8,7 @@
 ## 背景
 
 | 指標 | baseline（06-15 早） | 最新（06-15 15:14） | 說明 |
-|------|---------------------|---------------------|------|
+| ------ | --------------------- | --------------------- | ------ |
 | cutoff 365d eligible | 4281 | 4281 | 一年前 cutoff |
 | 已 export/import（M3 第一輪） | 1615 | 1615 | `state.json` 跳過 |
 | eligible `ismissing` | **4119** | **34** | Phase B 完成條件 → **0** |
@@ -116,7 +116,7 @@ IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-bulk-import-staging.sh
 ### 4. Phase B 收尾 checklist
 
 | # | 項目 | 指令 / 備註 |
-|---|------|-------------|
+| --- | ------ | ------------- |
 | A | 確認 download 完成 | `eligible_ismissing: 0`；`icloud-pull.log` 無 error |
 | B | bulk export/import/verify | 見 §2 |
 | C | 刪 icloud source + 清 Recently Deleted | 釋放 iCloud 配額 |
@@ -131,7 +131,7 @@ IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-bulk-import-staging.sh
 ## 風險
 
 | 風險 | 緩解 |
-|------|------|
+| ------ | ------ |
 | 磁碟空間不足（4119 原檔） | 先估算 eligible 體積；必要時外接碟暫存 library |
 | iCloud 下載慢 / 中斷 | 分批依年份下載；`audit_icloud_videos.py` 追蹤進度 |
 | sync storm | tier export 與 `immich-watch` 錯開 |

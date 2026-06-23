@@ -486,7 +486,7 @@ git push
 ### 方案 B（單一 immich-apps repo）優勢
 
 | 維度 | 優勢 |
-|------|------|
+| ------ | ------ |
 | **管理** | 統一版本控制，一個 repo 管理所有組件 |
 | **部署** | `make deploy-all` 一次部署所有服務 |
 | **開發** | 共用程式碼（Immich API client, logger） |

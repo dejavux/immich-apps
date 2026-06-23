@@ -15,7 +15,7 @@
 ## Repos
 
 | Repo | 路徑 |
-|------|------|
+| ------ | ------ |
 | **immich-apps** | `immich-apps/` — docs、photo-sync scripts、LINE bot |
 | **infra-bootstrap** | `infra-bootstrap/60_apps/immich/` — K8s manifests、deploy 腳本 |
 
@@ -96,7 +96,7 @@ flowchart LR
 ## Wave 快速參考
 
 | Wave | 平行 Tasks | 條件 |
-|------|------------|------|
+| ------ | ------------ | ------ |
 | **W0** | 3.5-A + 3.5-C（checklist） | 現在 |
 | **W1** | 5a-A + 5a-B + 5a-C +（可選）1-A + 1-C | 3.5 gate PASS |
 | **W2** | 5a-D 還原演練 + 1-B deploy | 5a 首次備份成功 |

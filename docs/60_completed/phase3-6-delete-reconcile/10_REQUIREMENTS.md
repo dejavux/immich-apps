@@ -9,7 +9,7 @@
 ## 問題陳述
 
 | 現況 | 痛點 |
-|------|------|
+| ------ | ------ |
 | `immich-sync.sh` 只做 **upload** | Mac 刪照片 → Immich **不刪**（刻意設計） |
 | Tier policy 從 icloud 刪 source | local-archive 仍保留 → Immich 應 **保留** |
 | 使用者從 **兩邊 library 都刪** | Immich 可能留下 **orphan asset** |
@@ -30,7 +30,7 @@
 ## 策略：`delete_policy`
 
 | 值 | 行為 |
-|----|------|
+| ---- | ------ |
 | `none`（**預設**） | 維持 Phase 3；reconcile 僅 dry-run 報告 |
 | `conservative` | Mac **雙 library** 都無該 SHA1 → Immich 候選 trash/delete（M2 `--apply`） |
 
@@ -126,7 +126,7 @@ eval "$(./scripts/dev/load-env-from-op.sh)"
 ## 實作分期
 
 | 階段 | 內容 | 狀態 |
-|------|------|------|
+| ------ | ------ | ------ |
 | **M1** | config + `immich-reconcile.sh` dry-run + tier manifest checksum | ✅ PR #19 |
 | **M2** | `--apply --confirm` + trash API + LaunchAgent 週 dry-run | ✅ PR #19 |
 | **M3** | fswatch lightweight reconcile（debounce 大） | ✅ PR #20 |
@@ -137,7 +137,7 @@ eval "$(./scripts/dev/load-env-from-op.sh)"
 ## 邊界情況
 
 | 情況 | 處理 |
-|------|------|
+| ------ | ------ |
 | Live Photo (.heic + .mov) | 以 primary upload 檔 checksum 為準 |
 | Immich checksum 為 base64 | `photo_sync_lib.normalize_checksum()` 轉 hex |
 | ismissing（無 local originals） | originals/ scan 不計入 → 不因此刪 Immich |
