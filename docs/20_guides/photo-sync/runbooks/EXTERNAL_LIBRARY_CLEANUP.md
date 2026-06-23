@@ -10,7 +10,7 @@
 Immich 節點約 **~86 GB** 為未 index 的 external-library 副本（`assetCount: 0`），與 `/data/upload` 正式 library 無關。清理可釋放磁碟，**不影響**已上傳 assets。
 
 | 路徑 | 約略大小 | 說明 |
-|------|---------|------|
+| ------ | --------- | ------ |
 | `/external-library` | 43 GB | hostPath 舊 rsync |
 | `/data/external-library` | 43 GB | PVC 內同內容副本 |
 | `/data/upload` | — | **勿刪** — 正式 library |

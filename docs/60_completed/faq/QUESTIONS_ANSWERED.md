@@ -101,7 +101,7 @@ make pf
 #### 為何拆開？
 
 | 考量點 | 獨立 Repo ✅ | Monorepo (infra-bootstrap) ❌ |
-|--------|--------------|------------------------------|
+| -------- | -------------- | ------------------------------ |
 | **源碼管理** | 清晰獨立，應用邏輯分離 | 混在 60_apps/，違反基礎設施 repo 定位 |
 | **CI/CD** | 獨立 pipeline，應用變更不觸發 infra CI | 耦合，應用 commit 會觸發整個 infra CI |
 | **Makefile** | 應用專用（eslint, ts-node, npm） | 衝突（lint-ansible vs lint-eslint） |
@@ -295,7 +295,7 @@ immich-line-bot/docs/PROGRESS_TRACKING.md
 #### 總結
 
 | Repo | PROGRESS_TRACKING 範圍 | 類型 |
-|------|------------------------|------|
+| ------ | ------------------------ | ------ |
 | **infra-bootstrap** | 基礎設施整體 | 高階概覽 |
 | **immich-enhancement (project)** | Immich 專案（5 Phase） | Phase 概覽 |
 | **immich-line-bot (app)** | LINE Bot 實作 | **實作 SSOT** ⭐ |
@@ -365,7 +365,7 @@ immich-line-bot/docs/PROGRESS_TRACKING.md
 ### 2. Port Range 分配
 
 | Service | Port Range | Repo | pf.sh 位置 |
-|---------|-----------|------|-----------|
+| --------- | ----------- | ------ | ----------- |
 | fuqi-asset-manager | 30400-30410 | fuqi-asset-manager | scripts/dev/pf.sh |
 | infra apps (qwen, registry) | 30420-30429 | infra-bootstrap | scripts/dev/pf.sh |
 | **immich-line-bot** | **30430-30439** | **immich-line-bot** | **scripts/dev/pf.sh** ⭐ |

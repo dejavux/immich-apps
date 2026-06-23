@@ -178,7 +178,7 @@ infra-bootstrap/
 ## 📊 文件統計
 
 | 文件 | Before | After | 變更 |
-|------|--------|-------|------|
+| ------ | -------- | ------- | ------ |
 | `IMMICH_ENHANCEMENT_PROJECT.md` | N/A | 1,000+ 行 | 新增 |
 | `60_apps/immich/README.md` | 161 行 | ~150 行 | 重構 |
 | `living-systems/immich/README.md` | 26 行 | ~120 行 | 擴充 |

@@ -632,7 +632,7 @@ export const metrics = {
 ### Grafana Dashboard 指標
 
 | 指標 | 類型 | 說明 |
-|------|------|------|
+| ------ | ------ | ------ |
 | `immich_line_bot_webhook_requests_total` | Counter | Webhook 請求總數 |
 | `immich_line_bot_upload_success_total` | Counter | 上傳成功次數 |
 | `immich_line_bot_upload_failure_total` | Counter | 上傳失敗次數 |
@@ -802,7 +802,7 @@ kubectl exec -n immich deployment/immich-line-bot -- \
 ## 📈 成功指標
 
 | 指標 | 目標 | 測量方式 |
-|------|------|----------|
+| ------ | ------ | ---------- |
 | **上傳成功率** | > 95% | Prometheus Counter |
 | **P95 延遲** | < 5s | Prometheus Histogram |
 | **AI 標註覆蓋率** | 100% | 所有照片都有描述 |

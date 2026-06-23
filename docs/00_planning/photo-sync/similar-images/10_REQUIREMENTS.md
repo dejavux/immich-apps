@@ -10,7 +10,7 @@
 ## 問題陳述
 
 | 現況 | 痛點 |
-|------|------|
+| ------ | ------ |
 | photo-sync 用 **SHA1 checksum** dedupe | 僅 **binary 完全相同** 才 skip |
 | local audit：**0 hash dup**，~**1506** hash 不在 Immich | Photos 重編碼 → Immich 視為不同 asset |
 | Immich v2.7 **Duplicate Detection** | 宣稱視覺相似，實務覆蓋率未知 |
@@ -23,7 +23,7 @@
 ## Immich 三層「重複」概念
 
 | 層級 | 機制 | 比對依據 | 能抓到重編碼？ |
-|------|------|----------|----------------|
+| ------ | ------ | ---------- | ---------------- |
 | **L1 Upload dedupe** | CLI `--skip-duplicates` / server checksum | **SHA1 二進位** | ❌ |
 | **L2 duplicateId** | DB 多 asset 共用 checksum | **SHA1 相同** | ❌ |
 | **L3 Duplicate Detection** | ML job（CLIP embedding + `maxDistance`） | **視覺相似** | ✅ 可能 |
@@ -85,7 +85,7 @@ similar-images-audit.py
 ## 里程碑
 
 | # | 任務 | 狀態 |
-|---|------|------|
+| --- | ------ | ------ |
 | V0 | 跑 [SIMILAR_IMAGES_EVAL](../../../20_guides/photo-sync/runbooks/SIMILAR_IMAGES_EVAL.md) | 📋 |
 | V1 | Ground truth 20 組 + recall/precision 表格 | 📋 |
 | A1 | `similar-images-audit.py`（若 V0 未過） | 📋 |
@@ -95,7 +95,7 @@ similar-images-audit.py
 ## 驗收（內建足夠時）
 
 | 項目 | 標準 |
-|------|------|
+| ------ | ------ |
 | Duplicate job | enabled · queue 無 backlog |
 | Ground truth recall | ≥ **80%**（20 組中 ≥16 被 L3 抓到） |
 | False positive | 隨機 50 張非重複 · ≤ **5%** 誤報 |

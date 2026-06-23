@@ -16,7 +16,7 @@ tier policy 目標：將 **eligible** 舊照片從 `icloud-primary` 移出，改
 ## 工具能力摘要
 
 | 能力 | osxphotos | photoscript | AppleScript / Photos UI |
-|------|-----------|-------------|-------------------------|
+| ------ | ----------- | ------------- | ------------------------- |
 | 讀取指定 library | ✅ `--library path` | ✅ `PhotosLibrary.open(path)` | ⚠️ 需 Option+開啟切換 |
 | 查詢 eligible（日期） | ✅ `query --to-date` / Python API | — | — |
 | 匯出 original | ✅ `export`（含 Live Photo flags） | ✅ `Photo.export()` | ✅ 匯出 |
@@ -41,7 +41,7 @@ export PATH="$HOME/.local/bin:$PATH"
 ### eligible 分桶（2900 張）
 
 | 分桶 | 數量 | 說明 |
-|------|------|------|
+| ------ | ------ | ------ |
 | eligible 總計 | **2900** | 建立日期早於 cutoff |
 | 已有 local path（可立即 export/hash） | **577** | originals 目錄有檔 |
 | iCloud-only（`ismissing`） | **2188** | 需先下載才能 export |
@@ -52,7 +52,7 @@ export PATH="$HOME/.local/bin:$PATH"
 ### Immich hash 重疊（spot-check）
 
 | 指標 | 值 |
-|------|-----|
+| ------ | ----- |
 | 可 hash 的 local eligible | **577** |
 | Immich `bulk-upload-check` reject（dup） | **577** |
 | 重疊率 | **100%** |
@@ -77,7 +77,7 @@ for each eligible photo in source (batch):
 ### 風險與緩解
 
 | 風險 | 緩解 |
-|------|------|
+| ------ | ------ |
 | iCloud 重新下載已刪項目 | 先移 **Immich 已確認 dup** 且 **local path 存在** 的 577 張 |
 | Live Photo 拆 pair | `osxphotos export --live-photo mov` |
 | import 錯 library | **必須** `photoscript.PhotosLibrary.open(target_path)` |

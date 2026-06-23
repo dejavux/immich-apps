@@ -19,7 +19,7 @@
 ## 磁碟配置（2026-06-12，external 已清理）
 
 | 路徑 | 大小 | 檔案數（約） | 說明 |
-|------|------|-------------|------|
+| ------ | ------ | ------------- | ------ |
 | `/data/upload` | **115 GB** | ~14500+ | 正式 library（local + icloud union 完成） |
 | `/data/encoded-video` | **32 GB** | — | 影片轉檔（每支影片一份，非原檔 dup） |
 | `/data/thumbs` | **3 GB** | — | 縮圖 |
@@ -33,7 +33,7 @@
 ## `/data/upload` 與 duplicate 的關係
 
 | 層級 | 行為 | 磁碟影響 |
-|------|------|----------|
+| ------ | ------ | ---------- |
 | **CLI「Found N duplicates」** | 本機檔 hash 已在 Immich DB | **不上傳** → upload 目錄**不增加** |
 | **Immich DB `duplicateId`** | 多個 asset 列指向同一 checksum | **一個** blob |
 | **local + icloud 兩 library** | 不同 Photos Library、不同 originals | 若 hash 不同 → **各存一份**（union 備份） |
@@ -48,7 +48,7 @@
 ## Immich DB（API `/server/statistics`）
 
 | 指標 | 2026-06-11 上傳前 | 2026-06-12（全量完成） |
-|------|-------------------|------------------------|
+| ------ | ------------------- | ------------------------ |
 | Photos | ~2731 | **4518** |
 | Videos | ~412 | **935** |
 | **Total assets** | ~3143 | **~5453** |
@@ -59,7 +59,7 @@
 ## Mac vs Immich 比對
 
 | 來源 | originals 檔案數 | 大小 |
-|------|-----------------|------|
+| ------ | ----------------- | ------ |
 | `LOCAL PHOTO LIBRARY` | **5023** | ~43 GB |
 | `Photos Library` (iCloud) | **3512** | ~37 GB |
 | **Hash 重疊（icloud vs DB）** | **1** | — |

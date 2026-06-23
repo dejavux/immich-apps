@@ -2,7 +2,8 @@
 
 **完整的 Immich 生態系統**：Immich server + LINE Bot + Photo Sync
 
-> 🚀 **Status**: Phase 2/3/3.6 ✅ · Phase 3.5 Phase B 收尾 🟡 · Immich **v2.7.5** ✅  
+> 🚀 **Status**: ✅ **Immich Enhancement 結案**（2026-06-22）· Immich Ops（Phase 1/4/5）agent-prompt 已寫、**未執行**  
+> 📋 **進度**: [PROGRESS_TRACKING.md](docs/00_planning/PROGRESS_TRACKING.md) · [Immich Ops backlog](docs/00_planning/BACKLOG.md#immich-opsphase-1--4--5--獨立-backlog)  
 > 📊 **Progress**: [PROGRESS_TRACKING.md](./docs/00_planning/PROGRESS_TRACKING.md)  
 > 📋 **如何進行**: [HOW_TO_PROCEED.md](./docs/00_planning/HOW_TO_PROCEED.md)  
 > 🎨 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./docs/00_planning/UX_PRODUCT_REVIEW.md)  
@@ -147,7 +148,7 @@ make logs              # 查看 k8s logs
 ### Port Range
 
 | Service | Port | 用途 |
-|---------|------|------|
+| --------- | ------ | ------ |
 | LINE Bot | 30450 | Webhook server |
 | (預留) | 30431-30439 | 未來服務 |
 
@@ -158,7 +159,7 @@ make logs              # 查看 k8s logs
 → **[docs/README.md](./docs/README.md)** — 完整導覽
 
 | 用途 | 連結 |
-|------|------|
+| ------ | ------ |
 | 任務 SSOT | [PROGRESS_TRACKING.md](./docs/00_planning/PROGRESS_TRACKING.md) |
 | 執行指南 | [HOW_TO_PROCEED.md](./docs/00_planning/HOW_TO_PROCEED.md) |
 | UX / 產品檢視 | [UX_PRODUCT_REVIEW.md](./docs/00_planning/UX_PRODUCT_REVIEW.md) |

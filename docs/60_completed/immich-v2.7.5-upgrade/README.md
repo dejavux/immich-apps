@@ -6,7 +6,7 @@
 ## 交付摘要
 
 | Phase | 狀態 | 備註 |
-|-------|------|------|
+| ------- | ------ | ------ |
 | A2 pg_dump | ✅ | `infra-bootstrap/immich-pg-backup-20260612.sql`（149 MB） |
 | A3 VectorChord | ✅ | `shared_preload_libraries = vchord.so` |
 | B deploy | ✅ | server + ML pin **v2.7.5** |
@@ -16,7 +16,7 @@
 ## 文件索引
 
 | 文件 | 說明 |
-|------|------|
+| ------ | ------ |
 | [COMPLETION_SUMMARY.md](./COMPLETION_SUMMARY.md) | 本摘要 |
 | [IMMICH_v2.7.5.md](../../20_guides/infra/upgrades/IMMICH_v2.7.5.md) | 完整 checklist |
 

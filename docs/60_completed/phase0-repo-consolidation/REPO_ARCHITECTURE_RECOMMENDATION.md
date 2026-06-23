@@ -11,7 +11,7 @@
 ### 現有 Repo 結構
 
 | Repo | 類型 | 內容 | Port Range | Makefile | PROGRESS_TRACKING |
-|------|------|------|------------|----------|-------------------|
+| ------ | ------ | ------ | ------------ | ---------- | ------------------- |
 | **fuqi-asset-manager** | 應用 repo | src/ + deploy/helm/ | 30400-30410 | ✅ 完整 | ✅ 獨立 |
 | **grid-bot-v3** | 應用 repo | src/ + deploy/ | (獨立) | ✅ 完整 | ✅ 獨立 |
 | **ibkr-portfolio-miniapp** | 應用 repo | src/ + deploy/ | (獨立) | ✅ 完整 | ✅ 獨立 |
@@ -169,7 +169,7 @@ register_tunnel() {
 **Port Range 總覽**:
 
 | Service | Port | Repo |
-|---------|------|------|
+| --------- | ------ | ------ |
 | fuqi-asset-manager | 30400-30410 | fuqi-asset-manager |
 | infra-apps | 30420-30429 | infra-bootstrap |
 | **immich-line-bot** | **30430-30439** | **immich-line-bot** |
@@ -464,7 +464,7 @@ make deploy
 ## 📊 對比總結
 
 | 項目 | 方案 A: 獨立 Repo | 方案 B: Monorepo |
-|------|-------------------|------------------|
+| ------ | ------------------- | ------------------ |
 | **源碼管理** | ✅ 清晰獨立 | ❌ 混在 60_apps |
 | **CI/CD** | ✅ 獨立 pipeline | ❌ 耦合 infra CI |
 | **Makefile** | ✅ 應用專用 | ❌ 與 infra 衝突 |

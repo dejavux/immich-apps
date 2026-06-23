@@ -7,7 +7,7 @@
 ## ✅ 升級完成紀錄（2026-06-12）
 
 | Phase | 狀態 | 備註 |
-|-------|------|------|
+| ------- | ------ | ------ |
 | **A2** pg_dump | ✅ | `infra-bootstrap/immich-pg-backup-20260612.sql`（149 MB） |
 | **A3** VectorChord | ✅ | `shared_preload_libraries = vchord.so`（已移除 `vectors.so`） |
 | **B** rolling update | ✅ | server + ML pin `v2.7.5`；`GET /api/server/version` → 2.7.5 |
@@ -19,7 +19,7 @@
 ## 0. 前置認知
 
 | 元件 | 升級前 | 現況（2026-06-12） |
-|------|--------|-------------------|
+| ------ | -------- | ------------------- |
 | immich-server | v2.0.1 (`:release`) | **`v2.7.5`** pin |
 | immich-machine-learning | `:release` | **`v2.7.5`** pin |
 | postgres | `14-vectorchord0.4.3-pgvectors0.2.0` | 不變（PG14） |
@@ -217,7 +217,7 @@ launchctl load ~/Library/LaunchAgents/com.immich.photo-sync.watch.plist
 ## Phase D — 升級後驗收
 
 | 項目 | 指令 / 動作 | 預期 | 狀態 |
-|------|-------------|------|------|
+| ------ | ------------- | ------ | ------ |
 | 版本 | `GET /api/server/version` | 2.7.5 | ✅ |
 | Web UI | 開 <https://immich.3q.fi> | 時間軸、相簿正常 | ⏸ 待人工 |
 | 相簿 | Admin → Albums | Local + iCloud | ⏸ 待人工 |
@@ -247,7 +247,7 @@ launchctl load ~/Library/LaunchAgents/com.immich.photo-sync.watch.plist
 ## 建議時程
 
 | 時機 | 動作 |
-|------|------|
+| ------ | ------ |
 | **現在** | 讓 icloud 上傳跑完；做 A2 備份 + A3 VectorChord 健檢 |
 | **上傳完成後** | Phase B rolling update（約 5–15 min downtime） |
 | **B 完成後** | Phase C OpenAPI sync + smoke；必要時 `make release` LINE Bot |

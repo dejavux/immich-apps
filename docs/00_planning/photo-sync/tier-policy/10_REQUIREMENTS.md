@@ -10,8 +10,8 @@
 ## 問題陳述
 
 | 現況 | 痛點 |
-|------|------|
-| 兩個 `.photoslibrary`（iCloud + Local）| iCloud 配額有限 |
+| ------ | ------ |
+| 兩個 `.photoslibrary`（iCloud + Local） | iCloud 配額有限 |
 | 兩邊都 sync → Immich dedupe | **搬移需手動**在 Photos App 操作 |
 | Immich 為 union 備份 | 無法用 CLI 批次「移出 iCloud library」 |
 
@@ -96,7 +96,7 @@ tier_policy:
 **PoC 結果**（`cutoff_date: 2023-01-01`）：
 
 | 指標 | 值 |
-|------|-----|
+| ------ | ----- |
 | originals 磁碟 | **~28 GB**（< `max_size_gb: 50` → 尺寸條件不觸發） |
 | eligible（日期） | **2900** 張（建立日期早於 2023-01-01） |
 | 報告 | `~/Library/Logs/immich-photo-sync/tier/tier-poc-*.json` |
@@ -116,7 +116,7 @@ export PATH="$HOME/.local/bin:$PATH"
 **M2 結論**：
 
 | 項目 | 結果 |
-|------|------|
+| ------ | ------ |
 | Immich 覆蓋（可 hash 子集） | **577/577 = 100%** |
 | 跨 library 自動「move」 | **不可**；需 export → photoscript import → 人工/AS 刪 source |
 | v1 建議先搬 | **577** 張已有 local path（Immich 已 dup） |
@@ -173,7 +173,7 @@ IMPORT_MODE=auto ./scripts/photo-sync/tier-policy-bulk-import-staging.sh
 ## 風險
 
 | 風險 | 緩解 |
-|------|------|
+| ------ | ------ |
 | osxphotos 無法跨 library 移動 | AppleScript / 半自動 + 人工確認 |
 | 搬移後 iCloud 重新下載 | 先移「僅 local 已有 copy」的 dup |
 | sync storm | tier 與 fswatch 錯開；debounce 加大 |
