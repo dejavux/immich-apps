@@ -7,7 +7,7 @@
 
 **最後更新**: 2026-06-24（Phase 4 COMPLETE · postgres → NVMe）  
 **專案狀態**: ✅ **增強專案結案** · Phase 5a **PASS** · Phase 5b **~95%** · Phase 4 ✅ **COMPLETE**  
-**Ops 更新**: 2026-06-24 — postgres `/nvme/immich-postgres` · asset **13763** · 停機 ~5min  
+**Ops 更新**: 2026-06-24 — Ops W2 首輪 Mac→delta rsync 進行中 · LINE Bot `af23fe4`  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
 

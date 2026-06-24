@@ -9,21 +9,28 @@
 | 項目 | 建議 |
 | ------ | ------ |
 | **Phase 4 SSD** | ✅ **COMPLETE**（postgres → `/nvme/immich-postgres`） |
-| **Ops W2 Mac → delta NFS** | **prep 進行中** · 完整 rsync **Q3** |
-| **首輪 Mac rsync** | 一輪 pg/NFS 備份驗證後（週日 04:00 data-backup 後評估） |
+| **Ops W2 Mac → delta NFS** | **首輪 rsync 進行中** · 週次 LaunchAgent **Q3 安裝** |
+| **首輪 Mac rsync** | 🟡 2026-06-24 啟動（~164G；錯開週日 04:00） |
 
 ### Delta NFS 目標路徑（SSOT）
 
 | 項目 | 值 |
 | ------ | ------ |
 | Host | `delta.3q.fi`（192.168.50.110） |
-| Export（NVMe） | `/home/nfs-storage`（`nfs-client` StorageClass） |
+| Export（NVMe） | `/home/nfs-storage`（`nfs-client` StorageClass · **~338G avail**） |
 | Mac 備份根 | `/home/nfs-storage/photos-backup/mac-studio/` |
-| Prep 腳本 | `scripts/mac-library-backup-dry-run.sh`（`rsync -n`） |
+| Dry-run | `scripts/mac-library-backup-dry-run.sh` |
+| 全量/增量 | `scripts/mac-library-backup-rsync.sh` |
+| LaunchAgent | `scripts/mac-library-backup/com.immich.mac-library-backup.plist.example`（週六 02:00） |
 
 ```bash
-# prep：僅 dry-run，不寫入
+# delta 目錄（須 light0 可寫；勿僅 sudo mkdir 不留 chown）
+ssh delta.3q.fi 'mkdir -p /home/nfs-storage/photos-backup/mac-studio/{local-archive,icloud-primary}'
+ssh delta.3q.fi 'sudo chown -R $(whoami):$(whoami) /home/nfs-storage/photos-backup/mac-studio'
+
 bash scripts/mac-library-backup-dry-run.sh
+bash scripts/mac-library-backup-rsync.sh   # 首輪全量
+tail -f ~/Library/Logs/immich-mac-backup/rsync-*.log
 ```
 
 ---

@@ -12,7 +12,7 @@
 | 項目 | 狀態 |
 | ------ | ------ |
 | **Immich Enhancement** | ✅ **結案** |
-| LINE Bot | release **`6ec5aaa`**（Helm rev 34） |
+| LINE Bot | release **`af23fe4`**（Helm rev 35） |
 | **Immich Ops** | 5a **PASS** · 5b **~95%** · Phase 4 ✅ **COMPLETE** |
 
 ---
@@ -38,20 +38,53 @@ Postgres 已遷至 lama NVMe `/nvme/immich-postgres`；upload 仍 HDD。詳見 [
 
 ---
 
-## Ops W2 — Mac library → delta NFS（Q3）
+## Ops W2 — Mac library → delta NFS（進行中）
 
 → [MAC_LIBRARY_BACKUP.md](../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)
 
 **前置**：Phase 4 ✅ · 5a PASS ✅
 
-- **可現在開始 prep**：delta NFS export 路徑／配額、rsync dry-run、LaunchAgent 草稿
-- **完整自動化 rsync** 建議 **Q3**（一輪 pg/NFS 備份驗證後）
+| 項目 | 狀態 |
+| ------ | ------ |
+| delta 目錄 | ✅ `ssh delta` mkdir 2026-06-24 |
+| dry-run | ✅ ~146G + ~18G |
+| 首輪 rsync | 🟡 **進行中**（`scripts/mac-library-backup-rsync.sh`） |
+| LaunchAgent 草稿 | ✅ `scripts/mac-library-backup/com.immich.mac-library-backup.plist.example`（週六 02:00） |
+| 週次自動化 | 📋 Q3 安裝 LaunchAgent |
 
-- [x] delta NFS 路徑 SSOT（`delta.3q.fi:/home/nfs-storage/photos-backup/mac-studio/`）
-- [x] `scripts/mac-library-backup-dry-run.sh`
-- [ ] 本機執行 dry-run（確認 `.photoslibrary/originals` 路徑）
-- [ ] `local-archive` / `icloud-primary` originals rsync LaunchAgent
-- [ ] 還原演練 checksum 對照
+- [x] delta NFS 路徑 SSOT
+- [x] `mac-library-backup-dry-run.sh`
+- [x] 本機 dry-run（local-archive **146G** · icloud-primary **18G**）
+- [x] delta 遠端目錄建立
+- [x] LaunchAgent plist 草稿
+- [ ] 首輪 rsync Complete + 抽樣 checksum
+- [ ] `launchctl load` 啟用週次排程（Q3）
+
+**追蹤首輪 rsync**：
+
+```bash
+tail -f ~/Library/Logs/immich-mac-backup/rsync-*.log
+pgrep -fl mac-library-backup-rsync
+```
+
+---
+
+## 驗證 K8s 是否跑最新 image
+
+```bash
+# 期望 tag = git short SHA（release 後）
+git -C /path/to/immich-apps rev-parse --short HEAD
+
+kubectl get deploy immich-line-bot -n immich \
+  -o jsonpath='deploy={.spec.template.spec.containers[0].image}{"\n"}'
+
+kubectl get pods -n immich -l app.kubernetes.io/name=immich-line-bot \
+  -o jsonpath='pod={.items[0].spec.containers[0].image} started={.items[0].status.startTime}{"\n"}'
+
+helm list -n immich -f immich-line-bot
+```
+
+三者 tag 一致（例如 `af23fe4`）且 pod `STARTED` 在 deploy 之後 → 已跑最新版。
 
 ---
 

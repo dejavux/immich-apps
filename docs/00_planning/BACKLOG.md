@@ -29,7 +29,7 @@
 | **Ops** | Phase 1 probes/Redis | ✅ **已 deploy** | probes + NetworkPolicy · Redis item 待建 |
 | **Ops W3** | Phase 5b monitoring | 🟡 **~95%** | RBAC 修復 · immich-ops 有資料 · smoke 已重送 |
 | **P2** | album reconcile | 📋 可選 | stale 27 / missing 123 |
-| **Ops W2** | Mac library → delta NFS | 📋 **Q3 延後** | prep 可平行 · 見下方建議 |
+| **Ops W2** | Mac library → delta NFS | 🟡 **首輪 rsync** | dry-run ✅ · LaunchAgent 草稿 ✅ · ~164G |
 | **Ops W4** | Phase 4 SSD 遷移 | ✅ **COMPLETE** | 2026-06-24 · postgres → `/nvme/immich-postgres` |
 
 ---
@@ -39,7 +39,7 @@
 ```text
 ✅  結案     Immich Enhancement（Phase 0–3.6 + 3.5 豁免）
 Ops W1       Phase 5a ✅ PASS（pg 2/2 · NFS ✅）
-Ops W2       Mac .photoslibrary → delta NFS（Q3 · prep 可平行 · 執行延後）
+Ops W2       Mac → delta NFS 首輪 rsync 進行中（週次 LaunchAgent Q3）
 Ops W3       Phase 5b 告警 + immich-ops Grafana（RBAC 修復 · ~95%）
 Ops W4       Phase 4 SSD ✅ COMPLETE 2026-06-24
 Observability  fuqi 儀表板併入 monitoring 或獨立子網域 → OBSERVABILITY_ROADMAP.md
@@ -48,20 +48,17 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 
 ---
 
-## Phase 5a+ — Mac Photos Library → delta NFS（Q3 · 建議延後）
+## Phase 5a+ — Mac Photos Library → delta NFS（首輪 rsync 進行中）
 
-**優先級**: P1（5a PASS ✅）  
-**目標視窗**: Q3 2026（**執行**；prep 可立即開始）  
-**前置**: Phase 5a **PASS**（2026-06-24）· Phase 4 完成後再跑首輪全量 rsync  
+**優先級**: P1  
 **Runbook**: [MAC_LIBRARY_BACKUP.md](../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)
 
-**建議（2026-06-24）**：**不要**現在直接開跑每週 rsync；與 Phase 4 停機窗錯開。可平行做 delta export 路徑、配額、`rsync --dry-run`、LaunchAgent plist 草稿。
-
-- [x] delta NFS export 路徑與配額（`delta.3q.fi` · `/home/nfs-storage/photos-backup/mac-studio/`）
-- [x] `mac-library-backup-dry-run.sh` prep 腳本
-- [ ] `local-archive` / `icloud-primary` originals rsync LaunchAgent（Q3 執行）
-- [ ] 還原演練：抽樣檔案 checksum 對照
-- [ ] 文件化於 PROGRESS_TRACKING Phase 5a+
+- [x] delta 路徑 + dry-run（local-archive **146G** · icloud-primary **18G**）
+- [x] delta 遠端目錄 + `chown light0`
+- [x] `mac-library-backup-rsync.sh` + LaunchAgent plist 草稿（週六 02:00）
+- [ ] 首輪 rsync Complete（2026-06-24 啟動）
+- [ ] `launchctl load` 啟用週次排程（Q3）
+- [ ] 還原演練 checksum 抽樣
 
 **不取代**：Immich `/data/upload` → NFS 週備份（已 deploy）。
 
