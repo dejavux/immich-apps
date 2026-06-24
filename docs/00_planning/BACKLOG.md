@@ -30,7 +30,7 @@
 | **Ops W3** | Phase 5b monitoring | 🟡 **~95%** | RBAC 修復 · immich-ops 有資料 · smoke 已重送 |
 | **P2** | album reconcile | 📋 可選 | stale 27 / missing 123 |
 | **Ops W2** | Mac library → delta NFS | 📋 **Q3 延後** | prep 可平行 · 見下方建議 |
-| **Ops W4** | Phase 4 SSD 遷移 | ✅ **已批准** | 執行待排程 · [STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md) |
+| **Ops W4** | Phase 4 SSD 遷移 | ✅ **COMPLETE** | 2026-06-24 · postgres → `/nvme/immich-postgres` |
 
 ---
 
@@ -41,7 +41,7 @@
 Ops W1       Phase 5a ✅ PASS（pg 2/2 · NFS ✅）
 Ops W2       Mac .photoslibrary → delta NFS（Q3 · prep 可平行 · 執行延後）
 Ops W3       Phase 5b 告警 + immich-ops Grafana（RBAC 修復 · ~95%）
-Ops W4       Phase 4 SSD prep ✅ · **已批准 2026-06-24** · 執行待排程
+Ops W4       Phase 4 SSD ✅ COMPLETE 2026-06-24
 Observability  fuqi 儀表板併入 monitoring 或獨立子網域 → OBSERVABILITY_ROADMAP.md
 P2  可選     album reconcile · Similar images · LINE V1.1 vision
 ```
@@ -126,13 +126,14 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 - [ ] 連續 2 次**排程** pg Success（**1/2**；下次 06-24 03:00）
 - [x] NFS data Job Complete（`immich-data-backup-nfs-test-1782176320` · **157.8G** · 7h34m）
 
-### Phase 4 — Storage SSD（prompt ✅ · prep ✅ · 執行 ❌）
+### Phase 4 — Storage SSD（✅ COMPLETE 2026-06-24）
 
-→ [agent-prompts/phase-4-storage-ssd.md](./agent-prompts/phase-4-storage-ssd.md) · [STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md)
+→ [STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md)
 
-- [x] 4-prep-A：lama NVMe/HDD 盤點（2026-06-22 ssh）
-- [x] 4-prep-B：`STORAGE_MIGRATION.md` runbook
-- [ ] Postgres → NVMe（依賴 5a gate PASS + 停機批准）
+- [x] 4-prep-A：lama NVMe/HDD 盤點
+- [x] 4-prep-B：runbook
+- [x] Postgres → `/nvme/immich-postgres`（470M rsync · `asset` 13763）
+- [ ] thumbs → NVMe（可選 · 未執行）
 
 ### Phase 5b — Monitoring（prompt ✅ · 執行 🟡 PARTIAL）
 

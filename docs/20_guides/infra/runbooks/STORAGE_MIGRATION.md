@@ -11,7 +11,7 @@
 | ------ | ------ |
 | Phase 5a gate | ✅ PASS（2026-06-24） |
 | 停機窗批准 | ✅ **2026-06-24**（使用者確認） |
-| 執行 | 📋 **待排程**（建議週末低峰 30–60 分鐘；**2026-06-24 評估：尚未 ready 立即執行**） |
+| 執行 | ✅ **2026-06-24**（即時執行 · ~5 分鐘停機） |
 
 ### 執行就緒檢查（2026-06-24）
 
@@ -20,12 +20,21 @@
 | Phase 5a gate | ✅ | pg 2/2 · NFS test Complete |
 | 停機窗批准 | ✅ | 2026-06-24 |
 | lama NVMe 目標目錄 | ✅ | `/nvme/immich-postgres` 已建立（2026-06-24 · `chown 999:999`） |
-| postgres 現況 | HDD | `immich-local-pv` → `/mnt/immich` · subPath `postgres-data`（~470M） |
+| postgres 現況 | ✅ NVMe | hostPath `/nvme/immich-postgres`（470M rsync） |
 | postgres Deployment | ✅ | rollback + manifest 補 `nvidia.com/gpu` toleration · `Recreate` strategy（2026-06-24） |
 | 5b Telegram smoke | 🟡 | 2026-06-24 03:22Z 重送 3 條 · 待使用者確認 |
 | Grafana immich-ops | ✅ | server/postgres Up · backup age 正常 |
 
-**結論**：NVMe prep 與 postgres rollout **已完成**（2026-06-24）。**排定週末低峰窗**執行 §4-3…4-6。
+**結論**：Phase 4 **COMPLETE**（2026-06-24）· `asset` **13763** · `https://immich.3q.fi/api/server/ping` → pong。
+
+### 執行紀錄（2026-06-24）
+
+| 步驟 | 結果 |
+| ------ | ------ |
+| 4-1 pre-migrate backup | `immich-pg-pre-migrate-1782272176` Complete |
+| 4-3 rsync | `/mnt/immich/postgres-data` 470M → `/nvme/immich-postgres` 469M |
+| 4-4 manifest | postgres `hostPath` `/nvme/immich-postgres`（upload 仍 HDD PVC） |
+| 4-6 驗收 | `SELECT count(*) FROM asset` → **13763** · ping **pong** |
 
 ---
 

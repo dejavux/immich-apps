@@ -224,7 +224,7 @@ spec:
       labels:
         app: immich-postgres
     spec:
-      # 與 immich-server 相同：postgres 資料在 immich-local-pvc（hostPath 綁 lama）
+      # Phase 4：postgres 資料在 lama NVMe（upload 仍用 immich-local-pvc HDD）
       nodeSelector:
         kubernetes.io/hostname: lama
       tolerations:
@@ -255,7 +255,6 @@ spec:
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
-              subPath: postgres-data
           resources:
             requests:
               memory: "1Gi"
@@ -265,8 +264,9 @@ spec:
               cpu: "1000m"
       volumes:
         - name: postgres-data
-          persistentVolumeClaim:
-            claimName: immich-local-pvc
+          hostPath:
+            path: /nvme/immich-postgres
+            type: Directory
 ---
 apiVersion: v1
 kind: Service

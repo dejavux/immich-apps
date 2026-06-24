@@ -5,9 +5,9 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-24（pg 2/2 · 5a PASS · Grafana Caddy 修復）  
-**專案狀態**: ✅ **增強專案結案**（Phase 0/2/3/3.5/3.6）· Phase 1 **強化 ~90%** · Phase 5a **PASS** · Phase 5b **~95%** · Phase 4 **已批准（執行待排程）**  
-**Ops 更新**: 2026-06-24 — pg **2/2**（`29702580` + `29704020`）· NFS Job ✅ · Caddy `grafana.3q.fi` → monitoring SSOT · PR #30  
+**最後更新**: 2026-06-24（Phase 4 COMPLETE · postgres → NVMe）  
+**專案狀態**: ✅ **增強專案結案** · Phase 5a **PASS** · Phase 5b **~95%** · Phase 4 ✅ **COMPLETE**  
+**Ops 更新**: 2026-06-24 — postgres `/nvme/immich-postgres` · asset **13763** · 停機 ~5min  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
 
@@ -34,7 +34,7 @@
 | **Phase 2** | LINE Bot | ✅ 結案 | MVP 100% | ██████████ 100% | 2026-06-12 |
 | **Phase 3** | Photo Sync | ✅ 結案 | 100% | ██████████ 100% | 2026-06-13 |
 | **Phase 3.5** | iCloud 分層 | ✅ 結案 | 豁免 purge | ██████████ 100% | 2026-06-22 |
-| **Phase 4** | Storage 優化 | 🟢 P2 | **已批准** · 執行待排程 | ████░░░░░░ ~35% | Wave W4 |
+| **Phase 4** | Storage 優化 | ✅ 完成 | postgres NVMe | ██████████ 100% | 2026-06-24 |
 | **Phase 5** | Backup 監控 | 🟡 P2 | 5a **PASS** · 5b ~95% | █████████░ ~90% | Wave W1–W3 |
 
 ---
@@ -708,19 +708,19 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 ---
 
-### Phase 4: 存儲優化（已批准 · 執行待排程）
+### Phase 4: 存儲優化（✅ COMPLETE 2026-06-24）
 
-**狀態**: ✅ **停機窗已批准 2026-06-24** · 5a PASS · 執行待排程  
-**依賴**: ~~Phase 5a gate PASS~~ ✅ · ~~使用者批准停機窗~~ ✅
+**狀態**: postgres → lama NVMe `/nvme/immich-postgres` · upload 仍 HDD  
+**驗收**: `asset` **13763** · ping **pong** · 停機 ~5 分鐘
 
 **任務**：
 
 - [x] 4-prep-A：lama NVMe/HDD 盤點（2026-06-22）
 - [x] 4-prep-B：[STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md)
 - [x] **批准停機窗**（2026-06-24）
-- [ ] PostgreSQL `subPath: postgres-data` → lama NVMe
+- [x] PostgreSQL → `/nvme/immich-postgres`（hostPath · 470M rsync）
 - [ ] 可選：thumbs → SSD
-- [ ] 停機遷移執行 + 效能基準
+- [ ] 效能基準（aspirational -50% 查詢延遲）
 
 ---
 

@@ -13,7 +13,7 @@
 | ------ | ------ |
 | **Immich Enhancement** | ✅ **結案** |
 | LINE Bot | release **`6ec5aaa`**（Helm rev 34） |
-| **Immich Ops** | 5a **PASS** · 5b **~95%** · Phase 1 **~90%** · Phase 4 **已批准（執行待排程）** |
+| **Immich Ops** | 5a **PASS** · 5b **~95%** · Phase 4 ✅ **COMPLETE** |
 
 ---
 
@@ -30,36 +30,25 @@
 
 ---
 
-## Wave W4 — Phase 4 SSD（已批准 · 執行待排程）
+## Wave W4 — Phase 4 SSD ✅ COMPLETE（2026-06-24）
 
-→ [STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md)
+Postgres 已遷至 lama NVMe `/nvme/immich-postgres`；upload 仍 HDD。詳見 [STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md)。
 
-| 項目 | 狀態 |
-| ------ | ------ |
-| prep runbook + lama 盤點 | ✅ |
-| 停機窗批准 | ✅ **2026-06-24** |
-| Postgres → lama NVMe | 📋 **待排程**（建議週末低峰） |
-| NVMe 目錄 prep | ❌ `/nvme/immich-postgres` 未建立 |
-| postgres rollout | ⚠️ `ProgressDeadlineExceeded`（新 pod Pending） |
-
-**建議（2026-06-24）**：**今日不執行**。先修 postgres Deployment → prep NVMe 目錄 → 週末低峰 30–60 分鐘依 runbook 遷移。
+**驗收**：`asset` **13763** · ping **pong** · 停機 ~5 分鐘。
 
 ---
 
-## Wave W2 — Mac library → delta NFS（Q3 · 建議延後）
+## Ops W2 — Mac library → delta NFS（Q3）
 
 → [MAC_LIBRARY_BACKUP.md](../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)
 
-**前置**：5a PASS ✅（2026-06-24）
+**前置**：Phase 4 ✅ · 5a PASS ✅
 
-**建議（2026-06-24）**：
+- **可現在開始 prep**：delta NFS export 路徑／配額、rsync dry-run、LaunchAgent 草稿
+- **完整自動化 rsync** 建議 **Q3**（一輪 pg/NFS 備份驗證後）
 
-- **不要**與 Phase 4 停機遷移同週執行；優先完成 W4 SSD。
-- **可現在開始 prep**（不阻塞 Phase 4）：delta NFS export 路徑／配額、rsync dry-run、LaunchAgent 草稿。
-- **完整自動化 rsync** 建議延後至 **Q3**（Phase 4 完成 + 一輪 pg/NFS 備份驗證後）。
-
-- [ ] delta NFS export 路徑與配額（prep OK）
-- [ ] `local-archive` / `icloud-primary` originals rsync LaunchAgent（Q3 執行）
+- [ ] delta NFS export 路徑與配額
+- [ ] `local-archive` / `icloud-primary` originals rsync LaunchAgent
 - [ ] 還原演練 checksum 對照
 
 ---

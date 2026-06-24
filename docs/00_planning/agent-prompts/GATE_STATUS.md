@@ -12,7 +12,7 @@
 | **Phase 3.5 gate** | **PASS（含豁免）** |
 | **Phase 3.5 結案** | ✅ |
 | **建議 Wave** | **W4 執行待排程**；5b **~95%**（Grafana 有資料 · smoke 已重送） |
-| **Cluster/deploy 工作** | Phase 1 ✅ · 5a ✅ **PASS** · 5b 🟡 **~95%** · 4 **已批准**（執行待排程） |
+| **Cluster/deploy 工作** | Phase 1 ✅ · 5a ✅ · 5b 🟡 **~95%** · 4 ✅ **COMPLETE** |
 
 ---
 
@@ -63,7 +63,7 @@
 | **A** Phase 3.5 Gate | ✅ |
 | **B** Phase 5a Backup | ✅ **PASS** |
 | **C** Phase 1 Hardening | ✅ deploy（Redis 已 rollout） |
-| **D** Phase 4 SSD | ✅ **已批准**（2026-06-24）· 執行待排程 → [STORAGE_MIGRATION.md](../../20_guides/infra/runbooks/STORAGE_MIGRATION.md) |
+| **D** Phase 4 SSD | ✅ **COMPLETE**（2026-06-24）→ [STORAGE_MIGRATION.md](../../20_guides/infra/runbooks/STORAGE_MIGRATION.md) |
 | **E** Phase 5b Monitoring | 🟡 Grafana ✅ 有資料 · smoke 2026-06-24 03:22Z 重送（待使用者確認 3 條） |
 
 ---
@@ -71,6 +71,5 @@
 ## 下一動作
 
 1. **5b**：確認 Telegram 收到 3 條 smoke（🤖⚠️ Sentinel · ⚠️ Platform · ⚠️ Immich-backup）
-2. **Phase 4**：**先**修 `immich-postgres` rollout（補 GPU toleration）+ 建立 lama `/nvme/immich-postgres` → 排週末低峰窗 → [STORAGE_MIGRATION.md](../../20_guides/infra/runbooks/STORAGE_MIGRATION.md)
-3. **Ops W2**（Q3 · **建議延後**）：Mac `.photoslibrary` → delta NFS — 可先做 prep（delta 路徑、LaunchAgent 設計），**不阻塞** Phase 4（見 [BACKLOG.md](../BACKLOG.md) · [MAC_LIBRARY_BACKUP.md](../../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)）
-4. **Observability**：fuqi 儀表板併入 monitoring ConfigMap 或獨立子網域（見 [OBSERVABILITY_ROADMAP.md](../../20_guides/infra/monitoring/OBSERVABILITY_ROADMAP.md)）
+2. **Ops W2**（Q3）：Mac `.photoslibrary` → delta NFS（Phase 4 完成後可啟動 prep）
+3. **Observability**：fuqi 儀表板併入 monitoring ConfigMap 或獨立子網域（見 [OBSERVABILITY_ROADMAP.md](../../20_guides/infra/monitoring/OBSERVABILITY_ROADMAP.md)）
