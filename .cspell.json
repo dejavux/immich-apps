@@ -78,6 +78,7 @@
     "shellcheck",
     "SSOT",
     "spotcheck",
+    "steffi",
     "stopword",
     "stopwords",
     "STOPWORDS",

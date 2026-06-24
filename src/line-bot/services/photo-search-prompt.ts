@@ -24,7 +24,7 @@ intent 取值：
 - unknown：無法理解
 
 欄位（缺省用 null）：
-- personNames: string[]  人物暱稱/姓名（勿把「不」或地名或「年齡不限」等修飾語併入人名；「小蕊不在台灣」→ personNames=["小蕊"]；「找在日本的照片」→ personNames=[]；「小蕊（年齡不限）」→ personNames=["小蕊"]）
+- personNames: string[]  人物暱稱/姓名（多人用陣列，如「小光和 steffi」→ ["小光","steffi"]；勿把「不」或地名併入人名）
 - ageYears: number|null   年齡（7歲 → 7，一歲半 → 1.5）；年齡不是 sceneQuery
 - ageMonths: number|null  月齡（優先於 ageYears 若兩者皆有）
 - dateFrom: string|null    YYYY-MM-DD 起始拍攝日
@@ -48,6 +48,9 @@ intent 取值：
 
 使用者「找小蕊在日本的照片」→
 {"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":"Japan","city":null,"sceneQuery":null,"sceneQueryEn":null}
+
+使用者「找小光和 steffi 在日本的照片」→
+{"intent":"search_photos","personNames":["小光","steffi"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":"Japan","city":null,"sceneQuery":null,"sceneQueryEn":null,"anyDate":true}
 
 使用者「找在日本的照片」（純地點，無人物）→
 {"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":"Japan","city":null,"sceneQuery":null,"sceneQueryEn":null}
@@ -250,6 +253,72 @@ const PERSON_STOPWORDS = new Set(["在", "有", "是", "於", "的"]);
 
 function isPersonStopword(name: string): boolean {
   return PERSON_STOPWORDS.has(name.trim());
+}
+
+const PERSON_NAME_SPLIT = /(?:和|跟|與|以及|、|,|&)+/;
+
+export function splitPersonNames(raw: string): string[] {
+  return raw
+    .split(PERSON_NAME_SPLIT)
+    .map((part) => cleanPersonName(part.trim()))
+    .filter(
+      (name) =>
+        name.length > 0 && !isPersonStopword(name) && !isKnownLocation(name),
+    );
+}
+
+/**
+ * 「找 A 和 B 在日本的照片」／「找小蕊在海邊的照片」— 支援多人 + 在…
+ * 優先於 tryParsePersonScenePhoto（避免 .{1,8}? 只截到單字）。
+ */
+export function tryParsePersonsWithAtPhrase(text: string):
+  | {
+      personNames: string[];
+      country?: string;
+      city?: string;
+      sceneQuery?: string;
+    }
+  | undefined {
+  const trimmed = text.trim();
+  if (tryParsePersonAge(trimmed)) {
+    return undefined;
+  }
+
+  const negMatch = trimmed.match(
+    new RegExp(`^${SEARCH_PREFIX}(.+?)不在(.+?)${PHOTO_SUFFIX}$`),
+  );
+  if (negMatch) {
+    const personNames = splitPersonNames(negMatch[1]);
+    if (personNames.length !== 1) {
+      return undefined;
+    }
+    return {
+      personNames,
+      sceneQuery: `不在${negMatch[2].trim()}`,
+    };
+  }
+
+  const match = trimmed.match(
+    new RegExp(`^${SEARCH_PREFIX}(.+?)(?<!不)在(.+?)${PHOTO_SUFFIX}$`),
+  );
+  if (!match) {
+    return undefined;
+  }
+
+  const personNames = splitPersonNames(match[1]);
+  if (personNames.length === 0) {
+    return undefined;
+  }
+
+  const locationRaw = cleanScenePhrase(match[2]);
+  const { country, city } = extractLocationFromQuery(locationRaw);
+  if (country || city || isKnownLocation(locationRaw)) {
+    return { personNames, country, city };
+  }
+  if (!locationRaw || isAgePhrase(locationRaw)) {
+    return undefined;
+  }
+  return { personNames, sceneQuery: locationRaw };
 }
 
 export function tryParseSceneOnlyPhoto(
@@ -705,6 +774,24 @@ export function parseSearchPlanFallback(
       plan.dateRangeLabel = rel.label;
     }
     return ensureSceneQueryEn(plan);
+  }
+
+  const personsAt = tryParsePersonsWithAtPhrase(working);
+  if (personsAt) {
+    const plan: PhotoSearchPlan = {
+      intent: "search_photos",
+      personNames: personsAt.personNames,
+      country: personsAt.country,
+      city: personsAt.city,
+      sceneQuery: personsAt.sceneQuery,
+      ...(personsAt.country || personsAt.city ? { anyDate: true } : {}),
+    };
+    if (rel) {
+      plan.dateFrom = rel.dateFrom;
+      plan.dateTo = rel.dateTo;
+      plan.dateRangeLabel = rel.label;
+    }
+    return personsAt.sceneQuery ? ensureSceneQueryEn(plan) : plan;
   }
 
   const personScene = tryParsePersonScenePhoto(working);

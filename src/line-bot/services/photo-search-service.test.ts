@@ -102,6 +102,20 @@ describe("parseSearchPlanFallback", () => {
     expect(plan.sceneQuery).toBeUndefined();
   });
 
+  it("parses multiple people with country filter", () => {
+    const plan = parseSearchPlanFallback("找小光和 steffi 在日本的照片");
+    expect(plan.personNames).toEqual(["小光", "steffi"]);
+    expect(plan.country).toBe("Japan");
+    expect(plan.anyDate).toBe(true);
+    expect(plan.sceneQuery).toBeUndefined();
+  });
+
+  it("parses multiple people at beach scene", () => {
+    const plan = parseSearchPlanFallback("找小光和 steffi 在海邊的照片");
+    expect(plan.personNames).toEqual(["小光", "steffi"]);
+    expect(plan.sceneQuery).toBe("海邊");
+  });
+
   it("extracts country filter for person+location query", () => {
     const plan = parseSearchPlanFallback("找小蕊在日本的照片");
     expect(plan.personNames).toEqual(["小蕊"]);

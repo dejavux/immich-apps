@@ -47,7 +47,9 @@ Postgres 已遷至 lama NVMe `/nvme/immich-postgres`；upload 仍 HDD。詳見 [
 - **可現在開始 prep**：delta NFS export 路徑／配額、rsync dry-run、LaunchAgent 草稿
 - **完整自動化 rsync** 建議 **Q3**（一輪 pg/NFS 備份驗證後）
 
-- [ ] delta NFS export 路徑與配額
+- [x] delta NFS 路徑 SSOT（`delta.3q.fi:/home/nfs-storage/photos-backup/mac-studio/`）
+- [x] `scripts/mac-library-backup-dry-run.sh`
+- [ ] 本機執行 dry-run（確認 `.photoslibrary/originals` 路徑）
 - [ ] `local-archive` / `icloud-primary` originals rsync LaunchAgent
 - [ ] 還原演練 checksum 對照
 

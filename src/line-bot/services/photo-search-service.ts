@@ -241,7 +241,8 @@ export class PhotoSearchService {
       return this.searchWithPerson(userId, plan, picked);
     }
 
-    const personName = plan.personNames?.[0];
+    const personNames = plan.personNames?.filter((n) => n.trim()) ?? [];
+    const personName = personNames[0];
     const hasLocation = Boolean(plan.country || plan.city);
     const noDateConstraint =
       !plan.dateFrom &&
@@ -249,7 +250,7 @@ export class PhotoSearchService {
       plan.ageMonths === undefined;
     const locationOrSceneOnly =
       (this.hasSceneQuery(plan) || hasLocation) &&
-      !personName &&
+      personNames.length === 0 &&
       noDateConstraint;
 
     if (locationOrSceneOnly) {
@@ -257,7 +258,7 @@ export class PhotoSearchService {
     }
 
     if (
-      !personName &&
+      personNames.length === 0 &&
       !plan.dateFrom &&
       !this.hasSceneQuery(plan) &&
       !hasLocation
@@ -268,44 +269,16 @@ export class PhotoSearchService {
       };
     }
 
+    if (personNames.length > 1) {
+      return this.searchWithMultiplePersons(userId, plan, personNames);
+    }
+
     if (personName) {
-      const immichName = resolvePersonSearchName(
-        personName,
-        this.options.personAliases,
-      );
-      const people =
-        await this.options.immichClient.searchPersonByName(immichName);
-      if (people.length === 0) {
-        this.options.sessionStore.save(userId, { plan });
-        const aliasHint =
-          immichName !== personName
-            ? `\n（已對照 Immich 名稱「${immichName}」仍找不到）`
-            : "";
-        return {
-          kind: "clarify",
-          message:
-            `Immich 找不到「${personName}」。${aliasHint}\n` +
-            "請確認 Immich 人物命名，或改用日期搜尋。",
-        };
+      const outcome = await this.resolvePersonByName(userId, plan, personName);
+      if (!outcome.ok) {
+        return outcome.result;
       }
-      if (people.length > 1) {
-        this.options.sessionStore.save(userId, {
-          plan,
-          personCandidates: people,
-        });
-        const list = people
-          .map(
-            (p, i) =>
-              `${i + 1}. ${p.name}${p.birthDate ? `（生日 ${p.birthDate}）` : ""}`,
-          )
-          .join("\n");
-        return {
-          kind: "clarify",
-          message: `找到多位「${personName}」：\n${list}\n\n請點選下方按鈕或回覆編號。`,
-          personCandidates: people,
-        };
-      }
-      return this.searchWithPerson(userId, plan, people[0]);
+      return this.searchWithPerson(userId, plan, outcome.person);
     }
 
     return this.searchByDateOnly(userId, plan);
@@ -367,7 +340,110 @@ export class PhotoSearchService {
     plan: Partial<PhotoSearchPlan>,
     person: ImmichPersonSummary,
   ): string {
-    return plan.personNames?.[0]?.trim() || person.name;
+    const names = plan.personNames?.filter((n) => n.trim()) ?? [];
+    if (names.length > 1) {
+      return names.join("、");
+    }
+    return names[0]?.trim() || person.name;
+  }
+
+  private async resolvePersonByName(
+    userId: string,
+    plan: Partial<PhotoSearchPlan>,
+    personName: string,
+  ): Promise<
+    | { ok: true; person: ImmichPersonSummary }
+    | { ok: false; result: PhotoSearchResult }
+  > {
+    const immichName = resolvePersonSearchName(
+      personName,
+      this.options.personAliases,
+    );
+    const people =
+      await this.options.immichClient.searchPersonByName(immichName);
+    if (people.length === 0) {
+      this.options.sessionStore.save(userId, { plan });
+      const aliasHint =
+        immichName !== personName
+          ? `\n（已對照 Immich 名稱「${immichName}」仍找不到）`
+          : "";
+      return {
+        ok: false,
+        result: {
+          kind: "clarify",
+          message:
+            `Immich 找不到「${personName}」。${aliasHint}\n` +
+            "請確認 Immich 人物命名，或改用日期搜尋。",
+        },
+      };
+    }
+    if (people.length > 1) {
+      this.options.sessionStore.save(userId, {
+        plan,
+        personCandidates: people,
+      });
+      const list = people
+        .map(
+          (p, i) =>
+            `${i + 1}. ${p.name}${p.birthDate ? `（生日 ${p.birthDate}）` : ""}`,
+        )
+        .join("\n");
+      return {
+        ok: false,
+        result: {
+          kind: "clarify",
+          message: `找到多位「${personName}」：\n${list}\n\n請點選下方按鈕或回覆編號。`,
+          personCandidates: people,
+        },
+      };
+    }
+    return { ok: true, person: people[0] };
+  }
+
+  private async searchWithMultiplePersons(
+    userId: string,
+    plan: Partial<PhotoSearchPlan>,
+    personNames: string[],
+  ): Promise<PhotoSearchResult> {
+    const resolved: ImmichPersonSummary[] = [];
+    for (const name of personNames) {
+      const outcome = await this.resolvePersonByName(userId, plan, name);
+      if (!outcome.ok) {
+        return outcome.result;
+      }
+      resolved.push(outcome.person);
+    }
+
+    const displayName = personNames.join("、");
+    const hasLocation = Boolean(plan.country || plan.city);
+    const locationLabel = [plan.country, plan.city].filter(Boolean).join(" · ");
+    const labelParts = [
+      displayName,
+      locationLabel,
+      this.hasSceneQuery(plan) ? this.sceneLabel(plan) : undefined,
+    ].filter(Boolean);
+
+    if (hasLocation || plan.anyDate || this.hasSceneQuery(plan)) {
+      const { label: dateLabel, ...dateRange } = this.planDateFilters(plan);
+      if (dateLabel) {
+        labelParts.splice(1, 0, dateLabel);
+      }
+      return this.finishAssetSearch(
+        userId,
+        displayName,
+        labelParts.filter(Boolean).join(" · "),
+        plan,
+        {
+          personIds: resolved.map((p) => p.id),
+          ...dateRange,
+        },
+      );
+    }
+
+    return {
+      kind: "clarify",
+      message: `請提供「${displayName}」的年齡（例如 7 歲）、拍攝日期，或加上地點（例如在日本）。`,
+    };
   }
 
   private async searchWithPerson(

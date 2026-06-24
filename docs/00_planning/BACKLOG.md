@@ -57,9 +57,9 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 
 **建議（2026-06-24）**：**不要**現在直接開跑每週 rsync；與 Phase 4 停機窗錯開。可平行做 delta export 路徑、配額、`rsync --dry-run`、LaunchAgent plist 草稿。
 
-- [ ] delta NFS export 路徑與配額（`delta.3q.fi`）
-- [ ] `local-archive` `originals/` rsync LaunchAgent（週次，錯開週日 04:00 data-backup）
-- [ ] `icloud-primary` `originals/` rsync（同上）
+- [x] delta NFS export 路徑與配額（`delta.3q.fi` · `/home/nfs-storage/photos-backup/mac-studio/`）
+- [x] `mac-library-backup-dry-run.sh` prep 腳本
+- [ ] `local-archive` / `icloud-primary` originals rsync LaunchAgent（Q3 執行）
 - [ ] 還原演練：抽樣檔案 checksum 對照
 - [ ] 文件化於 PROGRESS_TRACKING Phase 5a+
 
