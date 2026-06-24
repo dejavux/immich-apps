@@ -2,7 +2,7 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-06-23（NFS 首次 rsync Complete · Grafana apply）  
+**最後更新**: 2026-06-24（5a PASS · Grafana Caddy 修復）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
@@ -25,10 +25,12 @@
 | 軌道 | 任務 | 狀態 | 備註 |
 | ------ | ------ | ------ | ------ |
 | — | **Immich Enhancement** | ✅ 結案 | Phase 0–3.6 + 3.5（purge 豁免） |
-| **Ops W1** | Phase 5a NFS + pg_dump | 🟡 **~90%** | pg **1/2** · NFS Job ✅ **157.8G** · B2 已刪 |
+| **Ops W1** | Phase 5a NFS + pg_dump | ✅ **PASS** | pg 2/2 · NFS Job ✅ · B2 已刪 |
 | **Ops** | Phase 1 probes/Redis | ✅ **已 deploy** | probes + NetworkPolicy · Redis item 待建 |
+| **Ops W3** | Phase 5b monitoring | 🟡 **~80%** | immich-ops ConfigMap ✅ · Caddy 修復 · Telegram smoke 待驗 |
 | **P2** | album reconcile | 📋 可選 | stale 27 / missing 123 |
-| **Ops W2** | Mac library → delta NFS | 📋 **已排期** | 5a PASS 後 · Q3 2026 · 見下方 |
+| **Ops W2** | Mac library → delta NFS | 📋 **已排期** | 5a PASS ✅ · Q3 2026 · 見下方 |
+| **Ops W4** | Phase 4 SSD 遷移 | 📋 **待批准** | [STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md) |
 
 ---
 
@@ -36,11 +38,11 @@
 
 ```text
 ✅  結案     Immich Enhancement（Phase 0–3.6 + 3.5 豁免）
-Ops W1       Phase 5a NFS ✅ · pg 1/2（06-24 03:00）· B2 已廢止
-Ops W2       Mac .photoslibrary → delta NFS（5a PASS 後 · Q3）
-Ops          Phase 1 deploy ✅ · 5b 告警規則 ✅ · Grafana dashboard JSON
-Ops W4       Phase 4 SSD prep runbook ✅ · 執行待 5a PASS + 停機批准
-Observability 統一整合（Prometheus/Grafana SSOT）→ **延後**獨立專案，見 OBSERVABILITY_ROADMAP.md
+Ops W1       Phase 5a ✅ PASS（pg 2/2 · NFS ✅）
+Ops W2       Mac .photoslibrary → delta NFS（Q3 · 5a PASS 後）
+Ops W3       Phase 5b 告警 + immich-ops Grafana（Caddy 修復 · Telegram smoke 待驗）
+Ops W4       Phase 4 SSD prep ✅ · 執行待停機批准
+Observability  fuqi 儀表板併入 monitoring 或獨立子網域 → OBSERVABILITY_ROADMAP.md
 P2  可選     album reconcile · Similar images · LINE V1.1 vision
 ```
 
@@ -48,8 +50,9 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 
 ## Phase 5a+ — Mac Photos Library → delta NFS（已排期）
 
-**優先級**: P1（5a PASS 後）  
+**優先級**: P1（5a PASS ✅）  
 **目標視窗**: Q3 2026  
+**前置**: Phase 5a **PASS**（2026-06-24）  
 **Runbook**: [MAC_LIBRARY_BACKUP.md](../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)
 
 - [ ] delta NFS export 路徑與配額（`delta.3q.fi`）

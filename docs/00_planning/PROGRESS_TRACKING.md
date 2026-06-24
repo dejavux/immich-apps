@@ -5,9 +5,9 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-23（NFS 首次 rsync Complete · Grafana apply）  
-**專案狀態**: ✅ **增強專案結案**（Phase 0/2/3/3.5/3.6）· Phase 1 **強化 ~90%** · Phase 5a **~90%** · Phase 5b **~70%** · Phase 4 **prep ~30%**  
-**Ops 更新**: 2026-06-23 — NFS data Job ✅ **157.8G**（7h34m）· pg **1/2**（下次 06-24 03:00）· Grafana ConfigMap apply + rollout · PR #29/#174 merged · release `6ec5aaa`  
+**最後更新**: 2026-06-24（pg 2/2 · 5a PASS · Grafana Caddy 修復）  
+**專案狀態**: ✅ **增強專案結案**（Phase 0/2/3/3.5/3.6）· Phase 1 **強化 ~90%** · Phase 5a **PASS** · Phase 5b **~80%** · Phase 4 **prep ~30%（待停機批准）**  
+**Ops 更新**: 2026-06-24 — pg **2/2**（`29702580` + `29704020`）· NFS Job ✅ · Caddy `grafana.3q.fi` → monitoring SSOT · PR #30  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
 
@@ -18,8 +18,8 @@
 | 指標 | 數值 | 說明 |
 | ------ | ------ | ------ |
 | 🔴 高優先級任務 | 0 | — |
-| 🟡 中優先級任務 | 2 | album reconcile 對齊（可選）· Phase 5a 備份（Wave W1） |
-| 🟢 低優先級任務 | 6 | Phase 1 強化 · Phase 4 SSD · Grafana · Similar images |
+| 🟡 中優先級任務 | 1 | Phase 4 SSD 停機遷移（Wave W4） |
+| 🟢 低優先級任務 | 5 | Phase 5b Telegram smoke · Similar images · Ops W2 Mac NFS |
 | ✅ 本週完成 | 12+ | 專案結案評估 · agent-prompts · LINE PR #26–#28 · Phase 3.5 豁免結案 |
 | 📈 整體進度 | **99%** | 增強專案主體 **結案** · L3 維運 backlog 獨立追蹤 |
 
@@ -34,8 +34,8 @@
 | **Phase 2** | LINE Bot | ✅ 結案 | MVP 100% | ██████████ 100% | 2026-06-12 |
 | **Phase 3** | Photo Sync | ✅ 結案 | 100% | ██████████ 100% | 2026-06-13 |
 | **Phase 3.5** | iCloud 分層 | ✅ 結案 | 豁免 purge | ██████████ 100% | 2026-06-22 |
-| **Phase 4** | Storage 優化 | 🟢 P2 | prep 完成 · 執行 BLOCKED | ███░░░░░░░ ~30% | Wave W4 |
-| **Phase 5** | Backup 監控 | 🟡 P2 | 5a ~90% NFS ✅ · 5b ~70% | █████████░ ~75% | Wave W1–W3 |
+| **Phase 4** | Storage 優化 | 🟢 P2 | prep 完成 · **待停機批准** | ███░░░░░░░ ~30% | Wave W4 |
+| **Phase 5** | Backup 監控 | 🟡 P2 | 5a **PASS** · 5b ~80% | █████████░ ~85% | Wave W1–W3 |
 
 ---
 
@@ -61,8 +61,8 @@
 | [orchestrator.md](./agent-prompts/orchestrator.md) | ✅ | W1–W3 執行 | 編排就緒 |
 | [phase-3.5-gate.md](./agent-prompts/phase-3.5-gate.md) | ✅ | reconcile dry-run ✅；purge **豁免** | **結案** |
 | [phase-1-hardening.md](./agent-prompts/phase-1-hardening.md) | ✅ | ✅ probes · NetworkPolicy · deploy | **~85%** |
-| [phase-5a-backup.md](./agent-prompts/phase-5a-backup.md) | ✅ | 🟡 pg 1/2 · NFS Job ✅ · 還原 ✅ | **~90%** |
-| [phase-5b-monitoring.md](./agent-prompts/phase-5b-monitoring.md) | ✅ | 🟡 Grafana apply ✅ · deep link 待驗 | **~70%** |
+| [phase-5a-backup.md](./agent-prompts/phase-5a-backup.md) | ✅ | ✅ pg 2/2 · NFS Job ✅ · 還原 ✅ | **100%** |
+| [phase-5b-monitoring.md](./agent-prompts/phase-5b-monitoring.md) | ✅ | 🟡 Grafana Caddy 修復 · Telegram smoke 待驗 | **~80%** |
 | [phase-4-storage-ssd.md](./agent-prompts/phase-4-storage-ssd.md) | ✅ | prep runbook + lama 盤點 | **~30%** |
 
 **Phase 1「85%」**（2026-06-22 deploy）：
@@ -708,24 +708,25 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 ---
 
-### Phase 4: 存儲優化（prep ~30% · 執行 BLOCKED）
+### Phase 4: 存儲優化（prep ~30% · **待停機批准**）
 
-**狀態**: 📋 prep 完成 · **執行未開始**  
-**依賴**: Phase 5a gate **PASS** + 使用者批准停機窗
+**狀態**: 📋 prep 完成 · **5a PASS** · 執行待使用者批准停機窗  
+**依賴**: ~~Phase 5a gate PASS~~ ✅ · 使用者批准停機窗
 
 **任務**：
 
 - [x] 4-prep-A：lama NVMe/HDD 盤點（2026-06-22）
 - [x] 4-prep-B：[STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md)
+- [ ] **批准停機窗**（建議週末低峰；見 runbook §停機步驟）
 - [ ] PostgreSQL `subPath: postgres-data` → lama NVMe
 - [ ] 可選：thumbs → SSD
 - [ ] 停機遷移執行 + 效能基準
 
 ---
 
-### Phase 5: 備份與監控（~75%）
+### Phase 5: 備份與監控（~85%）
 
-**狀態**: 5a ~90% · 5b ~70%  
+**狀態**: 5a **PASS** · 5b ~80%  
 **Runbook**: [BACKUP_RESTORE.md](../20_guides/infra/runbooks/BACKUP_RESTORE.md)
 
 **5a 任務**（Wave W1–W2）：
@@ -733,14 +734,15 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 - [x] pg_dump CronJob + 還原演練（13759 = prod）
 - [x] NFS 備份 PVC + rsync CronJob（PR #174）
 - [x] 廢止 B2：`Immich-B2-Backup` OP item 已刪
-- [ ] pg 連續 **2 次排程** Success（**1/2**；下次 06-24 03:00）
-- [x] NFS `immich-data-backup` Job **Complete**（`immich-data-backup-nfs-test-1782176320` · **157.8G** · 7h34m）
+- [x] pg 連續 **2 次排程** Success（`29702580` @ 06-23 03:00 · `29704020` @ 06-24 03:00）
+- [x] NFS `immich-data-backup` Job **Complete**（`immich-data-backup-nfs-test-1782176320` · **157.8G**）
 
 **5b 任務**（Wave W3）：
 
 - [x] PrometheusRule `immich.rules` deploy
 - [x] Grafana `immich-ops` JSON in ConfigMap（PR #174）
 - [x] Grafana ConfigMap apply + rollout（2026-06-23）
+- [x] Caddy `grafana.3q.fi` → monitoring LoadBalancer（2026-06-24；根因：曾誤指 fuqi NodePort 30300）
 - [ ] Deep link `https://grafana.3q.fi/d/immich-ops` 驗證
 - [ ] Telegram smoke test
 
@@ -961,11 +963,11 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 ---
 
 **專案狀態**: ✅ **增強專案結案**（2026-06-22）  
-**Immich Ops backlog**: Phase 1 ~90% · 5a **~90%**（NFS ✅ · pg 2/2 待 06-24）· 5b ~70% · 4 prep（待 5a PASS）
+**Immich Ops backlog**: Phase 1 ~90% · 5a **PASS** · 5b ~80% · 4 prep（**待停機批准**）
 
-**Defer（P2/P3）**: album reconcile · LINE V1.1 Grafana · Similar Images · Photo Edit  
+**Defer（P2/P3）**: album reconcile · fuqi Grafana 併入 monitoring · Ops W2 Mac NFS · Similar Images · Photo Edit  
 **Infra**: immich v2.7.5 · LINE bot release `6ec5aaa` 線上
 
-**最後更新**: 2026-06-23  
+**最後更新**: 2026-06-24  
 **維護者**: Infrastructure Team + App Dev Team  
 **更新頻率**: Phase 里程碑或全量 sync 階段變更時
