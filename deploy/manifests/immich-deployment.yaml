@@ -22,6 +22,10 @@ spec:
       # hostPath PV immich-local-pv 僅在 lama 的 /mnt/immich，ReadWriteOnce 必須與該節點一致
       nodeSelector:
         kubernetes.io/hostname: lama
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
       containers:
         - name: immich-server
           image: ghcr.io/immich-app/immich-server:release
@@ -210,6 +214,8 @@ metadata:
     app: immich-postgres
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: immich-postgres
@@ -221,6 +227,10 @@ spec:
       # 與 immich-server 相同：postgres 資料在 immich-local-pvc（hostPath 綁 lama）
       nodeSelector:
         kubernetes.io/hostname: lama
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
       containers:
         - name: immich-postgres
           image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0

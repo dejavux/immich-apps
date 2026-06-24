@@ -19,13 +19,13 @@
 | ------ | ------ | ------ |
 | Phase 5a gate | ✅ | pg 2/2 · NFS test Complete |
 | 停機窗批准 | ✅ | 2026-06-24 |
-| lama NVMe 目標目錄 | ❌ | `/nvme/immich-postgres` **尚未建立**（根分區 NVMe 645G avail） |
+| lama NVMe 目標目錄 | ✅ | `/nvme/immich-postgres` 已建立（2026-06-24 · `chown 999:999`） |
 | postgres 現況 | HDD | `immich-local-pv` → `/mnt/immich` · subPath `postgres-data`（~470M） |
-| postgres Deployment | ⚠️ | `ProgressDeadlineExceeded`：新 RS Pending（缺 `nvidia.com/gpu` toleration）；舊 pod 仍 Running |
+| postgres Deployment | ✅ | rollback + manifest 補 `nvidia.com/gpu` toleration · `Recreate` strategy（2026-06-24） |
 | 5b Telegram smoke | 🟡 | 2026-06-24 03:22Z 重送 3 條 · 待使用者確認 |
 | Grafana immich-ops | ✅ | server/postgres Up · backup age 正常 |
 
-**結論**：**勿於 2026-06-24 立即執行**。先修 postgres rollout → 建立 NVMe 目錄 → 排定週末低峰窗。
+**結論**：NVMe prep 與 postgres rollout **已完成**（2026-06-24）。**排定週末低峰窗**執行 §4-3…4-6。
 
 ---
 
