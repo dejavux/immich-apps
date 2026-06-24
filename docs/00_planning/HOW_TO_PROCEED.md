@@ -39,8 +39,10 @@
 | prep runbook + lama 盤點 | ✅ |
 | 停機窗批准 | ✅ **2026-06-24** |
 | Postgres → lama NVMe | 📋 **待排程**（建議週末低峰） |
+| NVMe 目錄 prep | ❌ `/nvme/immich-postgres` 未建立 |
+| postgres rollout | ⚠️ `ProgressDeadlineExceeded`（新 pod Pending） |
 
-**建議**：選定低峰週末；依 runbook §停機步驟執行 pg 資料目錄遷移。
+**建議（2026-06-24）**：**今日不執行**。先修 postgres Deployment → prep NVMe 目錄 → 週末低峰 30–60 分鐘依 runbook 遷移。
 
 ---
 

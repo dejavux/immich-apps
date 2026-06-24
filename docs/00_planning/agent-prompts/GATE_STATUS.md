@@ -51,8 +51,8 @@
 | 3.5 Gate | ✅ | 結案 | **100%** |
 | 1 Hardening | ✅ PR #174 | deploy + Redis secret | **~90%** |
 | 5a Backup | ✅ PR #174/#29 | pg 2/2 + NFS Job ✅ | **100%** |
-| 5b Monitoring | ✅ | PrometheusRule + Grafana · RBAC 修復 · immich OTEL metrics | **~95%**（smoke 已重送 3 條） |
-| 4 SSD | ✅ prep | **停機窗已批准 2026-06-24** · 執行待排程 | **~35%** |
+| 5b Monitoring | ✅ | PrometheusRule + Grafana · RBAC 修復 · immich OTEL metrics | **~95%**（smoke 2026-06-24 03:22Z 重送 · 無 401） |
+| 4 SSD | ✅ prep | **停機窗已批准 2026-06-24** · **執行待排程**（NVMe 目錄未建 · postgres rollout 卡住） | **~35%** |
 
 ---
 
@@ -64,13 +64,13 @@
 | **B** Phase 5a Backup | ✅ **PASS** |
 | **C** Phase 1 Hardening | ✅ deploy（Redis 已 rollout） |
 | **D** Phase 4 SSD | ✅ **已批准**（2026-06-24）· 執行待排程 → [STORAGE_MIGRATION.md](../../20_guides/infra/runbooks/STORAGE_MIGRATION.md) |
-| **E** Phase 5b Monitoring | 🟡 Grafana 有資料 · Telegram smoke 已重送（待使用者確認 3 條） |
+| **E** Phase 5b Monitoring | 🟡 Grafana ✅ 有資料 · smoke 2026-06-24 03:22Z 重送（待使用者確認 3 條） |
 
 ---
 
 ## 下一動作
 
 1. **5b**：確認 Telegram 收到 3 條 smoke（🤖⚠️ Sentinel · ⚠️ Platform · ⚠️ Immich-backup）
-2. **Phase 4**：排定停機窗執行 → [STORAGE_MIGRATION.md](../../20_guides/infra/runbooks/STORAGE_MIGRATION.md)（Postgres `subPath` → lama NVMe）
+2. **Phase 4**：**先**修 `immich-postgres` rollout（補 GPU toleration）+ 建立 lama `/nvme/immich-postgres` → 排週末低峰窗 → [STORAGE_MIGRATION.md](../../20_guides/infra/runbooks/STORAGE_MIGRATION.md)
 3. **Ops W2**（Q3 · **建議延後**）：Mac `.photoslibrary` → delta NFS — 可先做 prep（delta 路徑、LaunchAgent 設計），**不阻塞** Phase 4（見 [BACKLOG.md](../BACKLOG.md) · [MAC_LIBRARY_BACKUP.md](../../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)）
 4. **Observability**：fuqi 儀表板併入 monitoring ConfigMap 或獨立子網域（見 [OBSERVABILITY_ROADMAP.md](../../20_guides/infra/monitoring/OBSERVABILITY_ROADMAP.md)）
