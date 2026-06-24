@@ -2,7 +2,7 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-06-24（5a PASS · Grafana Caddy 修復）  
+**最後更新**: 2026-06-24（5a PASS · Grafana RBAC 修復 · Phase 4 批准）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
@@ -27,10 +27,10 @@
 | — | **Immich Enhancement** | ✅ 結案 | Phase 0–3.6 + 3.5（purge 豁免） |
 | **Ops W1** | Phase 5a NFS + pg_dump | ✅ **PASS** | pg 2/2 · NFS Job ✅ · B2 已刪 |
 | **Ops** | Phase 1 probes/Redis | ✅ **已 deploy** | probes + NetworkPolicy · Redis item 待建 |
-| **Ops W3** | Phase 5b monitoring | 🟡 **~80%** | immich-ops ConfigMap ✅ · Caddy 修復 · Telegram smoke 待驗 |
+| **Ops W3** | Phase 5b monitoring | 🟡 **~95%** | RBAC 修復 · immich-ops 有資料 · smoke 已重送 |
 | **P2** | album reconcile | 📋 可選 | stale 27 / missing 123 |
-| **Ops W2** | Mac library → delta NFS | 📋 **已排期** | 5a PASS ✅ · Q3 2026 · 見下方 |
-| **Ops W4** | Phase 4 SSD 遷移 | 📋 **待批准** | [STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md) |
+| **Ops W2** | Mac library → delta NFS | 📋 **Q3 延後** | prep 可平行 · 見下方建議 |
+| **Ops W4** | Phase 4 SSD 遷移 | ✅ **已批准** | 執行待排程 · [STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md) |
 
 ---
 
@@ -39,21 +39,23 @@
 ```text
 ✅  結案     Immich Enhancement（Phase 0–3.6 + 3.5 豁免）
 Ops W1       Phase 5a ✅ PASS（pg 2/2 · NFS ✅）
-Ops W2       Mac .photoslibrary → delta NFS（Q3 · 5a PASS 後）
-Ops W3       Phase 5b 告警 + immich-ops Grafana（Caddy 修復 · Telegram smoke 待驗）
-Ops W4       Phase 4 SSD prep ✅ · 執行待停機批准
+Ops W2       Mac .photoslibrary → delta NFS（Q3 · prep 可平行 · 執行延後）
+Ops W3       Phase 5b 告警 + immich-ops Grafana（RBAC 修復 · ~95%）
+Ops W4       Phase 4 SSD prep ✅ · **已批准 2026-06-24** · 執行待排程
 Observability  fuqi 儀表板併入 monitoring 或獨立子網域 → OBSERVABILITY_ROADMAP.md
 P2  可選     album reconcile · Similar images · LINE V1.1 vision
 ```
 
 ---
 
-## Phase 5a+ — Mac Photos Library → delta NFS（已排期）
+## Phase 5a+ — Mac Photos Library → delta NFS（Q3 · 建議延後）
 
 **優先級**: P1（5a PASS ✅）  
-**目標視窗**: Q3 2026  
-**前置**: Phase 5a **PASS**（2026-06-24）  
+**目標視窗**: Q3 2026（**執行**；prep 可立即開始）  
+**前置**: Phase 5a **PASS**（2026-06-24）· Phase 4 完成後再跑首輪全量 rsync  
 **Runbook**: [MAC_LIBRARY_BACKUP.md](../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)
+
+**建議（2026-06-24）**：**不要**現在直接開跑每週 rsync；與 Phase 4 停機窗錯開。可平行做 delta export 路徑、配額、`rsync --dry-run`、LaunchAgent plist 草稿。
 
 - [ ] delta NFS export 路徑與配額（`delta.3q.fi`）
 - [ ] `local-archive` `originals/` rsync LaunchAgent（週次，錯開週日 04:00 data-backup）
@@ -140,8 +142,8 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 - [x] Dashboard 規格文件
 - [x] Dashboard JSON（UID `immich-ops`）in ConfigMap
 - [x] cluster apply + rollout（2026-06-23）
-- [ ] deep link 驗證 `https://grafana.3q.fi/d/immich-ops`
-- [ ] Telegram smoke test 告警
+- [ ] deep link 驗證 `https://grafana.3q.fi/d/immich-ops`（✅ PromQL 有資料 2026-06-24）
+- [ ] Telegram smoke test 告警（已重送 3 條 · 待確認）
 
 ---
 

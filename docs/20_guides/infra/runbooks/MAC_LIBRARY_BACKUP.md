@@ -1,6 +1,16 @@
 # Mac Photos Library 原始檔備份策略
 
-**最後更新**：2026-06-23
+**最後更新**：2026-06-24
+
+---
+
+## 排程建議（2026-06-24）
+
+| 項目 | 建議 |
+| ------ | ------ |
+| **Phase 4 SSD** | **優先** — 停機窗已批准；選週末低峰執行 |
+| **Ops W2 Mac → delta NFS** | **延後至 Q3** — 可平行 prep（export 路徑、rsync dry-run、LaunchAgent 草稿），不阻塞 Phase 4 |
+| **首輪 Mac rsync** | Phase 4 完成 + 一輪 pg/NFS 備份驗證後再跑 |
 
 ---
 

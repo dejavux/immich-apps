@@ -14,6 +14,10 @@ spec:
     metadata:
       labels:
         app: immich-server
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8081"
+        prometheus.io/path: "/metrics"
     spec:
       # hostPath PV immich-local-pv 僅在 lama 的 /mnt/immich，ReadWriteOnce 必須與該節點一致
       nodeSelector:
@@ -71,6 +75,8 @@ spec:
               value: "http://immich-machine-learning:3003"
             - name: MACHINE_LEARNING_ENABLED
               value: "true"
+            - name: IMMICH_TELEMETRY_INCLUDE
+              value: "all"
           volumeMounts:
             - name: immich-data
               mountPath: /data
@@ -78,6 +84,8 @@ spec:
               mountPath: /external-library
           ports:
             - containerPort: 2283
+            - containerPort: 8081
+              name: metrics
           resources:
             requests:
               memory: "2Gi"
