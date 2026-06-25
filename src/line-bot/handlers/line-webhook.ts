@@ -264,6 +264,8 @@ async function uploadLineMedia(
       bytes: 0,
       modeLabel,
       success: false,
+      errorReason:
+        error instanceof Error ? error.message : "照片上傳失敗，請稍後再試",
     };
   }
 
@@ -274,6 +276,9 @@ async function uploadLineMedia(
     item: summaryItem,
     sendMessages: async (token, messages) => {
       await messagingClient.replyMessage({ replyToken: token, messages });
+    },
+    pushMessage: async (uid, messages) => {
+      await messagingClient.pushMessage({ to: uid, messages });
     },
   });
 }

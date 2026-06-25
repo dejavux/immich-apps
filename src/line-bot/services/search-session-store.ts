@@ -5,6 +5,11 @@ export interface SearchSessionState {
   plan: Partial<PhotoSearchPlan>;
   /** Person candidates when disambiguation is needed */
   personCandidates?: ImmichPersonSummary[];
+  /** Plan awaiting user confirmation before search executes */
+  pendingPlan?: Partial<PhotoSearchPlan>;
+  awaitingConfirmation?: boolean;
+  /** Last plan that returned zero results — drives empty-result quick replies */
+  lastFailedPlan?: Partial<PhotoSearchPlan>;
   updatedAt: number;
 }
 

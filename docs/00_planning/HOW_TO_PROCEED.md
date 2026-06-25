@@ -1,6 +1,6 @@
 # 如何進行 — Immich Apps 執行指南
 
-**日期**: 2026-06-24  
+**日期**: 2026-06-25  
 **Repo**: <https://github.com/dejavux/immich-apps>  
 **進度 SSOT**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **Gate 狀態**: [agent-prompts/GATE_STATUS.md](./agent-prompts/GATE_STATUS.md)
@@ -12,7 +12,7 @@
 | 項目 | 狀態 |
 | ------ | ------ |
 | **Immich Enhancement** | ✅ **結案** |
-| LINE Bot | release **`af23fe4`**（Helm rev 35） |
+| LINE Bot | release **`af23fe4`**（Helm rev 35）· docs **`c41f09d`** |
 | **Immich Ops** | 5a **PASS** · 5b **~95%** · Phase 4 ✅ **COMPLETE** |
 
 ---
@@ -38,33 +38,37 @@ Postgres 已遷至 lama NVMe `/nvme/immich-postgres`；upload 仍 HDD。詳見 [
 
 ---
 
-## Ops W2 — Mac library → delta NFS（進行中）
+## Ops W2 — Mac library → delta **HDD**（進行中）
 
 → [MAC_LIBRARY_BACKUP.md](../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)
 
 **前置**：Phase 4 ✅ · 5a PASS ✅
 
+**SSOT**：`delta.3q.fi:/mnt/volume1/nfs-models/photos-backup/mac-studio/`（13T HDD · **非** NVMe `/home/nfs-storage`）
+
 | 項目 | 狀態 |
 | ------ | ------ |
-| delta 目錄 | ✅ `ssh delta` mkdir 2026-06-24 |
+| 路徑決策 NVMe→HDD | ✅ 2026-06-25（PR #31） |
+| delta HDD 目錄 + chown | ✅ |
 | dry-run | ✅ ~146G + ~18G |
-| 首輪 rsync | 🟡 **進行中**（`scripts/mac-library-backup-rsync.sh`） |
-| LaunchAgent 草稿 | ✅ `scripts/mac-library-backup/com.immich.mac-library-backup.plist.example`（週六 02:00） |
-| 週次自動化 | 📋 Q3 安裝 LaunchAgent |
+| 首輪 rsync | 🟡 **進行中**（icloud ~17G · local ~28G · screen `immich-mac-backup`） |
+| NVMe 舊 partial 清理 | ✅ ~48G 釋放 |
+| LaunchAgent | ✅ 已 `launchctl load`（週六 02:00） |
+| checksum 抽樣 | 📋 rsync Complete 後 |
 
-- [x] delta NFS 路徑 SSOT
-- [x] `mac-library-backup-dry-run.sh`
+- [x] delta NFS 路徑 SSOT（HDD）
+- [x] `mac-library-backup-dry-run.sh` / `mac-library-backup-rsync.sh`
 - [x] 本機 dry-run（local-archive **146G** · icloud-primary **18G**）
-- [x] delta 遠端目錄建立
-- [x] LaunchAgent plist 草稿
+- [x] delta 遠端目錄建立（HDD）
+- [x] LaunchAgent plist + load
 - [ ] 首輪 rsync Complete + 抽樣 checksum
-- [ ] `launchctl load` 啟用週次排程（Q3）
 
 **追蹤首輪 rsync**：
 
 ```bash
 tail -f ~/Library/Logs/immich-mac-backup/rsync-*.log
-pgrep -fl mac-library-backup-rsync
+screen -r immich-mac-backup   # Ctrl+A D detach
+ssh delta.3q.fi 'du -sh /mnt/volume1/nfs-models/photos-backup/mac-studio/*'
 ```
 
 ---
@@ -72,19 +76,11 @@ pgrep -fl mac-library-backup-rsync
 ## 驗證 K8s 是否跑最新 image
 
 ```bash
-# 期望 tag = git short SHA（release 後）
-git -C /path/to/immich-apps rev-parse --short HEAD
-
-kubectl get deploy immich-line-bot -n immich \
-  -o jsonpath='deploy={.spec.template.spec.containers[0].image}{"\n"}'
-
-kubectl get pods -n immich -l app.kubernetes.io/name=immich-line-bot \
-  -o jsonpath='pod={.items[0].spec.containers[0].image} started={.items[0].status.startTime}{"\n"}'
-
-helm list -n immich -f immich-line-bot
+make verify-deploy
+# 或手動：
+git rev-parse --short HEAD
+kubectl get deploy immich-line-bot -n immich -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
 ```
-
-三者 tag 一致（例如 `af23fe4`）且 pod `STARTED` 在 deploy 之後 → 已跑最新版。
 
 ---
 

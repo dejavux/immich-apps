@@ -44,8 +44,13 @@ export interface PhotoSearchAssetHit {
   localDateTime?: string;
 }
 
+export interface QuickReplyAction {
+  label: string;
+  text: string;
+}
+
 export interface PhotoSearchResult {
-  kind: "results" | "clarify" | "help" | "empty" | "error";
+  kind: "results" | "clarify" | "help" | "empty" | "error" | "confirm";
   message: string;
   assets?: PhotoSearchAssetHit[];
   total?: number;
@@ -53,6 +58,10 @@ export interface PhotoSearchResult {
   personCandidates?: ImmichPersonSummary[];
   /** Immich web deep-link to view all results (shown when results are truncated). */
   viewAllUrl?: string;
+  /** When kind=confirm — plan awaiting user confirmation. */
+  plan?: Partial<PhotoSearchPlan>;
+  /** When kind=empty — suggested follow-up actions. */
+  quickReplyActions?: QuickReplyAction[];
 }
 
 export interface MetadataSearchParams {

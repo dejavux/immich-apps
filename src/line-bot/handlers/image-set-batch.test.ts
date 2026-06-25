@@ -1,7 +1,12 @@
 import {
+  buildBatchProgressText,
   buildBatchSummaryText,
   buildSingleUploadText,
   buildSingleUploadFlexMessages,
+  buildUploadFailureFlexMessages,
+  coordinateImageSetReply,
+  resetImageSetBatchesForTest,
+  shouldSendBatchProgress,
   type UploadSummaryItem,
 } from "./image-set-batch";
 
@@ -125,16 +130,110 @@ describe("buildSingleUploadFlexMessages", () => {
     expect(messages[0].type).toBe("text");
   });
 
-  it("returns error text for failure", () => {
+  it("returns error flex for failure", () => {
+    const messages = buildUploadFailureFlexMessages({
+      filename: "x.jpg",
+      bytes: 0,
+      modeLabel: "照片（image）",
+      success: false,
+      errorReason: "檔案過大",
+    });
+    expect(messages).toHaveLength(1);
+    expect(messages[0].type).toBe("flex");
+    if (messages[0].type === "flex" && messages[0].contents.type === "bubble") {
+      expect(JSON.stringify(messages[0].contents)).toContain("上傳失敗");
+      expect(JSON.stringify(messages[0].contents)).toContain("檔案過大");
+      expect(JSON.stringify(messages[0].contents)).toContain("改以檔案傳送");
+    }
+  });
+
+  it("returns error flex via buildSingleUploadFlexMessages", () => {
     const messages = buildSingleUploadFlexMessages({
       filename: "x.jpg",
       bytes: 0,
       modeLabel: "照片（image）",
       success: false,
+      errorReason: "timeout",
     });
-    expect(messages).toHaveLength(1);
-    if (messages[0].type === "text") {
-      expect(messages[0].text).toContain("失敗");
-    }
+    expect(messages[0].type).toBe("flex");
+  });
+});
+
+describe("batch upload progress", () => {
+  beforeEach(() => {
+    resetImageSetBatchesForTest();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("formats progress text", () => {
+    expect(buildBatchProgressText(3, 8)).toBe("上傳中 3/8…");
+  });
+
+  it("sends throttled progress via pushMessage", async () => {
+    const pushMessage = jest.fn().mockResolvedValue(undefined);
+    const sendMessages = jest.fn().mockResolvedValue(undefined);
+    const item: UploadSummaryItem = {
+      filename: "a.jpg",
+      bytes: 100,
+      modeLabel: "照片（image）",
+      success: true,
+    };
+
+    await coordinateImageSetReply({
+      userId: "u1",
+      replyToken: "r1",
+      imageSet: { id: "set1", total: 4 },
+      item,
+      sendMessages,
+      pushMessage,
+    });
+
+    expect(pushMessage).toHaveBeenCalledWith("u1", [
+      { type: "text", text: "上傳中 1/4…" },
+    ]);
+
+    await coordinateImageSetReply({
+      userId: "u1",
+      replyToken: "r2",
+      imageSet: { id: "set1", total: 4 },
+      item: { ...item, filename: "b.jpg" },
+      sendMessages,
+      pushMessage,
+    });
+
+    expect(pushMessage).toHaveBeenCalledWith("u1", [
+      { type: "text", text: "上傳中 2/4…" },
+    ]);
+  });
+});
+
+describe("shouldSendBatchProgress", () => {
+  it("sends on first item when total known", () => {
+    expect(
+      shouldSendBatchProgress({
+        userId: "u1",
+        replyToken: "r1",
+        total: 4,
+        items: [{ filename: "a", bytes: 1, modeLabel: "x", success: true }],
+      }),
+    ).toBe(true);
+  });
+
+  it("sends every two items", () => {
+    expect(
+      shouldSendBatchProgress({
+        userId: "u1",
+        replyToken: "r1",
+        total: 4,
+        items: [
+          { filename: "a", bytes: 1, modeLabel: "x", success: true },
+          { filename: "b", bytes: 1, modeLabel: "x", success: true },
+        ],
+      }),
+    ).toBe(true);
   });
 });

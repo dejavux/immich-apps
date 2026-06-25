@@ -1,8 +1,15 @@
 import {
+  buildSearchConfirmSummary,
   formatResultsMessage,
+  isConfirmationAffirmative,
+  isConfirmationNegative,
   mergePlans,
+  needsClarifyBeforeConfirm,
+  PhotoSearchService,
   resolveTakenRange,
 } from "./photo-search-service";
+import { SearchSessionStore } from "./search-session-store";
+import type { ImmichClient } from "../../shared/immich-client";
 import {
   ensureActivityFromText,
   ensureAgeFromText,
@@ -15,6 +22,185 @@ import {
   tryParsePersonAge,
   tryParsePersonScenePhoto,
 } from "./photo-search-prompt";
+
+describe("buildSearchConfirmSummary", () => {
+  it("formats multi-person location search", () => {
+    const summary = buildSearchConfirmSummary({
+      personNames: ["小光", "steffi"],
+      country: "Japan",
+      anyDate: true,
+    });
+    expect(summary).toContain("小光");
+    expect(summary).toContain("steffi");
+    expect(summary).toContain("日本");
+    expect(summary).toContain("不限年齡");
+    expect(summary).toMatch(/嗎？$/);
+  });
+
+  it("formats scene-only search", () => {
+    const summary = buildSearchConfirmSummary({
+      sceneQuery: "海邊",
+    });
+    expect(summary).toContain("海邊");
+  });
+});
+
+describe("needsClarifyBeforeConfirm", () => {
+  it("requires clarify for person without age or location", () => {
+    expect(needsClarifyBeforeConfirm({ personNames: ["小蕊"] })).toBe(true);
+  });
+
+  it("allows confirm for person with location", () => {
+    expect(
+      needsClarifyBeforeConfirm({
+        personNames: ["小光", "steffi"],
+        country: "Japan",
+        anyDate: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("requires clarify when no criteria at all", () => {
+    expect(needsClarifyBeforeConfirm({})).toBe(true);
+  });
+});
+
+describe("confirmation keywords", () => {
+  it("detects affirmative replies", () => {
+    expect(isConfirmationAffirmative("確認")).toBe(true);
+    expect(isConfirmationAffirmative("好")).toBe(true);
+    expect(isConfirmationAffirmative("Y")).toBe(true);
+  });
+
+  it("detects negative replies", () => {
+    expect(isConfirmationNegative("取消")).toBe(true);
+    expect(isConfirmationNegative("否")).toBe(true);
+  });
+});
+
+function createMockImmich(overrides: Partial<ImmichClient> = {}): ImmichClient {
+  return {
+    searchPersonByName: jest
+      .fn()
+      .mockResolvedValue([{ id: "p1", name: "小光" }]),
+    searchMetadata: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+    searchSmart: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+    ...overrides,
+  } as unknown as ImmichClient;
+}
+
+describe("PhotoSearchService confirmation flow", () => {
+  const sessionStore = new SearchSessionStore(60_000);
+
+  beforeEach(() => {
+    sessionStore.resetForTest();
+  });
+
+  function createService(immich = createMockImmich()) {
+    return new PhotoSearchService({
+      immichClient: immich,
+      immichWebUrl: "https://immich.3q.fi",
+      sessionStore,
+      maxResults: 10,
+      ageWindowDays: 45,
+      personAliases: new Map(),
+    });
+  }
+
+  it("returns confirm before executing complete plan", async () => {
+    const service = createService();
+    const result = await service.handleMessage(
+      "u1",
+      "找小光和 steffi 在日本的照片",
+    );
+    expect(result.kind).toBe("confirm");
+    expect(result.message).toContain("日本");
+    expect(sessionStore.get("u1")?.awaitingConfirmation).toBe(true);
+  });
+
+  it("executes search after confirmation", async () => {
+    const immich = createMockImmich({
+      searchMetadata: jest.fn().mockResolvedValue({
+        items: [
+          {
+            id: "a1",
+            originalFileName: "x.jpg",
+            localDateTime: "2024-01-01T00:00:00.000Z",
+          },
+        ],
+        total: 1,
+      }),
+    });
+    const service = createService(immich);
+    await service.handleMessage("u1", "找小光和 steffi 在日本的照片");
+    const result = await service.handleMessage("u1", "確認");
+    expect(result.kind).toBe("results");
+    expect(immich.searchMetadata).toHaveBeenCalled();
+  });
+
+  it("cancels pending search", async () => {
+    const service = createService();
+    await service.handleMessage("u1", "找在日本的照片");
+    const result = await service.handleMessage("u1", "取消");
+    expect(result.kind).toBe("help");
+    expect(result.message).toContain("已取消");
+    expect(sessionStore.get("u1")).toBeUndefined();
+  });
+
+  it("skips confirmation for person choice", async () => {
+    const immich = createMockImmich({
+      searchPersonByName: jest.fn().mockResolvedValue([
+        { id: "p1", name: "rayna", birthDate: "2019-03-15" },
+        { id: "p2", name: "rayna2" },
+      ]),
+      searchMetadata: jest.fn().mockResolvedValue({
+        items: [
+          {
+            id: "a1",
+            originalFileName: "x.jpg",
+            localDateTime: "2024-01-01T00:00:00.000Z",
+          },
+        ],
+        total: 1,
+      }),
+    });
+    const service = createService(immich);
+    await service.handleMessage("u1", "找小蕊7歲的照片");
+    const clarify = await service.handleMessage("u1", "確認");
+    expect(clarify.kind).toBe("clarify");
+    const result = await service.handleMessage("u1", "1");
+    expect(result.kind).toBe("results");
+  });
+});
+
+describe("PhotoSearchService empty quick reply", () => {
+  const sessionStore = new SearchSessionStore(60_000);
+
+  beforeEach(() => {
+    sessionStore.resetForTest();
+  });
+
+  it("stores failed plan and offers relaxed search", async () => {
+    const immich = createMockImmich();
+    const service = new PhotoSearchService({
+      immichClient: immich,
+      immichWebUrl: "https://immich.3q.fi",
+      sessionStore,
+      maxResults: 10,
+      ageWindowDays: 45,
+      personAliases: new Map(),
+    });
+
+    await service.handleMessage("u1", "找小光和 steffi 在日本的照片");
+    const emptyResult = await service.handleMessage("u1", "確認");
+    expect(emptyResult.kind).toBe("empty");
+    expect(emptyResult.quickReplyActions?.length).toBeGreaterThan(0);
+
+    const relaxed = await service.handleMessage("u1", "放寬年齡");
+    expect(relaxed.kind).toBe("confirm");
+    expect(relaxed.message).toContain("不限年齡");
+  });
+});
 
 describe("parseSearchPlanFallback", () => {
   it("parses person and age", () => {

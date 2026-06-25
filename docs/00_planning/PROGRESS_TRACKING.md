@@ -5,9 +5,9 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-24（Phase 4 COMPLETE · postgres → NVMe）  
+**最後更新**: 2026-06-25（Ops W2 HDD · PR #31 · rsync ~45G/164G）  
 **專案狀態**: ✅ **增強專案結案** · Phase 5a **PASS** · Phase 5b **~95%** · Phase 4 ✅ **COMPLETE**  
-**Ops 更新**: 2026-06-24 — Ops W2 首輪 Mac→delta rsync 進行中 · LINE Bot `af23fe4`  
+**Ops 更新**: 2026-06-25 — Mac 備份改 delta HDD（`/mnt/volume1/nfs-models`）· 首輪 rsync screen 執行中 · LINE Bot `af23fe4` · docs `c41f09d`  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
 
@@ -18,8 +18,8 @@
 | 指標 | 數值 | 說明 |
 | ------ | ------ | ------ |
 | 🔴 高優先級任務 | 0 | — |
-| 🟡 中優先級任務 | 1 | Phase 4 SSD 停機遷移（Wave W4 · 已批准待排程） |
-| 🟢 低優先級任務 | 5 | Ops W2 Mac NFS（Q3）· Similar images |
+| 🟡 中優先級任務 | 1 | Ops W2 Mac→delta HDD 首輪 rsync |
+| 🟢 低優先級任務 | 4 | Similar images · album reconcile · LINE V1.1 |
 | ✅ 本週完成 | 12+ | 專案結案評估 · agent-prompts · LINE PR #26–#28 · Phase 3.5 豁免結案 |
 | 📈 整體進度 | **99%** | 增強專案主體 **結案** · L3 維運 backlog 獨立追蹤 |
 
@@ -63,7 +63,7 @@
 | [phase-1-hardening.md](./agent-prompts/phase-1-hardening.md) | ✅ | ✅ probes · NetworkPolicy · deploy | **~85%** |
 | [phase-5a-backup.md](./agent-prompts/phase-5a-backup.md) | ✅ | ✅ pg 2/2 · NFS Job ✅ · 還原 ✅ | **100%** |
 | [phase-5b-monitoring.md](./agent-prompts/phase-5b-monitoring.md) | ✅ | 🟡 Grafana RBAC 修復 · smoke 已重送 | **~95%** |
-| [phase-4-storage-ssd.md](./agent-prompts/phase-4-storage-ssd.md) | ✅ | prep runbook + lama 盤點 | **~30%** |
+| [phase-4-storage-ssd.md](./agent-prompts/phase-4-storage-ssd.md) | ✅ | postgres → NVMe 2026-06-24 | **100%** |
 
 **Phase 1「85%」**（2026-06-22 deploy）：
 
@@ -774,9 +774,11 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 ## 🔄 每週進度更新
 
-### Week 1 (2026-05-27 ~ 2026-06-02)
+> **說明**：Week 1–2 為 2026-05/06 歷史紀錄（當時未即時勾選，2026-06-25 補登）。**當前活動**見 [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md) · [BACKLOG.md](./BACKLOG.md)。
 
-**目標**: 完成 Phase 2 LINE Bot
+### Week 1 (2026-05-27 ~ 2026-06-02) — ✅ 已完成（Phase 2 啟動）
+
+**目標**: 完成 Phase 2 LINE Bot 規劃與環境
 
 **已完成**:
 
@@ -786,31 +788,36 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 - [x] 2026-05-27: 優先級調整（LINE Bot > Photo Sync）
 - [x] 2026-05-27: PROGRESS_TRACKING.md 建立
 - [x] 2026-05-27: PHASE2_LINE_BOT.md 完整實作文檔
-
-**進行中**:
-
-- [ ] LINE Bot Channel 設定
-- [ ] 1Password 憑證準備
-- [ ] 開發環境設定
-
-**計畫下週**:
-
-- [ ] 本地功能測試
-- [ ] Kubernetes 部署
-- [ ] 生產環境測試
+- [x] LINE Bot Channel 設定（2026-06-11 E2E）
+- [x] 1Password 憑證準備（Immich-LINE-Bot · Immich-API-Key）
+- [x] 開發環境設定 + K8s 部署（2026-06-12 結案）
 
 ---
 
-### Week 2 (2026-06-03 ~ 2026-06-09)
+### Week 2 (2026-06-03 ~ 2026-06-09) — ✅ 已完成（Phase 3 + Photo Sync Launchd）
 
-**目標**: 完成 Phase 3 Photo Sync + 開始 Phase 4
+**目標**: 完成 Phase 3 Photo Sync + 開始 Phase 4 規劃
 
-**計畫**:
+**已完成**:
 
-- [ ] Mac Photos Library 同步設定
-- [ ] 初次全量同步
-- [ ] Launchd 自動啟動
-- [ ] PostgreSQL 遷移到 SSD
+- [x] Mac Photos Library **Immich 同步**設定（photo-sync · 非 delta 冷備份）
+- [x] 初次全量同步（local-archive 5023 · icloud-primary 3512 · 2026-06-12）
+- [x] Launchd 自動啟動（photo-sync LaunchAgent · 2026-06-12）
+- [x] PostgreSQL 遷移到 SSD（**2026-06-24** Wave W4 · 較原計畫延後至 Ops 軌道）
+
+---
+
+### Week 3–4 (2026-06-16 ~ 2026-06-25) — Ops 收尾 + Mac 冷備份
+
+| 項目 | 狀態 |
+| ------ | ------ |
+| Phase 3.5 tier 結案（purge 豁免） | ✅ 2026-06-22 |
+| Phase 5a pg 2/2 + NFS 157.8G | ✅ PASS |
+| Phase 4 postgres → lama NVMe | ✅ 2026-06-24 |
+| Phase 5b Grafana / immich-ops | 🟡 ~95%（smoke 待確認） |
+| LINE Bot 多人地點搜尋 | ✅ `af23fe4` |
+| Ops W2 Mac `.photoslibrary` → delta **HDD** | 🟡 首輪 rsync ~45G/164G（screen） |
+| `make verify-deploy` | ✅ PR #31 |
 
 ---
 
@@ -868,36 +875,37 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 > 詳細步驟見 [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-### 本週收尾清單（2026-06-22）
+### 本週收尾清單（2026-06-25）
 
-**完成** ✅:
+**進行中** 🚧:
 
-1. **Agent Prompts 文件庫** — multi-task orchestrator + gate 控管（`b66f3ee` · `54363b1`）
-2. **LINE Bot 搜尋強化** — country/city filter（PR #26）· anyDate / bare age 追問（PR #27–#28）· deploy rev 33
-3. **reconcile dry-run** — orphan **0**（`reconcile-20260622-203149.json`）
-4. **tier staging** — `staging_items: 0` ✅
+1. **Ops W2** — Mac 冷備份首輪 rsync 至 delta HDD（`screen immich-mac-backup`）
+2. **Phase 5b** — Telegram smoke 告警最終確認（3 條）
 
-**待完成** 🚧（**人工為主，約 1–2 小時**）:
+**待 rsync 完成後**:
 
-1. **手動還原 23 張** → `recovery/trashed-restore-23.json`
-2. **Recently Deleted 永久清除**（目前 **103** 筆）
-3. **等 sync 結束** → icloud/local dry-run + local-archive 補傳
-4. **album reconcile** — stale 27 / missing 123 對齊（dry-run → apply 視策略）
+1. `du -sh` 比對 Mac dry-run 體積 vs delta HDD
+2. checksum 抽樣還原演練
+3. 更新本檔 Ops W2 → Complete
 
-**明確 Defer（獨立維運 backlog，不阻擋核心結案）**:
+**已完成** ✅（2026-06-22 ~ 06-25）:
+
+1. Phase 4 postgres → NVMe（2026-06-24）
+2. Phase 5a PASS · Grafana RBAC 修復
+3. LINE Bot 多人地點搜尋（`af23fe4`）
+4. Mac 備份 NVMe→HDD 遷移 + PR #31（`c41f09d`）
+5. `make verify-deploy` 腳本
+
+**明確 Defer（獨立維運 backlog）**:
 
 | 項目 | 優先 | 預計 |
 | ------ | ------ | ------ |
-| Phase 4 PostgreSQL → SSD | P2 | Q3 |
-| Phase 5 B2 備份 | P2 | Q3 |
 | LINE Bot Grafana / 7 天 SLO | P2 | Q3 |
 | LINE Bot V1.1 Qwen vision 繁中描述 | P3 | TBD |
+| LINE LIFF 迷你 App（見 UX 討論） | P3 | 評估中 |
 | Similar Images 重複偵測 | P2 Optional | TBD |
 | Photo Edit + AI | P3 | TBD |
-| `immich-reconcile-diagnose.sh` | P2 | TBD |
-| rollback 實測文件 | P2 | TBD |
-| tier LaunchAgent / cron | P2 | Phase B 後 |
-| fswatch debounce / ignore | P3 | TBD |
+| album reconcile stale/missing | P2 | 可選 |
 
 **已完成** ✅（近期）:
 
