@@ -81,6 +81,43 @@ export function buildPhotoSearchFlexCarousel(params: {
   };
 }
 
+export function buildConfirmQuickReply(): messagingApi.QuickReply {
+  return {
+    items: [
+      {
+        type: "action",
+        action: { type: "message", label: "✅ 確認搜尋", text: "確認" },
+      },
+      {
+        type: "action",
+        action: { type: "message", label: "❌ 取消", text: "取消" },
+      },
+      {
+        type: "action",
+        action: {
+          type: "message",
+          label: "✏️ 改條件",
+          text: "請告訴我要改什麼",
+        },
+      },
+    ],
+  };
+}
+
+export function buildEmptyQuickReply(
+  actions: Array<{ label: string; text: string }>,
+): messagingApi.QuickReply {
+  return {
+    items: actions.map((action) => ({
+      type: "action" as const,
+      action: {
+        type: "message" as const,
+        label: action.label.slice(0, 20),
+        text: action.text,
+      },
+    })),
+  };
+}
 export function buildPersonQuickReply(
   people: ImmichPersonSummary[],
 ): messagingApi.QuickReply {
@@ -147,6 +184,26 @@ export function buildSearchReplyMessages(
         type: "text",
         text: result.message,
         quickReply: buildPersonQuickReply(result.personCandidates),
+      },
+    ];
+  }
+
+  if (result.kind === "confirm") {
+    return [
+      {
+        type: "text",
+        text: result.message,
+        quickReply: buildConfirmQuickReply(),
+      },
+    ];
+  }
+
+  if (result.kind === "empty" && result.quickReplyActions?.length) {
+    return [
+      {
+        type: "text",
+        text: result.message,
+        quickReply: buildEmptyQuickReply(result.quickReplyActions),
       },
     ];
   }

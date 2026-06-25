@@ -50,6 +50,41 @@ describe("line-search-reply", () => {
     expect(messages[1].type).toBe("flex");
   });
 
+  it("adds quick reply for confirm", () => {
+    const messages = buildSearchReplyMessages(
+      {
+        kind: "confirm",
+        message: "要找「小光」在日本的照片（不限年齡）嗎？",
+        plan: { personNames: ["小光"], country: "Japan", anyDate: true },
+      },
+      "https://immich-bot.3q.fi",
+      "https://immich.3q.fi",
+    );
+    expect(messages).toHaveLength(1);
+    if (messages[0].type === "text") {
+      expect(messages[0].quickReply?.items).toHaveLength(3);
+    }
+  });
+
+  it("adds quick reply for empty results", () => {
+    const messages = buildSearchReplyMessages(
+      {
+        kind: "empty",
+        message: "找不到符合條件的照片",
+        quickReplyActions: [
+          { label: "放寬年齡", text: "放寬年齡" },
+          { label: "只搜地點", text: "只搜地點" },
+        ],
+      },
+      "https://immich-bot.3q.fi",
+      "https://immich.3q.fi",
+    );
+    expect(messages).toHaveLength(1);
+    if (messages[0].type === "text") {
+      expect(messages[0].quickReply?.items).toHaveLength(2);
+    }
+  });
+
   it("adds quick reply for person disambiguation", () => {
     const messages = buildSearchReplyMessages(
       {

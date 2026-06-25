@@ -29,6 +29,23 @@ import { SearchSessionStore } from "./search-session-store";
 import { resolvePersonSearchName } from "./person-aliases";
 import { buildUploadHelpText, SEARCH_HELP_MESSAGE } from "./line-welcome";
 
+const EMPTY_QUICK_REPLY_ACTIONS = [
+  { label: "放寬年齡", text: "放寬年齡" },
+  { label: "只搜地點", text: "只搜地點" },
+  { label: "檢查人臉命名", text: "檢查人臉命名" },
+] as const;
+
+const FACE_NAMING_HELP =
+  "👤 Immich 人臉命名：\n" +
+  "1. 開啟 Immich Web →「人物」\n" +
+  "2. 點選未命名的人臉群組並輸入姓名\n" +
+  "3. 命名完成後即可用姓名搜尋照片";
+
+const COUNTRY_DISPLAY: Record<string, string> = {
+  Japan: "日本",
+  "Taiwan, Province of China": "台灣",
+};
+
 export interface PhotoSearchServiceOptions {
   immichClient: ImmichClient;
   immichWebUrl: string;
@@ -58,6 +75,34 @@ export class PhotoSearchService {
     }
 
     const session = this.options.sessionStore.get(userId);
+
+    const emptyAction = this.handleEmptyQuickReply(userId, trimmed, session);
+    if (emptyAction) {
+      return emptyAction;
+    }
+
+    if (session?.personCandidates?.length && /^\d+$/.test(trimmed)) {
+      const merged = mergePlans(session.plan, {
+        intent: "search_photos",
+        personNames: [],
+        personChoice: Number.parseInt(trimmed, 10),
+      });
+      return this.executeSearch(userId, merged, session.personCandidates);
+    }
+
+    if (session?.awaitingConfirmation && session.pendingPlan) {
+      if (isConfirmationAffirmative(trimmed)) {
+        const plan = session.pendingPlan;
+        const candidates = session.personCandidates;
+        this.options.sessionStore.clear(userId);
+        return this.executeSearch(userId, plan, candidates);
+      }
+      if (isConfirmationNegative(trimmed)) {
+        this.options.sessionStore.clear(userId);
+        return { kind: "help", message: "已取消搜尋。" };
+      }
+    }
+
     const plan = await this.resolvePlan(message, session);
 
     if (plan.intent === "cancel") {
@@ -82,8 +127,104 @@ export class PhotoSearchService {
       };
     }
 
-    const merged = mergePlans(session?.plan, plan);
-    return this.executeSearch(userId, merged, session?.personCandidates);
+    const basePlan = session?.awaitingConfirmation
+      ? session.pendingPlan
+      : session?.plan;
+    const merged = mergePlans(basePlan, plan);
+
+    if (plan.personChoice && session?.personCandidates?.length) {
+      return this.executeSearch(userId, merged, session.personCandidates);
+    }
+
+    if (needsClarifyBeforeConfirm(merged)) {
+      return this.executeSearch(userId, merged, session?.personCandidates);
+    }
+
+    if (
+      session?.awaitingConfirmation &&
+      session.pendingPlan &&
+      plansEquivalent(session.pendingPlan, merged)
+    ) {
+      return this.buildConfirmResult(merged);
+    }
+
+    return this.requestSearchConfirmation(
+      userId,
+      merged,
+      session?.personCandidates,
+    );
+  }
+
+  private buildConfirmResult(
+    plan: Partial<PhotoSearchPlan>,
+  ): PhotoSearchResult {
+    return {
+      kind: "confirm",
+      message: buildSearchConfirmSummary(plan),
+      plan,
+    };
+  }
+
+  private requestSearchConfirmation(
+    userId: string,
+    plan: Partial<PhotoSearchPlan>,
+    personCandidates?: ImmichPersonSummary[],
+  ): PhotoSearchResult {
+    this.options.sessionStore.save(userId, {
+      plan,
+      pendingPlan: plan,
+      awaitingConfirmation: true,
+      personCandidates,
+    });
+    return this.buildConfirmResult(plan);
+  }
+
+  private handleEmptyQuickReply(
+    userId: string,
+    message: string,
+    session: ReturnType<SearchSessionStore["get"]>,
+  ): PhotoSearchResult | undefined {
+    const failedPlan = session?.lastFailedPlan;
+    if (!failedPlan) {
+      return undefined;
+    }
+
+    if (message === "檢查人臉命名") {
+      this.options.sessionStore.clear(userId);
+      return { kind: "help", message: FACE_NAMING_HELP };
+    }
+
+    if (message === "放寬年齡") {
+      const relaxed = {
+        ...failedPlan,
+        anyDate: true,
+        ageYears: undefined,
+        ageMonths: undefined,
+        dateFrom: undefined,
+        dateTo: undefined,
+        dateRangeLabel: undefined,
+      };
+      return this.requestSearchConfirmation(userId, relaxed);
+    }
+
+    if (message === "只搜地點") {
+      const locationOnly: Partial<PhotoSearchPlan> = {
+        intent: "search_photos",
+        country: failedPlan.country,
+        city: failedPlan.city,
+        anyDate: true,
+      };
+      if (!locationOnly.country && !locationOnly.city) {
+        return {
+          kind: "help",
+          message:
+            "上次搜尋沒有地點條件。請直接描述地點，例如「找在日本的照片」。",
+        };
+      }
+      return this.requestSearchConfirmation(userId, locationOnly);
+    }
+
+    return undefined;
   }
 
   private async resolvePlan(
@@ -193,19 +334,23 @@ export class PhotoSearchService {
     },
   ): Promise<PhotoSearchResult> {
     const { items, total } = await this.searchAssets(plan, filters);
-    this.options.sessionStore.clear(userId);
 
     if (items.length === 0) {
+      this.options.sessionStore.save(userId, {
+        plan,
+        lastFailedPlan: plan,
+      });
       return {
         kind: "empty",
         message:
           `找不到符合條件的照片（${criteriaLabel}）。\n` +
-          (this.hasSceneQuery(plan)
-            ? "試試換個場景描述，或確認 Immich smart search 已索引。"
-            : "試試放寬年齡或確認 Immich 人臉已命名。"),
+          "你可以試試下方快捷選項，或調整條件後再搜尋。",
         total: 0,
+        quickReplyActions: [...EMPTY_QUICK_REPLY_ACTIONS],
       };
     }
+
+    this.options.sessionStore.clear(userId);
 
     const viewAllUrl =
       total > items.length
@@ -706,4 +851,134 @@ export function formatResultsMessage(
       : "";
 
   return `${header}\n\n${lines.join("\n\n")}${more}`;
+}
+
+export function isConfirmationAffirmative(message: string): boolean {
+  const normalized = message.trim().toLowerCase();
+  return /^(是|y|yes|確認|好|ok|✅\s*確認搜尋)$/i.test(normalized);
+}
+
+export function isConfirmationNegative(message: string): boolean {
+  const normalized = message.trim().toLowerCase();
+  return /^(否|n|no|取消|❌\s*取消)$/i.test(normalized);
+}
+
+export function needsClarifyBeforeConfirm(
+  plan: Partial<PhotoSearchPlan>,
+): boolean {
+  const personNames = plan.personNames?.filter((n) => n.trim()) ?? [];
+  const hasLocation = Boolean(plan.country || plan.city);
+  const hasScene = Boolean(
+    plan.sceneQuery?.trim() || plan.sceneQueryEn?.trim(),
+  );
+  const hasDate = Boolean(plan.dateFrom);
+  const hasAge = plan.ageYears !== undefined || plan.ageMonths !== undefined;
+  const anyDate = Boolean(plan.anyDate);
+
+  if (personNames.length === 0) {
+    return !hasLocation && !hasScene && !hasDate;
+  }
+
+  if (
+    personNames.length >= 1 &&
+    !hasLocation &&
+    !anyDate &&
+    !hasScene &&
+    !hasDate &&
+    !hasAge
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+export function plansEquivalent(
+  a: Partial<PhotoSearchPlan>,
+  b: Partial<PhotoSearchPlan>,
+): boolean {
+  return (
+    JSON.stringify(normalizePlanForCompare(a)) ===
+    JSON.stringify(normalizePlanForCompare(b))
+  );
+}
+
+function normalizePlanForCompare(
+  plan: Partial<PhotoSearchPlan>,
+): Partial<PhotoSearchPlan> {
+  return {
+    intent: plan.intent,
+    personNames: plan.personNames
+      ?.map((n) => n.trim())
+      .filter(Boolean)
+      .sort(),
+    ageYears: plan.ageYears,
+    ageMonths: plan.ageMonths,
+    dateFrom: plan.dateFrom,
+    dateTo: plan.dateTo,
+    birthDate: plan.birthDate,
+    sceneQuery: plan.sceneQuery?.trim(),
+    sceneQueryEn: plan.sceneQueryEn?.trim(),
+    dateRangeLabel: plan.dateRangeLabel,
+    country: plan.country,
+    city: plan.city,
+    anyDate: plan.anyDate,
+  };
+}
+
+function formatCountryLabel(country: string): string {
+  return COUNTRY_DISPLAY[country] ?? country;
+}
+
+export function buildSearchConfirmSummary(
+  plan: Partial<PhotoSearchPlan>,
+): string {
+  const segments: string[] = [];
+  const personNames = plan.personNames?.filter((n) => n.trim()) ?? [];
+
+  if (personNames.length > 0) {
+    segments.push(`「${personNames.join("、")}」`);
+  }
+
+  const locationLabel = [
+    plan.city,
+    plan.country ? formatCountryLabel(plan.country) : undefined,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  if (locationLabel) {
+    segments.push(`在${locationLabel}`);
+  }
+
+  const scene = plan.sceneQuery?.trim();
+  if (scene) {
+    segments.push(scene.startsWith("在") ? scene : `在${scene}`);
+  }
+
+  let qualifier = "";
+  if (plan.anyDate) {
+    qualifier = "（不限年齡）";
+  } else if (plan.ageYears !== undefined) {
+    qualifier = `（${plan.ageYears} 歲）`;
+  } else if (plan.ageMonths !== undefined) {
+    qualifier = `（${plan.ageMonths} 個月）`;
+  } else if (plan.dateFrom) {
+    const dateLabel =
+      plan.dateRangeLabel ??
+      (plan.dateTo && plan.dateTo !== plan.dateFrom
+        ? `${plan.dateFrom}～${plan.dateTo}`
+        : plan.dateFrom);
+    qualifier = `（${dateLabel}）`;
+  }
+
+  const criteria = segments.join("");
+  if (criteria) {
+    return `要找${criteria}的照片${qualifier}嗎？`;
+  }
+
+  if (scene) {
+    return `要找${scene}的照片${qualifier}嗎？`;
+  }
+
+  return `要依這些條件搜尋照片${qualifier}嗎？`;
 }

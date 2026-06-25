@@ -2,7 +2,7 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-06-24（5a PASS · Grafana RBAC 修復 · Phase 4 批准）  
+**最後更新**: 2026-06-25（Ops W2 HDD 遷移 · PR #31 · rsync ~45G/164G）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
@@ -29,7 +29,7 @@
 | **Ops** | Phase 1 probes/Redis | ✅ **已 deploy** | probes + NetworkPolicy · Redis item 待建 |
 | **Ops W3** | Phase 5b monitoring | 🟡 **~95%** | RBAC 修復 · immich-ops 有資料 · smoke 已重送 |
 | **P2** | album reconcile | 📋 可選 | stale 27 / missing 123 |
-| **Ops W2** | Mac library → delta NFS | 🟡 **首輪 rsync** | dry-run ✅ · LaunchAgent 草稿 ✅ · ~164G |
+| **Ops W2** | Mac library → delta **HDD** | 🟡 **首輪 rsync** | NVMe→HDD（PR #31）· icloud ~17G · local ~28G · screen 執行中 |
 | **Ops W4** | Phase 4 SSD 遷移 | ✅ **COMPLETE** | 2026-06-24 · postgres → `/nvme/immich-postgres` |
 
 ---
@@ -39,7 +39,7 @@
 ```text
 ✅  結案     Immich Enhancement（Phase 0–3.6 + 3.5 豁免）
 Ops W1       Phase 5a ✅ PASS（pg 2/2 · NFS ✅）
-Ops W2       Mac → delta NFS 首輪 rsync 進行中（週次 LaunchAgent Q3）
+Ops W2       Mac → delta **HDD** 首輪 rsync 進行中（~45G/164G · LaunchAgent 已 load）
 Ops W3       Phase 5b 告警 + immich-ops Grafana（RBAC 修復 · ~95%）
 Ops W4       Phase 4 SSD ✅ COMPLETE 2026-06-24
 Observability  fuqi 儀表板併入 monitoring 或獨立子網域 → OBSERVABILITY_ROADMAP.md
@@ -48,16 +48,21 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 
 ---
 
-## Phase 5a+ — Mac Photos Library → delta NFS（首輪 rsync 進行中）
+## Phase 5a+ — Mac Photos Library → delta HDD（首輪 rsync 進行中）
 
 **優先級**: P1  
-**Runbook**: [MAC_LIBRARY_BACKUP.md](../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)
+**Runbook**: [MAC_LIBRARY_BACKUP.md](../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)  
+**SSOT 路徑**: `delta.3q.fi:/mnt/volume1/nfs-models/photos-backup/mac-studio/`（`nfs-hdd` · ~12T；**非** NVMe `/home/nfs-storage`）
 
-- [x] delta 路徑 + dry-run（local-archive **146G** · icloud-primary **18G**）
-- [x] delta 遠端目錄 + `chown light0`
+- [x] delta 路徑決策（NVMe → HDD · 與 Immich data backup 同 tier）
+- [x] dry-run（local-archive **146G** · icloud-primary **18G**）
+- [x] delta HDD 遠端目錄 + `chown light0`（2026-06-25）
 - [x] `mac-library-backup-rsync.sh` + LaunchAgent plist 草稿（週六 02:00）
-- [ ] 首輪 rsync Complete（2026-06-24 啟動）
-- [ ] `launchctl load` 啟用週次排程（Q3）
+- [x] `DELTA_BASE` 改 HDD + runbook 更新（PR #31 · `c41f09d`）
+- [x] `make verify-line-bot` / `verify-deploy` 腳本（PR #31）
+- [x] NVMe 舊 partial copy 清理（~48G 釋放 · 2026-06-25）
+- [x] LaunchAgent `com.immich.mac-library-backup` 已 `launchctl load`
+- [ ] 首輪 rsync Complete（2026-06-25 重啟至 HDD · screen `immich-mac-backup`）
 - [ ] 還原演練 checksum 抽樣
 
 **不取代**：Immich `/data/upload` → NFS 週備份（已 deploy）。
@@ -120,7 +125,7 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 - [x] 還原 runbook + 演練（`asset` count 13759 = prod）
 - [x] pg_dump CronJob + NFS rsync CronJob（PR #174）
 - [x] `Immich-B2-Backup` 已刪（改 NFS）
-- [ ] 連續 2 次**排程** pg Success（**1/2**；下次 06-24 03:00）
+- [x] 連續 2 次**排程** pg Success（`29702580` · `29704020`）
 - [x] NFS data Job Complete（`immich-data-backup-nfs-test-1782176320` · **157.8G** · 7h34m）
 
 ### Phase 4 — Storage SSD（✅ COMPLETE 2026-06-24）
@@ -140,7 +145,7 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 - [x] Dashboard 規格文件
 - [x] Dashboard JSON（UID `immich-ops`）in ConfigMap
 - [x] cluster apply + rollout（2026-06-23）
-- [ ] deep link 驗證 `https://grafana.3q.fi/d/immich-ops`（✅ PromQL 有資料 2026-06-24）
+- [x] deep link 驗證 `https://grafana.3q.fi/d/immich-ops`（PromQL 有資料 2026-06-24）
 - [ ] Telegram smoke test 告警（已重送 3 條 · 待確認）
 
 ---
@@ -166,6 +171,7 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 
 - [ ] Qwen vision 繁中描述（P3）
 - [ ] Grafana dashboard + 7 天 SLO（P2）
+- [ ] **LIFF 迷你 App 評估**（P3）— 搜尋瀏覽／上傳教學 UI；見 [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md) §LINE
 
 ---
 

@@ -18,6 +18,8 @@ export type UploadSummaryItem = {
   success: boolean;
   /** Optional Immich post-upload metadata note (EXIF / faces). */
   metadataNote?: string;
+  /** Failure reason when success=false */
+  errorReason?: string;
 };
 
 type BatchState = {
@@ -26,6 +28,7 @@ type BatchState = {
   total?: number;
   items: UploadSummaryItem[];
   flushTimer?: ReturnType<typeof setTimeout>;
+  lastProgressSent?: number;
 };
 
 const FLUSH_DELAY_MS = 2_000;
@@ -89,11 +92,66 @@ export function buildSingleUploadText(item: UploadSummaryItem): string {
   return lines.join("\n");
 }
 
+export function buildUploadFailureFlexMessages(
+  item: UploadSummaryItem,
+): messagingApi.Message[] {
+  const reason = item.errorReason?.trim() || "請稍後再試";
+  const bubble: messagingApi.FlexBubble = {
+    type: "bubble",
+    body: {
+      type: "box",
+      layout: "vertical",
+      spacing: "sm",
+      contents: [
+        {
+          type: "text",
+          text: "上傳失敗",
+          weight: "bold",
+          size: "md",
+        },
+        {
+          type: "text",
+          text: `📄 ${item.filename}`,
+          size: "sm",
+          wrap: true,
+        },
+        {
+          type: "text",
+          text: reason,
+          size: "xs",
+          color: "#888888",
+          wrap: true,
+        },
+      ],
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "button",
+          action: {
+            type: "message",
+            label: "改以檔案傳送",
+            text: "怎麼上傳照片",
+          },
+          style: "link",
+          height: "sm",
+        },
+      ],
+    },
+  };
+
+  return [
+    { type: "flex", altText: `上傳失敗：${item.filename}`, contents: bubble },
+  ];
+}
+
 export function buildSingleUploadFlexMessages(
   item: UploadSummaryItem,
 ): messagingApi.Message[] {
   if (!item.success) {
-    return [{ type: "text", text: "❌ 照片上傳失敗，請稍後再試" }];
+    return buildUploadFailureFlexMessages(item);
   }
 
   if (!item.assetPreviewUrl || !item.assetUrl) {
@@ -162,6 +220,24 @@ export function buildSingleUploadFlexMessages(
   ];
 }
 
+export function buildBatchProgressText(current: number, total: number): string {
+  return `上傳中 ${current}/${total}…`;
+}
+
+export function shouldSendBatchProgress(state: BatchState): boolean {
+  const count = state.items.length;
+  if (state.total === undefined || state.total <= 1) {
+    return false;
+  }
+  if (count >= state.total) {
+    return false;
+  }
+  if (state.lastProgressSent === count) {
+    return false;
+  }
+  return count % 2 === 0 || count === 1;
+}
+
 export async function coordinateImageSetReply(params: {
   userId: string;
   replyToken: string;
@@ -169,6 +245,10 @@ export async function coordinateImageSetReply(params: {
   item: UploadSummaryItem;
   sendMessages: (
     replyToken: string,
+    messages: messagingApi.Message[],
+  ) => Promise<void>;
+  pushMessage?: (
+    userId: string,
     messages: messagingApi.Message[],
   ) => Promise<void>;
 }): Promise<void> {
@@ -201,6 +281,16 @@ export async function coordinateImageSetReply(params: {
       state.total = imageSet.total;
     }
     state.items.push(params.item);
+
+    if (shouldSendBatchProgress(state) && params.pushMessage) {
+      state.lastProgressSent = state.items.length;
+      await params.pushMessage(params.userId, [
+        {
+          type: "text",
+          text: buildBatchProgressText(state.items.length, state.total!),
+        },
+      ]);
+    }
 
     if (state.flushTimer) {
       clearTimeout(state.flushTimer);
