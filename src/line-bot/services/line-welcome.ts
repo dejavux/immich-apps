@@ -14,7 +14,14 @@ export const SEARCH_HELP_MESSAGE =
   "• 找在海邊的照片\n" +
   "• 幫我找小蕊一歲半的照片\n" +
   "• 找 2024-06-01 的相片\n\n" +
-  "若有多位同名人物，我會請你點選編號。";
+  "點下方快捷按鈕試試，或直接輸入你的描述。";
+
+/** Quick Reply chips shown after「找照片」help. */
+export const SEARCH_HELP_QUICK_REPLIES = [
+  { label: "🌊 海邊", text: "找在海邊的照片" },
+  { label: "👧 小蕊一歲半", text: "幫我找小蕊一歲半的照片" },
+  { label: "📅 指定日期", text: "找 2024-06-01 的相片" },
+] as const;
 
 export function buildUploadHelpText(): string {
   return (
