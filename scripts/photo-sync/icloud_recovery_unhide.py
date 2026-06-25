@@ -75,6 +75,15 @@ def open_photos(photos_library: Path) -> None:
     time.sleep(5)
 
 
+def _register_coredata_sqlite_stubs(conn: sqlite3.Connection) -> None:
+    """Photos.sqlite triggers call CoreData helpers; stub them for offline UPDATE."""
+
+    def _noop(*_args: object) -> None:
+        return None
+
+    conn.create_function("NSCoreDataTriggerUpdateAffectedObjectValue", 5, _noop)
+
+
 def unhide_hidden_assets(
     photos_library: Path,
     *,
@@ -83,6 +92,7 @@ def unhide_hidden_assets(
 ) -> int:
     db_path = photos_library / "database" / "Photos.sqlite"
     conn = sqlite3.connect(db_path)
+    _register_coredata_sqlite_stubs(conn)
     try:
         if limit is None:
             hidden = conn.execute(

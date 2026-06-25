@@ -4,7 +4,7 @@
 set -euo pipefail
 
 DELTA_HOST="${DELTA_HOST:-delta.3q.fi}"
-DELTA_BASE="${DELTA_BASE:-/home/nfs-storage/photos-backup/mac-studio}"
+DELTA_BASE="${DELTA_BASE:-/mnt/volume1/nfs-models/photos-backup/mac-studio}"
 LOCAL_ARCHIVE="${LOCAL_ARCHIVE:-$HOME/Pictures/LOCAL PHOTO LIBRARY.photoslibrary/originals}"
 ICLOUD_PRIMARY="${ICLOUD_PRIMARY:-$HOME/Pictures/Photos Library.photoslibrary/originals}"
 LOG_DIR="${LOG_DIR:-$HOME/Library/Logs/immich-mac-backup}"
