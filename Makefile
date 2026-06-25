@@ -1,7 +1,7 @@
 # Immich Apps - Makefile
 # 統一管理 Immich server + LINE Bot + Photo Sync
 
-.PHONY: help build test deploy clean logs status \
+.PHONY: help build test deploy clean logs status verify-deploy verify-line-bot \
 	deploy-all deploy-server deploy-line-bot deploy-sync \
 	build-line-bot release-line-bot helm-lint \
 	ci-setup ci-setup-secrets ci-apply ci-apply-release ci-status ci-logs ci-release \
@@ -216,6 +216,11 @@ status: ## 檢查所有組件狀態
 	@kubectl get pods -n $(NAMESPACE) -l 'app in (immich-server,immich-machine-learning,immich-postgres,immich-redis,immich-line-bot)'
 	@echo ""
 	@kubectl get svc -n $(NAMESPACE)
+
+verify-deploy: verify-line-bot ## 比對 LINE Bot cluster image vs git（別名）
+
+verify-line-bot: ## 比對 LINE Bot 是否為最新已 release 的 image
+	@bash ./scripts/verify-line-bot-deploy.sh
 
 # ═══════════════════════════════════════════════════════════════
 # Lint（Cursor lint-fix-agent 由 Makefile.lint.mk 提供 cursor-lint*）
