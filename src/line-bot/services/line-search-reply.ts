@@ -208,6 +208,16 @@ export function buildSearchReplyMessages(
     ];
   }
 
+  if (result.kind === "help" && result.quickReplyActions?.length) {
+    return [
+      {
+        type: "text",
+        text: result.message,
+        quickReply: buildEmptyQuickReply(result.quickReplyActions),
+      },
+    ];
+  }
+
   if (
     result.kind === "results" &&
     result.assets?.length &&

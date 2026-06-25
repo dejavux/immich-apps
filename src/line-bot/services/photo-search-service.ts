@@ -27,7 +27,11 @@ import {
 import { QwenClient } from "./qwen-client";
 import { SearchSessionStore } from "./search-session-store";
 import { resolvePersonSearchName } from "./person-aliases";
-import { buildUploadHelpText, SEARCH_HELP_MESSAGE } from "./line-welcome";
+import {
+  buildUploadHelpText,
+  SEARCH_HELP_MESSAGE,
+  SEARCH_HELP_QUICK_REPLIES,
+} from "./line-welcome";
 
 const EMPTY_QUICK_REPLY_ACTIONS = [
   { label: "放寬年齡", text: "放寬年齡" },
@@ -65,7 +69,11 @@ export class PhotoSearchService {
   ): Promise<PhotoSearchResult> {
     const trimmed = message.trim();
     if (trimmed === "找照片") {
-      return { kind: "help", message: SEARCH_HELP_MESSAGE };
+      return {
+        kind: "help",
+        message: SEARCH_HELP_MESSAGE,
+        quickReplyActions: [...SEARCH_HELP_QUICK_REPLIES],
+      };
     }
     if (trimmed === "使用說明") {
       return {

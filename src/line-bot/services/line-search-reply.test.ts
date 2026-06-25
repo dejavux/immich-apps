@@ -85,6 +85,25 @@ describe("line-search-reply", () => {
     }
   });
 
+  it("adds quick reply for search help", () => {
+    const messages = buildSearchReplyMessages(
+      {
+        kind: "help",
+        message: "🔍 找照片範例",
+        quickReplyActions: [
+          { label: "🌊 海邊", text: "找在海邊的照片" },
+          { label: "👧 小蕊", text: "幫我找小蕊一歲半的照片" },
+        ],
+      },
+      "https://immich-bot.3q.fi",
+      "https://immich.3q.fi",
+    );
+    expect(messages).toHaveLength(1);
+    if (messages[0].type === "text") {
+      expect(messages[0].quickReply?.items).toHaveLength(2);
+    }
+  });
+
   it("adds quick reply for person disambiguation", () => {
     const messages = buildSearchReplyMessages(
       {
