@@ -24,7 +24,7 @@ intent 取值：
 - unknown：無法理解
 
 欄位（缺省用 null）：
-- personNames: string[]  人物暱稱/姓名（多人用陣列，如「小光和 steffi」→ ["小光","steffi"]；勿把「不」或地名併入人名）
+- personNames: string[]  人物暱稱/姓名（多人用陣列；**關係詞**如老婆/老公/媽媽**不要**放入 personNames，只保留具名人物如小光）
 - ageYears: number|null   年齡（7歲 → 7，一歲半 → 1.5）；年齡不是 sceneQuery
 - ageMonths: number|null  月齡（優先於 ageYears 若兩者皆有）
 - dateFrom: string|null    YYYY-MM-DD 起始拍攝日
@@ -51,6 +51,9 @@ intent 取值：
 
 使用者「找小光和 steffi 在日本的照片」→
 {"intent":"search_photos","personNames":["小光","steffi"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":"Japan","city":null,"sceneQuery":null,"sceneQueryEn":null,"anyDate":true}
+
+使用者「小光和老婆在歐洲」（口語、無「照片」；老婆為關係詞非 Immich 人名）→
+{"intent":"search_photos","personNames":["小光"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":"歐洲","sceneQueryEn":"europe travel","anyDate":true}
 
 使用者「找在日本的照片」（純地點，無人物）→
 {"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":"Japan","city":null,"sceneQuery":null,"sceneQueryEn":null}
@@ -257,6 +260,41 @@ function isPersonStopword(name: string): boolean {
 
 const PERSON_NAME_SPLIT = /(?:和|跟|與|以及|、|,|&)+/;
 
+/** 關係稱謂（非 Immich 人物名）；搜尋時略過，僅保留具名人物。 */
+const RELATIONSHIP_WORDS = new Set([
+  "老婆",
+  "老公",
+  "妻子",
+  "丈夫",
+  "太太",
+  "先生",
+  "爸",
+  "媽",
+  "爸爸",
+  "媽媽",
+  "老爸",
+  "老媽",
+  "兒子",
+  "女兒",
+  "孩子",
+  "寶寶",
+  "家人",
+]);
+
+export function isRelationshipWord(name: string): boolean {
+  return RELATIONSHIP_WORDS.has(name.trim());
+}
+
+export function filterSearchPersonNames(names: string[]): string[] {
+  return names.filter(
+    (name) =>
+      name.length > 0 &&
+      !isPersonStopword(name) &&
+      !isKnownLocation(name) &&
+      !isRelationshipWord(name),
+  );
+}
+
 export function splitPersonNames(raw: string): string[] {
   return raw
     .split(PERSON_NAME_SPLIT)
@@ -321,6 +359,83 @@ export function tryParsePersonsWithAtPhrase(text: string):
   return { personNames, sceneQuery: locationRaw };
 }
 
+/**
+ * 口語「小光和老婆在歐洲」（無「照片」後綴）— 關係詞略過，大洲/區域走 sceneQuery。
+ */
+export function tryParseInformalPersonAtLocation(text: string):
+  | {
+      personNames: string[];
+      country?: string;
+      city?: string;
+      sceneQuery?: string;
+      sceneQueryEn?: string;
+    }
+  | undefined {
+  const trimmed = text.trim();
+  if (/(?:的)?(?:照片|相片|圖)$/.test(trimmed)) {
+    return undefined;
+  }
+  if (!/在/.test(trimmed)) {
+    return undefined;
+  }
+
+  const match = trimmed.match(
+    /^(?:幫)?(?:我)?(?:找|搜|查+)?(?:找)?(.+?)在(.+)$/,
+  );
+  if (!match) {
+    return undefined;
+  }
+
+  const personNames = filterSearchPersonNames(splitPersonNames(match[1]));
+  if (personNames.length === 0) {
+    return undefined;
+  }
+
+  const locationRaw = cleanScenePhrase(match[2]);
+  if (!locationRaw || isAgePhrase(locationRaw)) {
+    return undefined;
+  }
+
+  const { country, city } = extractLocationFromQuery(locationRaw);
+  if (country || city) {
+    return { personNames, country, city };
+  }
+
+  const region = resolveRegionScene(locationRaw);
+  if (region) {
+    return { personNames, ...region };
+  }
+
+  if (/國外|海外/.test(locationRaw)) {
+    return {
+      personNames,
+      sceneQuery: "國外",
+      sceneQueryEn: "abroad overseas foreign travel",
+    };
+  }
+
+  if (locationRaw.length <= 24) {
+    return { personNames, sceneQuery: locationRaw };
+  }
+
+  return undefined;
+}
+
+function resolveRegionScene(
+  location: string,
+): { sceneQuery: string; sceneQueryEn: string } | undefined {
+  if (/歐洲|欧洲/.test(location)) {
+    return { sceneQuery: "歐洲", sceneQueryEn: "europe travel" };
+  }
+  if (/亞洲|亚洲/.test(location)) {
+    return { sceneQuery: "亞洲", sceneQueryEn: "asia travel" };
+  }
+  if (/美洲/.test(location)) {
+    return { sceneQuery: "美洲", sceneQueryEn: "americas travel" };
+  }
+  return undefined;
+}
+
 export function tryParseSceneOnlyPhoto(
   text: string,
 ): { sceneQuery: string } | undefined {
@@ -369,14 +484,15 @@ export function sanitizeSearchPlan(
   const names = (plan.personNames?.filter(Boolean) ?? []).map(
     stripParenthesizedSuffix,
   );
+  const searchNames = filterSearchPersonNames(names);
   const cleanedPlan =
-    names.join(",") !== (plan.personNames ?? []).join(",")
-      ? { ...plan, personNames: names.filter(Boolean) }
+    searchNames.join(",") !== (plan.personNames ?? []).join(",")
+      ? { ...plan, personNames: searchNames }
       : plan;
 
   if (
-    names.length === 1 &&
-    isPersonStopword(names[0]) &&
+    searchNames.length === 1 &&
+    isPersonStopword(searchNames[0]) &&
     cleanedPlan.sceneQuery?.trim()
   ) {
     return ensureSceneQueryEn({ ...cleanedPlan, personNames: [] });
@@ -614,6 +730,8 @@ export function isKnownLocation(query: string): boolean {
 const SCENE_TRANSLATIONS: Array<[RegExp, string]> = [
   [/不在台灣|不是台灣|非台灣/, "abroad overseas foreign travel not Taiwan"],
   [/國外|海外|國外旅行/, "abroad overseas foreign country travel"],
+  [/歐洲|欧洲/, "europe travel"],
+  [/亞洲|亚洲/, "asia travel"],
   [/海邊|海灘|沙灘/, "beach ocean seaside"],
   [/山|登山|爬山/, "mountain hiking"],
   [/生日|慶生|蛋糕/, "birthday party cake"],
@@ -759,6 +877,27 @@ export function parseSearchPlanFallback(
       plan.dateRangeLabel = rel.label;
     }
     return plan;
+  }
+
+  const informal = tryParseInformalPersonAtLocation(working);
+  if (informal) {
+    const plan: PhotoSearchPlan = {
+      intent: "search_photos",
+      personNames: informal.personNames,
+      country: informal.country,
+      city: informal.city,
+      sceneQuery: informal.sceneQuery,
+      sceneQueryEn: informal.sceneQueryEn,
+      anyDate: true,
+    };
+    if (rel) {
+      plan.dateFrom = rel.dateFrom;
+      plan.dateTo = rel.dateTo;
+      plan.dateRangeLabel = rel.label;
+    }
+    return informal.sceneQuery || informal.sceneQueryEn
+      ? ensureSceneQueryEn(plan)
+      : plan;
   }
 
   const sceneOnly = tryParseSceneOnlyPhoto(working);

@@ -118,6 +118,16 @@ describe("PhotoSearchService confirmation flow", () => {
     expect(sessionStore.get("u1")?.awaitingConfirmation).toBe(true);
   });
 
+  it("returns confirm for informal wife + Europe phrasing", async () => {
+    const service = createService();
+    const result = await service.handleMessage("u1", "小光和老婆在歐洲");
+    expect(result.kind).toBe("confirm");
+    expect(result.message).toContain("小光");
+    expect(result.message).toContain("歐洲");
+    expect(result.plan?.personNames).toEqual(["小光"]);
+    expect(result.plan?.sceneQuery).toBe("歐洲");
+  });
+
   it("executes search after confirmation", async () => {
     const immich = createMockImmich({
       searchMetadata: jest.fn().mockResolvedValue({
@@ -300,6 +310,15 @@ describe("parseSearchPlanFallback", () => {
     const plan = parseSearchPlanFallback("找小光和 steffi 在海邊的照片");
     expect(plan.personNames).toEqual(["小光", "steffi"]);
     expect(plan.sceneQuery).toBe("海邊");
+  });
+
+  it("parses informal person + relationship + region without 照片 suffix", () => {
+    const plan = parseSearchPlanFallback("小光和老婆在歐洲");
+    expect(plan.intent).toBe("search_photos");
+    expect(plan.personNames).toEqual(["小光"]);
+    expect(plan.sceneQuery).toBe("歐洲");
+    expect(plan.sceneQueryEn).toContain("europe");
+    expect(plan.anyDate).toBe(true);
   });
 
   it("extracts country filter for person+location query", () => {
