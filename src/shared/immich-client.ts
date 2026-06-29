@@ -264,6 +264,8 @@ export class ImmichClient {
     const body: Record<string, unknown> = {
       size: params.size ?? 20,
       page: params.page ?? 1,
+      withExif: true,
+      withPeople: true,
     };
     if (params.personIds?.length) {
       body.personIds = params.personIds;
@@ -308,6 +310,8 @@ export class ImmichClient {
       query: params.query,
       size: params.size ?? 20,
       page: params.page ?? 1,
+      withExif: true,
+      withPeople: true,
     };
     if (params.personIds?.length) {
       body.personIds = params.personIds;

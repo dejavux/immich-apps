@@ -38,6 +38,9 @@ RUN npm ci --only=production
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 
+# Rich menu banner (ensureDefaultRichMenu reads deploy/line-bot/rich-menu.jpg)
+COPY deploy/line-bot/rich-menu.jpg ./deploy/line-bot/rich-menu.jpg
+
 # Expose port
 EXPOSE 3000
 

@@ -6,6 +6,7 @@
 #   bash scripts/line-bot/smoke-photo-search-e2e.sh
 #   bash scripts/line-bot/smoke-photo-search-e2e.sh --person 小蕊
 #   bash scripts/line-bot/smoke-photo-search-e2e.sh --person rayna
+#   bash scripts/line-bot/smoke-photo-search-e2e.sh --country Denmark --person steffi
 #   bash scripts/line-bot/smoke-photo-search-e2e.sh --scene "beach ocean"
 #
 set -euo pipefail
@@ -15,12 +16,14 @@ BOT_HOST="${BOT_HOST:-https://immich-bot.3q.fi}"
 IMMICH_BASE="${IMMICH_BASE:-https://immich.3q.fi}"
 PERSON_NAME=""
 SCENE_QUERY="beach ocean"
+COUNTRY_FILTER=""
 SEARCH_PERSON_ALIASES="${SEARCH_PERSON_ALIASES:-小蕊:rayna}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --person) PERSON_NAME="$2"; shift 2 ;;
     --scene) SCENE_QUERY="$2"; shift 2 ;;
+    --country) COUNTRY_FILTER="$2"; shift 2 ;;
     -h|--help)
       sed -n '2,9p' "$0"
       exit 0
@@ -91,11 +94,40 @@ fi
 
 echo ""
 echo "== 4) Immich POST /search/smart query=${SCENE_QUERY} =="
+smart_body="{\"query\":\"${SCENE_QUERY}\",\"size\":3,\"withExif\":true,\"withPeople\":true}"
 smart_json="$(curl -fsS "${auth[@]}" -H "Content-Type: application/json" \
-  -d "{\"query\":\"${SCENE_QUERY}\",\"size\":3}" \
+  -d "$smart_body" \
   "${IMMICH_BASE}/api/search/smart")"
 asset_id="$(python3 -c "import json,sys; d=json.load(sys.stdin); items=d.get('assets',{}).get('items',[]); print(items[0]['id'] if items else '')" <<<"$smart_json")"
 python3 -c "import json,sys; d=json.load(sys.stdin); a=d.get('assets',{}); print('total', a.get('total',0), 'sample', [i.get('id') for i in a.get('items',[])[:3]])" <<<"$smart_json"
+
+if [[ -n "$COUNTRY_FILTER" ]]; then
+  echo ""
+  echo "== 4b) Immich POST /search/metadata country=${COUNTRY_FILTER} (withExif + withPeople) =="
+  meta_body="{\"country\":\"${COUNTRY_FILTER}\",\"size\":3,\"withExif\":true,\"withPeople\":true}"
+  if [[ -n "$PERSON_NAME" ]]; then
+    immich_name="$(resolve_person_alias "$PERSON_NAME")"
+    person_id="$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0]['id'] if d else '')" <<<"$(curl -fsS "${auth[@]}" "${IMMICH_BASE}/api/search/person?name=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${immich_name}'))")&withHidden=false")")"
+    if [[ -n "$person_id" ]]; then
+      meta_body="{\"country\":\"${COUNTRY_FILTER}\",\"personIds\":[\"${person_id}\"],\"size\":3,\"withExif\":true,\"withPeople\":true}"
+    fi
+  fi
+  meta_json="$(curl -fsS "${auth[@]}" -H "Content-Type: application/json" \
+    -d "$meta_body" \
+    "${IMMICH_BASE}/api/search/metadata")"
+  python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+items = data.get('assets', {}).get('items', [])
+print('total', data.get('assets', {}).get('total', 0))
+for item in items[:3]:
+    exif = item.get('exifInfo') or {}
+    people = [p.get('name') for p in item.get('people') or [] if p.get('name')]
+    print(' -', item.get('id'), 'country=', exif.get('country'), 'city=', exif.get('city'), 'people=', people or '-')
+if items and not ((items[0].get('exifInfo') or {}).get('country') or items[0].get('people')):
+    print('  ⚠ 首筆無 exif/people — carousel 副標可能為「—」（需 enrich fallback）')
+" <<<"$meta_json"
+fi
 
 if [[ -n "$asset_id" ]]; then
   echo ""
@@ -131,15 +163,19 @@ cat <<'EOF'
      → 找在海邊的照片
      預期：文字摘要 + 橫向滑動縮圖；點縮圖開 Immich
 
-  B. 人名 + 年齡（V1 metadata + Flex；暱稱 小蕊 → Immich rayna）
+  B. 人名 + 地點（carousel 副標應顯示地點/人物，非「—」）
+     → 找 steffi 在丹麥的照片
+     預期：文字摘要 + carousel；副標含「丹麥」或城市、人物名
+
+  C. 人名 + 年齡（V1 metadata + Flex；暱稱 小蕊 → Immich rayna）
      → 幫我找小蕊一歲半的照片
      預期：若 rayna 有生日 → carousel；否則追問生日
 
-  C. 追問流程
+  D. 追問流程
      → 生日 2019-03-15
      預期：依生日推算 1.5 歲區間並回傳結果
 
-  D. 驗 log
+  E. 驗 log
      kubectl logs -n immich deploy/immich-line-bot --tail=80 | rg "Photo search"
 
 EOF
