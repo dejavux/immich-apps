@@ -79,6 +79,10 @@ async function uploadRichMenuImage(
   );
 }
 
+/**
+ * LINE does not allow replacing an image on an existing rich menu.
+ * Create a fresh menu, upload the banner, swap default, then delete the old one.
+ */
 export async function ensureDefaultRichMenu(
   accessToken: string,
 ): Promise<string | undefined> {
@@ -87,25 +91,41 @@ export async function ensureDefaultRichMenu(
     channelAccessToken: accessToken,
   });
 
-  let richMenuId: string | undefined;
+  let previousRichMenuId: string | undefined;
   try {
     const existing = await client.getDefaultRichMenuId();
-    richMenuId = existing?.richMenuId;
+    previousRichMenuId = existing?.richMenuId;
   } catch {
     // No default menu yet.
   }
 
+  const created = await client.createRichMenu(buildRichMenuBody());
+  const richMenuId = created.richMenuId;
   if (!richMenuId) {
-    const created = await client.createRichMenu(buildRichMenuBody());
-    richMenuId = created.richMenuId;
-    if (!richMenuId) {
-      throw new Error("createRichMenu returned no richMenuId");
-    }
-    await client.setDefaultRichMenu(richMenuId);
-    logger.info({ richMenuId }, "Created and linked default rich menu");
+    throw new Error("createRichMenu returned no richMenuId");
   }
 
   await uploadRichMenuImage(blobClient, richMenuId);
-  logger.info({ richMenuId }, "Rich menu image uploaded");
+  await client.setDefaultRichMenu(richMenuId);
+  logger.info(
+    { richMenuId, previousRichMenuId },
+    "Default rich menu refreshed",
+  );
+
+  if (previousRichMenuId && previousRichMenuId !== richMenuId) {
+    try {
+      await client.deleteRichMenu(previousRichMenuId);
+      logger.info(
+        { richMenuId: previousRichMenuId },
+        "Deleted previous rich menu",
+      );
+    } catch (error) {
+      logger.warn(
+        { error, richMenuId: previousRichMenuId },
+        "Failed to delete previous rich menu",
+      );
+    }
+  }
+
   return richMenuId;
 }
