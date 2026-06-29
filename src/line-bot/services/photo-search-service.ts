@@ -4,6 +4,7 @@ import {
   parseIsoDateOnly,
 } from "../../shared/date-range";
 import { ImmichClient } from "../../shared/immich-client";
+import { enrichSearchAssetHits } from "../../shared/map-search-asset";
 import { logger } from "../../shared/logger";
 import type { ImmichPersonSummary } from "../../shared/types/immich";
 import type {
@@ -344,8 +345,9 @@ export class PhotoSearchService {
     },
   ): Promise<PhotoSearchResult> {
     const { items, total } = await this.searchAssets(plan, filters);
+    const assets = enrichSearchAssetHits(items, plan, personName);
 
-    if (items.length === 0) {
+    if (assets.length === 0) {
       this.options.sessionStore.save(userId, {
         plan,
         lastFailedPlan: plan,
@@ -363,7 +365,7 @@ export class PhotoSearchService {
     this.options.sessionStore.clear(userId);
 
     const viewAllUrl =
-      total > items.length
+      total > assets.length
         ? buildViewAllUrl(
             this.options.immichWebUrl,
             plan,
@@ -374,7 +376,7 @@ export class PhotoSearchService {
     return {
       kind: "results",
       message: formatResultsHeader(personName, criteriaLabel, total),
-      assets: items,
+      assets,
       total,
       viewAllUrl,
     };

@@ -87,6 +87,8 @@ spec:
               value: {{ .Values.env.searchSessionTtlMs | quote }}
             - name: SEARCH_PERSON_ALIASES
               value: {{ .Values.env.searchPersonAliases | quote }}
+            - name: LINE_RICH_MENU_AUTO_SETUP
+              value: {{ .Values.env.lineRichMenuAutoSetup | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:

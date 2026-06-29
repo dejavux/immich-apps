@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { messagingApi } from "@line/bot-sdk";
@@ -11,9 +11,21 @@ const { MessagingApiClient, MessagingApiBlobClient } = messagingApi;
 const MENU_WIDTH = 2500;
 const MENU_HEIGHT = 843;
 
+function resolveRichMenuImagePath(): string {
+  const candidates = [
+    join(__dirname, "../../../deploy/line-bot/rich-menu.jpg"),
+    join(process.cwd(), "deploy/line-bot/rich-menu.jpg"),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  throw new Error(`Rich menu image not found. Tried: ${candidates.join(", ")}`);
+}
+
 function richMenuImageBytes(): Buffer {
-  const imagePath = join(__dirname, "../../../deploy/line-bot/rich-menu.jpg");
-  return readFileSync(imagePath);
+  return readFileSync(resolveRichMenuImagePath());
 }
 
 function buildRichMenuBody(): messagingApi.RichMenuRequest {
@@ -57,6 +69,16 @@ function buildRichMenuBody(): messagingApi.RichMenuRequest {
   };
 }
 
+async function uploadRichMenuImage(
+  blobClient: messagingApi.MessagingApiBlobClient,
+  richMenuId: string,
+): Promise<void> {
+  await blobClient.setRichMenuImage(
+    richMenuId,
+    new Blob([richMenuImageBytes()], { type: "image/jpeg" }),
+  );
+}
+
 export async function ensureDefaultRichMenu(
   accessToken: string,
 ): Promise<string | undefined> {
@@ -65,26 +87,25 @@ export async function ensureDefaultRichMenu(
     channelAccessToken: accessToken,
   });
 
+  let richMenuId: string | undefined;
   try {
     const existing = await client.getDefaultRichMenuId();
-    if (existing?.richMenuId) {
-      logger.info({ richMenuId: existing.richMenuId }, "Rich menu already set");
-      return existing.richMenuId;
-    }
+    richMenuId = existing?.richMenuId;
   } catch {
     // No default menu yet.
   }
 
-  const created = await client.createRichMenu(buildRichMenuBody());
-  const richMenuId = created.richMenuId;
   if (!richMenuId) {
-    throw new Error("createRichMenu returned no richMenuId");
+    const created = await client.createRichMenu(buildRichMenuBody());
+    richMenuId = created.richMenuId;
+    if (!richMenuId) {
+      throw new Error("createRichMenu returned no richMenuId");
+    }
+    await client.setDefaultRichMenu(richMenuId);
+    logger.info({ richMenuId }, "Created and linked default rich menu");
   }
-  await blobClient.setRichMenuImage(
-    richMenuId,
-    new Blob([richMenuImageBytes()], { type: "image/jpeg" }),
-  );
-  await client.setDefaultRichMenu(richMenuId);
-  logger.info({ richMenuId }, "Created and linked default rich menu");
+
+  await uploadRichMenuImage(blobClient, richMenuId);
+  logger.info({ richMenuId }, "Rich menu image uploaded");
   return richMenuId;
 }

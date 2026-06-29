@@ -235,8 +235,8 @@ P2  可選     album reconcile · Similar images · thumbs NVMe
 | # | 項目 | 類型 | 狀態 | 說明 |
 | --- | ------ | ------ | ------ | ------ |
 | 4 | 國名對照自動化 | Feature | ✅ | `scripts/generate-country-lookup.py` · CLDR 264 筆 + runtime explore alias |
-| 5 | Carousel bubble 中繼資料 | UX | ✅ | 地點/人物標籤取代 UUID 檔名（`mapSearchAssetItem`） |
-| 6 | Web + LINE E2E 驗收 | UX | 📋 | [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md) P0 checklist（alias · 時間軸 · Smart Search 對照） |
+| 5 | Carousel bubble 中繼資料 | UX | ✅ | `withExif`/`withPeople` + plan enrich；副標顯示地點/人物 |
+| 6 | Web + LINE E2E 驗收 | UX | 📋 | [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md) · `smoke-photo-search-e2e.sh --country Denmark` |
 | 7 | 上傳「處理中 N/M」 | UX | ✅ | imageSet 每張 push「處理中 N/M…」（非僅偶數張） |
 
 ### P2 — 平台與資料品質（Q3 · **Defer**）
@@ -288,6 +288,7 @@ P2  可選     album reconcile · Similar images · thumbs NVMe
 
 | 項目 | 完成日 |
 | ------ | -------- |
+| Carousel 副標 withExif + Rich Menu 圖片修復（117 tests） | 2026-06-29 |
 | P1 國名 CLDR 自動化 + carousel 中繼資料 + 處理中 N/M（115 tests） | 2026-06-29 |
 | Denmark country filter + normalizeCountryForImmich（`d272c21`） | 2026-06-28 |
 | LINE 搜尋 UX PR #32–#34（確認 flow · help QR · 歐洲口語） | 2026-06-25 |

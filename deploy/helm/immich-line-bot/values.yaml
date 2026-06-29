@@ -47,6 +47,7 @@ env:
   searchAgeWindowDays: "45"
   searchSessionTtlMs: "1800000"
   searchPersonAliases: "小蕊:rayna"
+  lineRichMenuAutoSetup: "true"
   # Cluster-internal Immich API (same namespace)
   immichBaseUrl: http://immich-server:2283
   immichWebUrl: https://immich.3q.fi

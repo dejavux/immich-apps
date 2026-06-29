@@ -1,4 +1,8 @@
-import { isUuidLikeFileName, mapSearchAssetItem } from "./map-search-asset";
+import {
+  enrichSearchAssetHits,
+  isUuidLikeFileName,
+  mapSearchAssetItem,
+} from "./map-search-asset";
 
 describe("mapSearchAssetItem", () => {
   it("extracts exif location and people", () => {
@@ -16,6 +20,46 @@ describe("mapSearchAssetItem", () => {
       country: "Japan",
       city: "Tokyo",
       personNames: ["rayna", "steffi"],
+    });
+  });
+});
+
+describe("enrichSearchAssetHits", () => {
+  it("fills missing location and people from search plan", () => {
+    const enriched = enrichSearchAssetHits(
+      [
+        {
+          id: "abc",
+          localDateTime: "2019-07-14T12:00:00.000Z",
+          originalFileName: "11111111-1111-4111-8111-111111111111.jpg",
+        },
+      ],
+      { country: "Denmark", personNames: ["steffi"] },
+    );
+    expect(enriched[0]).toMatchObject({
+      country: "Denmark",
+      personNames: ["steffi"],
+    });
+  });
+
+  it("preserves API metadata when present", () => {
+    const enriched = enrichSearchAssetHits(
+      [
+        {
+          id: "abc",
+          country: "Japan",
+          city: "Tokyo",
+          personNames: ["rayna"],
+        },
+      ],
+      { country: "Denmark", personNames: ["steffi"] },
+      "steffi",
+    );
+    expect(enriched[0]).toEqual({
+      id: "abc",
+      country: "Japan",
+      city: "Tokyo",
+      personNames: ["rayna"],
     });
   });
 });
