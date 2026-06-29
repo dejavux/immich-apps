@@ -19,6 +19,8 @@ import {
   ensureAgeFromText,
   ensureRelativeDatesFromText,
   ensureSceneQueryEn,
+  isBareActivityScene,
+  isVenueSceneQuery,
   parseLlmSearchResponse,
   normalizeCountryForImmich,
   parseSearchPlanFallback,
@@ -38,6 +40,7 @@ import {
 const EMPTY_QUICK_REPLY_ACTIONS = [
   { label: "放寬年齡", text: "放寬年齡" },
   { label: "只搜地點", text: "只搜地點" },
+  { label: "只要哭的", text: "只要哭的" },
   { label: "檢查人臉命名", text: "檢查人臉命名" },
 ] as const;
 
@@ -345,7 +348,8 @@ export class PhotoSearchService {
     },
   ): Promise<PhotoSearchResult> {
     const { items, total } = await this.searchAssets(plan, filters);
-    const assets = enrichSearchAssetHits(items, plan, personName);
+    const filteredItems = filterVenueSceneResults(items, plan);
+    const assets = enrichSearchAssetHits(filteredItems, plan, personName);
 
     if (assets.length === 0) {
       this.options.sessionStore.save(userId, {
@@ -964,7 +968,8 @@ export function buildSearchConfirmSummary(
 
   const scene = plan.sceneQuery?.trim();
   if (scene) {
-    segments.push(scene.startsWith("在") ? scene : `在${scene}`);
+    const sceneSegment = formatSceneSegment(scene);
+    segments.push(sceneSegment);
   }
 
   let qualifier = "";
@@ -993,4 +998,39 @@ export function buildSearchConfirmSummary(
   }
 
   return `要依這些條件搜尋照片${qualifier}嗎？`;
+}
+
+function formatSceneSegment(scene: string): string {
+  if (scene.startsWith("在") || scene.startsWith("不在")) {
+    return scene;
+  }
+  if (isBareActivityScene(scene)) {
+    return scene;
+  }
+  return `在${scene}`;
+}
+
+/**
+ * Drop smart-search hits whose EXIF location contradicts a venue scene
+ * (e.g. Taipei photo when searching Disney). Assets without EXIF city are kept.
+ */
+export function filterVenueSceneResults(
+  items: PhotoSearchAssetHit[],
+  plan: Partial<PhotoSearchPlan>,
+): PhotoSearchAssetHit[] {
+  if (!isVenueSceneQuery(plan) || items.length === 0) {
+    return items;
+  }
+
+  return items.filter((item) => {
+    const city = item.city?.toLowerCase() ?? "";
+    const country = item.country?.toLowerCase() ?? "";
+    if (!city && !country) {
+      return true;
+    }
+    if (/taipei|taichung|kaohsiung|taiwan/.test(`${city} ${country}`)) {
+      return false;
+    }
+    return true;
+  });
 }

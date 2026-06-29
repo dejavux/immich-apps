@@ -63,6 +63,19 @@ describe("relativeDateRange", () => {
     expect(range?.label).toBe("今年");
     expect(range?.dateFrom).toBe("2026-01-01");
   });
+
+  it("detects 2年前 with optional space", () => {
+    const range = detectRelativeDateInText("找 2年 前的照片", now);
+    expect(range?.label).toBe("2年前");
+    expect(range?.dateFrom).toBe("2024-01-01");
+    expect(range?.dateTo).toBe("2024-12-31");
+  });
+
+  it("detects Chinese numeral 二年前", () => {
+    const range = detectRelativeDateInText("找二年前的照片", now);
+    expect(range?.label).toBe("二年前");
+    expect(range?.dateFrom).toBe("2024-01-01");
+  });
 });
 
 describe("addMonthsUtc", () => {

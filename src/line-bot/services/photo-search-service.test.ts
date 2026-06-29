@@ -1,5 +1,6 @@
 import {
   buildSearchConfirmSummary,
+  filterVenueSceneResults,
   formatResultsMessage,
   isConfirmationAffirmative,
   isConfirmationNegative,
@@ -429,6 +430,90 @@ describe("parseSearchPlanFallback", () => {
     expect(plan.country).toBe("Denmark");
     expect(plan.sceneQuery).toBeUndefined();
     expect(plan.anyDate).toBe(true);
+  });
+
+  it("parses person + bare emotion without erroneous 在", () => {
+    const plan = parseSearchPlanFallback("找 小蕊 哭的照片");
+    expect(plan.personNames).toEqual(["小蕊"]);
+    expect(plan.sceneQuery).toBe("哭");
+    expect(plan.sceneQueryEn).toContain("crying");
+    expect(buildSearchConfirmSummary(plan)).toBe(
+      "要找「小蕊」哭的照片（不限年齡）嗎？",
+    );
+  });
+
+  it("parses relative date 2年 前 without person", () => {
+    const now = new Date("2026-06-29T12:00:00.000Z");
+    const plan = parseSearchPlanFallback("找 2年 前的照片", now);
+    expect(plan.personNames).toEqual([]);
+    expect(plan.dateRangeLabel).toBe("2年前");
+    expect(plan.dateFrom).toBe("2024-01-01");
+    expect(plan.dateTo).toBe("2024-12-31");
+    expect(buildSearchConfirmSummary(plan)).toContain("2年前");
+  });
+
+  it("parses Chinese numeral 二年前", () => {
+    const now = new Date("2026-06-29T12:00:00.000Z");
+    const plan = parseSearchPlanFallback("找 二年前的照片", now);
+    expect(plan.personNames).toEqual([]);
+    expect(plan.dateRangeLabel).toBe("二年前");
+    expect(plan.dateFrom).toBe("2024-01-01");
+  });
+
+  it("parses Disney as venue scene with multiple people", () => {
+    const plan = parseSearchPlanFallback("找 Steffi. 小蕊 在Disney的照片");
+    expect(plan.personNames).toEqual(["Steffi", "小蕊"]);
+    expect(plan.country).toBeUndefined();
+    expect(plan.city).toBeUndefined();
+    expect(plan.sceneQuery).toMatch(/Disney/i);
+    expect(plan.sceneQueryEn).toContain("Disney");
+  });
+
+  it("parses emotion follow-up 只要哭的", () => {
+    const plan = parseSearchPlanFallback("只要哭的");
+    expect(plan.sceneQuery).toBe("哭");
+    expect(plan.anyDate).toBe(true);
+  });
+});
+
+describe("filterVenueSceneResults", () => {
+  it("drops Taipei EXIF hits for Disney venue search", () => {
+    const filtered = filterVenueSceneResults(
+      [
+        {
+          id: "a1",
+          city: "Taipei",
+          country: "Taiwan, Province of China",
+        },
+        {
+          id: "a2",
+          city: "Anaheim",
+          country: "United States",
+        },
+        { id: "a3" },
+      ],
+      {
+        sceneQuery: "Disney",
+        sceneQueryEn: "Disney theme park amusement",
+      },
+    );
+    expect(filtered.map((item) => item.id)).toEqual(["a2", "a3"]);
+  });
+});
+
+describe("mergePlans emotion multi-turn", () => {
+  it("accumulates emotion filter onto prior person search", () => {
+    const merged = mergePlans(
+      { personNames: ["小蕊"], anyDate: true },
+      {
+        intent: "search_photos",
+        personNames: [],
+        sceneQuery: "哭",
+        anyDate: true,
+      },
+    );
+    expect(merged.personNames).toEqual(["小蕊"]);
+    expect(merged.sceneQuery).toBe("哭");
   });
 });
 
