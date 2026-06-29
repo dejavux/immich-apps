@@ -675,6 +675,7 @@ export const CITY_LOOKUP: Array<[RegExp, string]> = [
   [/香港/, "Hong Kong"],
   [/奧斯陸/, "Oslo"],
   [/哥本哈根/, "Copenhagen"],
+  [/聖彼得堡/, "Saint Petersburg"],
 ];
 
 /**

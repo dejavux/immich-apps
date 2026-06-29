@@ -288,6 +288,7 @@ P2  可選     album reconcile · Similar images · thumbs NVMe
 
 | 項目 | 完成日 |
 | ------ | -------- |
+| 聖彼得堡 CITY_LOOKUP + carousel 不誤標地點 + Rich Menu 可見橫幅 | 2026-06-29 |
 | Carousel 副標 withExif + Rich Menu 圖片修復（117 tests） | 2026-06-29 |
 | P1 國名 CLDR 自動化 + carousel 中繼資料 + 處理中 N/M（115 tests） | 2026-06-29 |
 | Denmark country filter + normalizeCountryForImmich（`d272c21`） | 2026-06-28 |

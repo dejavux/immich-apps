@@ -107,8 +107,10 @@ export async function ensureDefaultRichMenu(
 
   await uploadRichMenuImage(blobClient, richMenuId);
   await client.setDefaultRichMenu(richMenuId);
+  const imagePath = resolveRichMenuImagePath();
+  const imageSize = richMenuImageBytes().length;
   logger.info(
-    { richMenuId, previousRichMenuId },
+    { richMenuId, previousRichMenuId, imagePath, imageSize },
     "Default rich menu refreshed",
   );
 
