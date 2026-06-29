@@ -2,7 +2,7 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-06-29（P1 #4/#5/#7 實作 · rsync du 複查 63G+17G）  
+**最後更新**: 2026-06-30（Rich Menu 中文標籤修復 · 使用者驗收 2026-06-29）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
@@ -25,7 +25,7 @@
 | 軌道 | 任務 | 狀態 | 備註 |
 | ------ | ------ | ------ | ------ |
 | — | **Immich Enhancement** | ✅ 結案 | Phase 0–3.6 + 3.5（purge 豁免） |
-| **Release** | LINE Bot `d272c21` | 🔴 **待 deploy** | cluster `f75de69` · `make verify-deploy` NEED RELEASE |
+| **Release** | LINE Bot rich menu fix | 🟡 **deploy 中** | 見 `make verify-deploy` · 搜尋／OA 驗收 ✅ 2026-06-29 |
 | **Ops W1** | Phase 5a NFS + pg_dump | ✅ **PASS** | pg 2/2 · NFS Job ✅ · B2 已刪 |
 | **Ops** | Phase 1 probes/Redis | ✅ **已 deploy** | probes + NetworkPolicy + Redis secret（2026-06-23） |
 | **Ops W3** | Phase 5b monitoring | 🟡 **~95%** | immich-ops 有資料 · Telegram smoke 待確認 |
@@ -199,7 +199,8 @@ P2  可選     album reconcile · Similar images · thumbs NVMe
 - [x] 口語「小光和老婆在歐洲」· 關係詞過濾 · 歐洲 sceneQuery（PR #34）
 - [x] Denmark / 丹麥 country metadata filter + `normalizeCountryForImmich`（`d272c21`）
 - [x] 搜尋 parser P0：人物+情緒（哭）· `N年前` 相對日期 · 中文數字 · Disney 場景 + EXIF 過濾（2026-06-29）
-- [x] 情緒篩選 MVP（哭/笑/開心）· 多輪「只要哭的」· Rich Menu 2500×843 重製 · OA icon（2026-06-29）
+- [x] 情緒篩選 MVP（哭/笑/開心）· 多輪「只要哭的」· 搜尋重測（小蕊哭／2年前／Disney）· OA icon 上傳（2026-06-29 · PR #39）
+- [x] Rich Menu 橫幅中文標籤（找照片／上傳教學／使用說明）· `generate-rich-menu.py`（2026-06-30）
 
 ---
 
@@ -290,6 +291,7 @@ P2  可選     album reconcile · Similar images · thumbs NVMe
 
 | 項目 | 完成日 |
 | ------ | -------- |
+| Rich Menu 中文標籤修復（CJK 字型 · generate-rich-menu.py） | 2026-06-30 |
 | 聖彼得堡 CITY_LOOKUP + carousel 不誤標地點 + Rich Menu 可見橫幅 | 2026-06-29 |
 | Carousel 副標 withExif + Rich Menu 圖片修復（117 tests） | 2026-06-29 |
 | P1 國名 CLDR 自動化 + carousel 中繼資料 + 處理中 N/M（115 tests） | 2026-06-29 |

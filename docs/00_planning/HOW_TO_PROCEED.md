@@ -1,6 +1,6 @@
 # 如何進行 — Immich Apps 執行指南
 
-**日期**: 2026-06-28  
+**日期**: 2026-06-30  
 **Repo**: <https://github.com/dejavux/immich-apps>  
 **進度 SSOT**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **路線圖**: [BACKLOG.md §下一階段路線圖](./BACKLOG.md#下一階段路線圖2026-06-28)  
@@ -13,21 +13,30 @@
 | 項目 | 狀態 |
 | ------ | ------ |
 | **Immich Enhancement** | ✅ **結案** |
-| LINE Bot git | **`d272c21`**（Denmark + PR #32–#34） |
-| LINE Bot cluster | **`f75de69`** → 🔴 **`make release` 待執行** |
+| LINE Bot git | 見 `git rev-parse --short HEAD` |
+| LINE Bot cluster | 見 `make verify-deploy` |
+| **使用者驗收** | ✅ **2026-06-29** — OA icon 上傳 · 搜尋重測（小蕊哭／2年前／Disney） |
 | **Immich Ops** | 5a **PASS** · 5b **~95%** · Phase 4 ✅ **COMPLETE** |
 
 ```bash
-make verify-deploy   # 預期：NEED RELEASE 直至 rollout d272c21
+make verify-deploy   # 比對 git SHA vs cluster image tag
 ```
 
 ---
 
 ## 🔴 本週優先（P0）
 
-1. **`make release`** → `make verify-deploy` PASS → LINE 實機驗證「找 steffi 在丹麥的照片」
+1. **`make release`** → `make verify-deploy` PASS → LINE Rich Menu 標籤實機確認（找照片／上傳教學／使用說明）
 2. **Ops W2** — 追蹤 rsync：`ssh delta.3q.fi 'du -sh .../mac-studio/*'`（2026-06-28：**63G/146G** local · **17G/18G** icloud）
 3. **Phase 5b** — 確認 Telegram smoke 3 條告警
+
+### Rich Menu 更新（維運）
+
+```bash
+python3 scripts/line-bot/generate-rich-menu.py
+eval "$(./scripts/dev/load-env-from-op.sh)"
+bash scripts/line-bot/setup-rich-menu.sh
+```
 
 ---
 

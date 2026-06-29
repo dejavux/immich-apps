@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Create and link LINE Rich Menu (one-time or after menu copy changes).
+# Create and link LINE Rich Menu (one-time or after menu copy / banner changes).
+#
+# Compact menu titles are baked into deploy/line-bot/rich-menu.jpg (not API label).
+# After editing copy or layout:
+#   python3 scripts/line-bot/generate-rich-menu.py
 #
 # Usage:
 #   eval "$(./scripts/dev/load-env-from-op.sh)"
