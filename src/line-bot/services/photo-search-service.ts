@@ -19,6 +19,7 @@ import {
   ensureRelativeDatesFromText,
   ensureSceneQueryEn,
   parseLlmSearchResponse,
+  normalizeCountryForImmich,
   parseSearchPlanFallback,
   sanitizeSearchPlan,
   summarizeSessionForPrompt,
@@ -48,6 +49,7 @@ const FACE_NAMING_HELP =
 const COUNTRY_DISPLAY: Record<string, string> = {
   Japan: "日本",
   "Taiwan, Province of China": "台灣",
+  Denmark: "丹麥",
 };
 
 export interface PhotoSearchServiceOptions {
@@ -306,7 +308,7 @@ export class PhotoSearchService {
       takenBefore?: string;
     },
   ): Promise<{ items: PhotoSearchAssetHit[]; total: number }> {
-    const country = plan.country ?? undefined;
+    const country = normalizeCountryForImmich(plan.country);
     const city = plan.city ?? undefined;
 
     if (this.hasSceneQuery(plan)) {

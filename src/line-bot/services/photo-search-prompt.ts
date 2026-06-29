@@ -179,7 +179,7 @@ export function parseLlmSearchResponse(
     dateTo: raw.dateTo ?? undefined,
     birthDate: raw.birthDate ?? undefined,
     personChoice: raw.personChoice ?? undefined,
-    country: raw.country ?? undefined,
+    country: normalizeCountryForImmich(raw.country),
     city: raw.city ?? undefined,
     sceneQuery: raw.sceneQuery ?? undefined,
     sceneQueryEn: raw.sceneQueryEn ?? undefined,
@@ -665,6 +665,7 @@ export const COUNTRY_LOOKUP: Array<[RegExp, string]> = [
   [/泰國|曼谷/, "Thailand"],
   [/香港/, "Hong Kong"],
   [/中國|北京|上海/, "China"],
+  [/丹麥|哥本哈根/, "Denmark"],
 ];
 
 /**
@@ -682,12 +683,39 @@ export const CITY_LOOKUP: Array<[RegExp, string]> = [
   [/新加坡市/, "Singapore"],
   [/香港/, "Hong Kong"],
   [/奧斯陸/, "Oslo"],
+  [/哥本哈根/, "Copenhagen"],
 ];
 
 /**
  * Tries to extract a country or city from a Chinese location phrase.
  * Returns the matched Immich country/city names, or undefined if nothing matches.
  */
+const IMMICH_COUNTRY_VALUES = new Set(
+  COUNTRY_LOOKUP.map(([, name]) => name),
+);
+
+/**
+ * Maps Chinese country keywords or alternate LLM output to Immich EXIF country names.
+ */
+export function normalizeCountryForImmich(
+  country: string | undefined | null,
+): string | undefined {
+  if (!country?.trim()) {
+    return undefined;
+  }
+  const trimmed = country.trim();
+  if (IMMICH_COUNTRY_VALUES.has(trimmed)) {
+    return trimmed;
+  }
+  for (const [, immichName] of COUNTRY_LOOKUP) {
+    if (immichName.toLowerCase() === trimmed.toLowerCase()) {
+      return immichName;
+    }
+  }
+  const { country: extracted } = extractLocationFromQuery(trimmed);
+  return extracted ?? trimmed;
+}
+
 export function extractLocationFromQuery(query: string): {
   country?: string;
   city?: string;
@@ -783,7 +811,7 @@ export function ensureSceneQueryEn(plan: PhotoSearchPlan): PhotoSearchPlan {
     const { country, city } = extractLocationFromQuery(scene);
     return {
       ...withCleanScene,
-      country: withCleanScene.country ?? country,
+      country: normalizeCountryForImmich(withCleanScene.country ?? country),
       city: withCleanScene.city ?? city,
       sceneQuery: undefined,
       sceneQueryEn: undefined,

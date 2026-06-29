@@ -14,6 +14,8 @@ import {
   ensureActivityFromText,
   ensureAgeFromText,
   ensureSceneQueryEn,
+  extractLocationFromQuery,
+  normalizeCountryForImmich,
   parseSearchPlanFallback,
   parseLlmSearchResponse,
   sanitizeSearchPlan,
@@ -21,6 +23,7 @@ import {
   translateSceneQueryFallback,
   tryParsePersonAge,
   tryParsePersonScenePhoto,
+  tryParsePersonsWithAtPhrase,
 } from "./photo-search-prompt";
 
 describe("buildSearchConfirmSummary", () => {
@@ -42,6 +45,17 @@ describe("buildSearchConfirmSummary", () => {
       sceneQuery: "海邊",
     });
     expect(summary).toContain("海邊");
+  });
+
+  it("formats Denmark country in Chinese", () => {
+    const summary = buildSearchConfirmSummary({
+      personNames: ["steffi"],
+      country: "Denmark",
+      anyDate: true,
+    });
+    expect(summary).toContain("steffi");
+    expect(summary).toContain("丹麥");
+    expect(summary).toContain("不限年齡");
   });
 });
 
@@ -377,6 +391,56 @@ describe("parseSearchPlanFallback", () => {
     expect(plan.ageMonths).toBe(18);
     expect(plan.personNames).toEqual([]);
   });
+
+  it("parses steffi in Denmark with country filter", () => {
+    const plan = parseSearchPlanFallback("找 steffi 在丹麥的照片");
+    expect(plan.personNames).toEqual(["steffi"]);
+    expect(plan.country).toBe("Denmark");
+    expect(plan.sceneQuery).toBeUndefined();
+    expect(plan.anyDate).toBe(true);
+  });
+});
+
+describe("tryParsePersonsWithAtPhrase", () => {
+  it("extracts Denmark from 在丹麥", () => {
+    const parsed = tryParsePersonsWithAtPhrase("找 steffi 在丹麥的照片");
+    expect(parsed?.personNames).toEqual(["steffi"]);
+    expect(parsed?.country).toBe("Denmark");
+    expect(parsed?.sceneQuery).toBeUndefined();
+  });
+});
+
+describe("extractLocationFromQuery", () => {
+  it("maps 丹麥 to Denmark", () => {
+    expect(extractLocationFromQuery("丹麥")).toEqual({ country: "Denmark" });
+  });
+});
+
+describe("normalizeCountryForImmich", () => {
+  it("maps Chinese 丹麥 to Denmark", () => {
+    expect(normalizeCountryForImmich("丹麥")).toBe("Denmark");
+  });
+
+  it("normalizes case-insensitive English", () => {
+    expect(normalizeCountryForImmich("denmark")).toBe("Denmark");
+  });
+
+  it("passes through known Immich country names", () => {
+    expect(normalizeCountryForImmich("Japan")).toBe("Japan");
+  });
+});
+
+describe("ensureSceneQueryEn", () => {
+  it("promotes 丹麥 sceneQuery to country filter", () => {
+    const plan = ensureSceneQueryEn({
+      intent: "search_photos",
+      personNames: ["steffi"],
+      sceneQuery: "丹麥",
+    });
+    expect(plan.country).toBe("Denmark");
+    expect(plan.sceneQuery).toBeUndefined();
+    expect(plan.sceneQueryEn).toBeUndefined();
+  });
 });
 
 describe("sanitizeSearchPlan", () => {
@@ -442,6 +506,17 @@ describe("parseLlmSearchResponse", () => {
       anyDate: true,
     });
     expect(plan.personNames).toEqual(["小蕊"]);
+  });
+
+  it("normalizes Chinese country from LLM response", () => {
+    const plan = parseLlmSearchResponse({
+      intent: "search_photos",
+      personNames: ["steffi"],
+      country: "丹麥",
+      anyDate: true,
+    });
+    expect(plan.country).toBe("Denmark");
+    expect(plan.sceneQuery).toBeUndefined();
   });
 });
 
