@@ -1,6 +1,6 @@
 # UX / Product Review — Immich Apps
 
-**日期**: 2026-06-18  
+**日期**: 2026-06-28（對齊 PR #32–#34 · `d272c21`）  
 **範圍**: 使用者面向流程（LINE Bot · Immich Web · Mac Photos 維運）與下一階段產品優化  
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md) · **Sprint**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
@@ -12,11 +12,11 @@
 | ------ | ------ | ------ | ------ |
 | **後端 / 資料正確性** | 強 | ★★★★☆ | Photo sync、reconcile、tier policy 腳本鏈完整；Immich v2.7.5 穩定 |
 | **LINE 上傳** | 可用 | ★★★☆☆ | E2E 通過；但「照片 vs 原檔」認知負擔高 |
-| **LINE 搜尋** | 進步中 | ★★★★☆ | Qwen + CLIP + Flex carousel 已上線；追問/disambiguation 仍偏文字 |
-| **Immich Web** | 依 upstream | ★★★☆☆ | 相簿/時間軸可用；union 兩 library 對一般使用者不直覺 |
-| **維運者 UX** | 腳本為主 | ★★☆☆☆ | tier / reconcile 多步 CLI + Photos GUI；缺單一狀態面板 |
+| **LINE 搜尋** | 成熟 | ★★★★☆ | 確認 flow · help QR · 地點 metadata（含丹麥）· 口語歐洲；carousel 仍顯示檔名 |
+| **Immich Web** | 依 upstream | ★★★☆☆ | 相簿/時間軸可用；P0 驗收 checklist 未跑 |
+| **維運者 UX** | 腳本為主 | ★★★☆☆ | `tier-policy-status.sh` 已有；tier 仍多步 CLI |
 
-**結論**：功能面已接近 Phase 3.5 收尾；**產品體驗下一階段**應聚焦「使用者怎麼找照片、怎麼上傳、怎麼理解兩個圖庫」，以及「維運者怎麼一眼看懂 tier/reconcile 狀態」。
+**結論**：增強專案主體已結案；**下一階段 UX** 聚焦：(1) carousel 顯示地點/人物而非 UUID、(2) Web+LINE P0 驗收、(3) 國名對照自動化避免再出現「丹麥」類缺口、(4) AI 對話助理延伸 session store。
 
 ---
 
@@ -63,11 +63,11 @@ graph LR
 
 | 步驟 | 現況 | 痛點 | 建議 |
 | ------ | ------ | ------ | ------ |
-| 意圖解析 | Qwen JSON plan + fallback + **搜尋前確認**（Quick Reply 確認/取消/改條件） | 偶發誤解口語 | 已實作確認流程；持續調整摘要文案 |
-| 人物消歧 | 文字列表 1.2.3 | 無頭像、難辨識 | **P1** Quick Reply 按鈕或 Flex 人名卡片 |
-| 結果呈現 | 文字 + Flex carousel 10 張 | 超過 10 張只有文字提示 | **P2** 「查看更多」deep link 到 Immich 預填搜尋 |
-| 空結果 | 引導換場景/確認人臉 | 尚可 | **P3** 建議「尚未命名的人物」連結 |
-| 幫助 | 靜態範例列表 | 新使用者不知 Bot 能做什麼 | **P1** 首次對話 welcome + Rich Menu「找照片」「怎麼上傳」 |
+| 意圖解析 | Qwen JSON + fallback + **搜尋前確認** + help Quick Reply | 少數國名需擴 `COUNTRY_LOOKUP` | **P1** CLDR 自動生成 + Immich distinct countries |
+| 人物消歧 | Quick Reply 按鈕 | 無頭像 | **P2** Flex 人名卡片（附縮圖若 API 允許） |
+| 結果呈現 | Flex carousel + deep link | bubble 顯示 UUID 檔名 | **P1** 地點/人物/場景標籤 |
+| 空結果 | Quick Reply 放寬條件 | 尚可 | 維持 |
+| 幫助 | Rich Menu + 範例 QR | 已改善 | 維持 |
 
 ### LINE 版面（Layout）建議
 
@@ -146,18 +146,17 @@ status → 缺什麼一目了然
 ## 優先序矩陣（功能 + UX）
 
 ```text
-本週必做（阻擋收尾）
-  P0  Web + LINE 人工 E2E 驗收
-  P1  Phase B bulk 收尾 · purge · reconcile apply（20 orphan ready，2026-06-18 dry-run）
+P0  本週
+  make release d272c21 · LINE「丹麥」E2E · Ops W2 rsync 收尾
 
-下週產品體驗
-  P1  LINE Rich Menu + 上傳教學 · 人物消歧 Quick Reply
-  P1  tier-policy-status 單頁摘要
-  P2  上傳成功 Flex 預覽 · 搜尋「查看更多」deep link
+P1  產品（2–4 週）
+  國名 CLDR 自動化 · carousel 中繼資料 · Web/LINE P0 驗收 checklist
 
-Q3 / Defer
-  P2  Grafana LINE + Immich dashboard
-  P3  Photo Edit UI · Qwen vision 描述
+P2  平台（Q3）
+  Similar images · album reconcile · LINE Grafana panel · Immich 升級
+
+P3  AI / 新場景
+  照片館對話助理（session + 主動建議）· Qwen vision · Photo Edit · LIFF defer
 ```
 
 ---

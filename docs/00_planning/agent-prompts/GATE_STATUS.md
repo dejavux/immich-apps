@@ -1,6 +1,6 @@
 # Phase 3.5 Gate 狀態（Handoff）
 
-**評估時間**：2026-06-24（pg 2/2 · 5a PASS · Grafana 修復 · Phase 4 批准）  
+**評估時間**：2026-06-28（Phase 4 COMPLETE · LINE Bot `d272c21` 待 release）  
 **評估者**：Orchestrator + Agent 執行
 
 ---
@@ -11,7 +11,7 @@
 | ------ | ------ |
 | **Phase 3.5 gate** | **PASS（含豁免）** |
 | **Phase 3.5 結案** | ✅ |
-| **建議 Wave** | **W4 執行待排程**；5b **~95%**（Grafana 有資料 · smoke 已重送） |
+| **建議 Wave** | Ops W2 rsync 收尾 · 5b smoke 確認 · **`make release`**（LINE Bot） |
 | **Cluster/deploy 工作** | Phase 1 ✅ · 5a ✅ · 5b 🟡 **~95%** · 4 ✅ **COMPLETE** |
 
 ---
@@ -52,7 +52,7 @@
 | 1 Hardening | ✅ PR #174 | deploy + Redis secret | **~90%** |
 | 5a Backup | ✅ PR #174/#29 | pg 2/2 + NFS Job ✅ | **100%** |
 | 5b Monitoring | ✅ | PrometheusRule + Grafana · RBAC 修復 · immich OTEL metrics | **~95%**（smoke 2026-06-24 03:22Z 重送 · 無 401） |
-| 4 SSD | ✅ prep | **停機窗已批准 2026-06-24** · **執行待排程**（NVMe 目錄未建 · postgres rollout 卡住） | **~35%** |
+| 4 SSD | ✅ COMPLETE | postgres → `/nvme/immich-postgres`（2026-06-24） | **100%** |
 
 ---
 
@@ -70,6 +70,6 @@
 
 ## 下一動作
 
-1. **5b**：確認 Telegram 收到 3 條 smoke（🤖⚠️ Sentinel · ⚠️ Platform · ⚠️ Immich-backup）
-2. **Ops W2**（Q3）：Mac `.photoslibrary` → delta NFS（Phase 4 完成後可啟動 prep）
-3. **Observability**：fuqi 儀表板併入 monitoring ConfigMap 或獨立子網域（見 [OBSERVABILITY_ROADMAP.md](../../20_guides/infra/monitoring/OBSERVABILITY_ROADMAP.md)）
+1. **`make release`** + `make verify-deploy`（git `d272c21` 領先 cluster `f75de69`）
+2. **5b**：確認 Telegram 收到 3 條 smoke（🤖⚠️ Sentinel · ⚠️ Platform · ⚠️ Immich-backup）
+3. **Ops W2**：Mac → delta HDD rsync 收尾（local **63G/146G** · icloud **17G/18G**）

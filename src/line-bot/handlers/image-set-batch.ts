@@ -221,7 +221,7 @@ export function buildSingleUploadFlexMessages(
 }
 
 export function buildBatchProgressText(current: number, total: number): string {
-  return `上傳中 ${current}/${total}…`;
+  return `處理中 ${current}/${total}…`;
 }
 
 export function shouldSendBatchProgress(state: BatchState): boolean {
@@ -235,7 +235,7 @@ export function shouldSendBatchProgress(state: BatchState): boolean {
   if (state.lastProgressSent === count) {
     return false;
   }
-  return count % 2 === 0 || count === 1;
+  return true;
 }
 
 export async function coordinateImageSetReply(params: {

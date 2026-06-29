@@ -6,6 +6,7 @@
     "dist/**",
     "coverage/**",
     "src/shared/generated/**",
+    "src/line-bot/data/country-lookup.generated.ts",
     ".git/**",
     "package-lock.json",
     "*.lock"
@@ -15,6 +16,7 @@
     "buildkit",
     "buildctl",
     "cicd",
+    "CLDR",
     "configmap",
     "creds",
     "cspell",
@@ -118,6 +120,7 @@
     "Busan",
     "Kaohsiung",
     "Taichung",
-    "Aurlandsvangen"
+    "Aurlandsvangen",
+    "CLDR"
   ]
 }

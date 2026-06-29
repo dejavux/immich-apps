@@ -42,6 +42,9 @@ export interface PhotoSearchAssetHit {
   id: string;
   originalFileName?: string;
   localDateTime?: string;
+  country?: string;
+  city?: string;
+  personNames?: string[];
 }
 
 export interface QuickReplyAction {

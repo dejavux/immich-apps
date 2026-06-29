@@ -1,8 +1,9 @@
 # 如何進行 — Immich Apps 執行指南
 
-**日期**: 2026-06-25  
+**日期**: 2026-06-28  
 **Repo**: <https://github.com/dejavux/immich-apps>  
 **進度 SSOT**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
+**路線圖**: [BACKLOG.md §下一階段路線圖](./BACKLOG.md#下一階段路線圖2026-06-28)  
 **Gate 狀態**: [agent-prompts/GATE_STATUS.md](./agent-prompts/GATE_STATUS.md)
 
 ---
@@ -12,8 +13,21 @@
 | 項目 | 狀態 |
 | ------ | ------ |
 | **Immich Enhancement** | ✅ **結案** |
-| LINE Bot | release **`af23fe4`**（Helm rev 35）· docs **`c41f09d`** |
+| LINE Bot git | **`d272c21`**（Denmark + PR #32–#34） |
+| LINE Bot cluster | **`f75de69`** → 🔴 **`make release` 待執行** |
 | **Immich Ops** | 5a **PASS** · 5b **~95%** · Phase 4 ✅ **COMPLETE** |
+
+```bash
+make verify-deploy   # 預期：NEED RELEASE 直至 rollout d272c21
+```
+
+---
+
+## 🔴 本週優先（P0）
+
+1. **`make release`** → `make verify-deploy` PASS → LINE 實機驗證「找 steffi 在丹麥的照片」
+2. **Ops W2** — 追蹤 rsync：`ssh delta.3q.fi 'du -sh .../mac-studio/*'`（2026-06-28：**63G/146G** local · **17G/18G** icloud）
+3. **Phase 5b** — 確認 Telegram smoke 3 條告警
 
 ---
 
@@ -38,7 +52,7 @@ Postgres 已遷至 lama NVMe `/nvme/immich-postgres`；upload 仍 HDD。詳見 [
 
 ---
 
-## Ops W2 — Mac library → delta **HDD**（進行中）
+## Ops W2 — Mac library → delta **HDD**（~50%）
 
 → [MAC_LIBRARY_BACKUP.md](../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)
 
@@ -51,17 +65,10 @@ Postgres 已遷至 lama NVMe `/nvme/immich-postgres`；upload 仍 HDD。詳見 [
 | 路徑決策 NVMe→HDD | ✅ 2026-06-25（PR #31） |
 | delta HDD 目錄 + chown | ✅ |
 | dry-run | ✅ ~146G + ~18G |
-| 首輪 rsync | 🟡 **進行中**（icloud ~17G · local ~28G · screen `immich-mac-backup`） |
+| 首輪 rsync | 🟡 **63G/146G** local · **17G/18G** icloud（2026-06-28） |
 | NVMe 舊 partial 清理 | ✅ ~48G 釋放 |
 | LaunchAgent | ✅ 已 `launchctl load`（週六 02:00） |
 | checksum 抽樣 | 📋 rsync Complete 後 |
-
-- [x] delta NFS 路徑 SSOT（HDD）
-- [x] `mac-library-backup-dry-run.sh` / `mac-library-backup-rsync.sh`
-- [x] 本機 dry-run（local-archive **146G** · icloud-primary **18G**）
-- [x] delta 遠端目錄建立（HDD）
-- [x] LaunchAgent plist + load
-- [ ] 首輪 rsync Complete + 抽樣 checksum
 
 **追蹤首輪 rsync**：
 
@@ -94,12 +101,23 @@ kubectl get deploy immich-line-bot -n immich -o jsonpath='{.spec.template.spec.c
 | Prometheus RBAC（kube-state-metrics scrape） | ✅ `prometheus-monitoring` ClusterRoleBinding |
 | Deep link `/d/immich-ops` | ✅ kube + HTTP panels 有資料（2026-06-24） |
 | Telegram 告警 smoke | 🟡 已重送 3 條（待使用者確認） |
-
-**Grafana 根因（2026-06-24）**：`monitoring/prometheus` SA 未綁定 ClusterRole（`prometheus` binding 僅指向 `grid-bot-shared-services`）→ kube-state-metrics / kubernetes-pods 無法 scrape → 全板 No data。已新增 `prometheus-monitoring` binding；HTTP panel 改用 Immich OTEL metric 名稱（`http_server_*`）。
+| LINE Bot 專用 panel | 📋 P2 backlog |
 
 ```bash
 open https://grafana.3q.fi/d/immich-ops
 ```
+
+---
+
+## 下一階段（摘要）
+
+完整 18 項見 [BACKLOG.md §下一階段路線圖](./BACKLOG.md#下一階段路線圖2026-06-28)。
+
+| 優先 | 方向 | 代表項 |
+| ------ | ------ | ------ |
+| **P1** | 產品體驗 | 國名 CLDR 自動化 · carousel 地點/人物標籤 · Web E2E 驗收 |
+| **P2** | 平台 | Immich 升級 · Redis 密碼 · Similar images · LINE Grafana panel |
+| **P3** | AI / 新場景 | 照片館對話助理 · Qwen vision · Photo Edit BFF · LIFF（defer） |
 
 ---
 
@@ -110,4 +128,5 @@ kubectl get cronjob,jobs -n immich -l component=backup --sort-by=.metadata.creat
 kubectl get pvc immich-backup-nfs-pvc -n immich
 kubectl get deploy -n immich immich-redis immich-server
 kubectl get configmap grafana-dashboards -n monitoring -o jsonpath='{.data}' | jq 'keys'
+npm test
 ```

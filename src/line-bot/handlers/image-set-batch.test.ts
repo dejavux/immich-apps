@@ -170,7 +170,7 @@ describe("batch upload progress", () => {
   });
 
   it("formats progress text", () => {
-    expect(buildBatchProgressText(3, 8)).toBe("上傳中 3/8…");
+    expect(buildBatchProgressText(3, 8)).toBe("處理中 3/8…");
   });
 
   it("sends throttled progress via pushMessage", async () => {
@@ -193,7 +193,7 @@ describe("batch upload progress", () => {
     });
 
     expect(pushMessage).toHaveBeenCalledWith("u1", [
-      { type: "text", text: "上傳中 1/4…" },
+      { type: "text", text: "處理中 1/4…" },
     ]);
 
     await coordinateImageSetReply({
@@ -206,7 +206,34 @@ describe("batch upload progress", () => {
     });
 
     expect(pushMessage).toHaveBeenCalledWith("u1", [
-      { type: "text", text: "上傳中 2/4…" },
+      { type: "text", text: "處理中 2/4…" },
+    ]);
+  });
+
+  it("sends progress on every item until complete", async () => {
+    const pushMessage = jest.fn().mockResolvedValue(undefined);
+    const sendMessages = jest.fn().mockResolvedValue(undefined);
+    const item: UploadSummaryItem = {
+      filename: "a.jpg",
+      bytes: 100,
+      modeLabel: "照片（image）",
+      success: true,
+    };
+
+    for (let i = 1; i <= 3; i += 1) {
+      await coordinateImageSetReply({
+        userId: "u2",
+        replyToken: `r${i}`,
+        imageSet: { id: "set2", total: 4 },
+        item: { ...item, filename: `p${i}.jpg` },
+        sendMessages,
+        pushMessage,
+      });
+    }
+
+    expect(pushMessage).toHaveBeenCalledTimes(3);
+    expect(pushMessage).toHaveBeenLastCalledWith("u2", [
+      { type: "text", text: "處理中 3/4…" },
     ]);
   });
 });
@@ -223,7 +250,7 @@ describe("shouldSendBatchProgress", () => {
     ).toBe(true);
   });
 
-  it("sends every two items", () => {
+  it("sends every item while batch incomplete", () => {
     expect(
       shouldSendBatchProgress({
         userId: "u1",
@@ -232,6 +259,7 @@ describe("shouldSendBatchProgress", () => {
         items: [
           { filename: "a", bytes: 1, modeLabel: "x", success: true },
           { filename: "b", bytes: 1, modeLabel: "x", success: true },
+          { filename: "c", bytes: 1, modeLabel: "x", success: true },
         ],
       }),
     ).toBe(true);
