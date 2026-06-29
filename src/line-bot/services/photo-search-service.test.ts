@@ -162,6 +162,37 @@ describe("PhotoSearchService confirmation flow", () => {
     expect(immich.searchMetadata).toHaveBeenCalled();
   });
 
+  it("uses metadata search for Saint Petersburg city filter", async () => {
+    const immich = createMockImmich({
+      searchPersonByName: jest
+        .fn()
+        .mockResolvedValue([{ id: "p-light", name: "light" }]),
+      searchMetadata: jest.fn().mockResolvedValue({
+        items: [
+          {
+            id: "a1",
+            originalFileName: "sp.jpg",
+            localDateTime: "2024-01-01T00:00:00.000Z",
+            city: "Saint Petersburg",
+            country: "Russia",
+            personNames: ["light"],
+          },
+        ],
+        total: 1,
+      }),
+      searchSmart: jest.fn(),
+    });
+    const service = createService(immich);
+    await service.handleMessage("u1", "找 light 在聖彼得堡的照片");
+    const result = await service.handleMessage("u1", "確認");
+    expect(result.kind).toBe("results");
+    expect(immich.searchMetadata).toHaveBeenCalledWith(
+      expect.objectContaining({ city: "Saint Petersburg" }),
+    );
+    expect(immich.searchSmart).not.toHaveBeenCalled();
+    expect(result.assets?.[0]?.city).toBe("Saint Petersburg");
+  });
+
   it("cancels pending search", async () => {
     const service = createService();
     await service.handleMessage("u1", "找在日本的照片");
@@ -408,11 +439,25 @@ describe("tryParsePersonsWithAtPhrase", () => {
     expect(parsed?.country).toBe("Denmark");
     expect(parsed?.sceneQuery).toBeUndefined();
   });
+
+  it("extracts Saint Petersburg from 在聖彼得堡", () => {
+    const parsed = tryParsePersonsWithAtPhrase("找 light 在聖彼得堡的照片");
+    expect(parsed?.personNames).toEqual(["light"]);
+    expect(parsed?.city).toBe("Saint Petersburg");
+    expect(parsed?.country).toBeUndefined();
+    expect(parsed?.sceneQuery).toBeUndefined();
+  });
 });
 
 describe("extractLocationFromQuery", () => {
   it("maps 丹麥 to Denmark", () => {
     expect(extractLocationFromQuery("丹麥")).toEqual({ country: "Denmark" });
+  });
+
+  it("maps 聖彼得堡 to Saint Petersburg", () => {
+    expect(extractLocationFromQuery("聖彼得堡")).toEqual({
+      city: "Saint Petersburg",
+    });
   });
 });
 
@@ -438,6 +483,17 @@ describe("ensureSceneQueryEn", () => {
       sceneQuery: "丹麥",
     });
     expect(plan.country).toBe("Denmark");
+    expect(plan.sceneQuery).toBeUndefined();
+    expect(plan.sceneQueryEn).toBeUndefined();
+  });
+
+  it("promotes 聖彼得堡 sceneQuery to city filter", () => {
+    const plan = ensureSceneQueryEn({
+      intent: "search_photos",
+      personNames: ["light"],
+      sceneQuery: "聖彼得堡",
+    });
+    expect(plan.city).toBe("Saint Petersburg");
     expect(plan.sceneQuery).toBeUndefined();
     expect(plan.sceneQueryEn).toBeUndefined();
   });

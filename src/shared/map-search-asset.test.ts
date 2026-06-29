@@ -25,7 +25,7 @@ describe("mapSearchAssetItem", () => {
 });
 
 describe("enrichSearchAssetHits", () => {
-  it("fills missing location and people from search plan", () => {
+  it("fills missing people from search plan but not location", () => {
     const enriched = enrichSearchAssetHits(
       [
         {
@@ -34,12 +34,13 @@ describe("enrichSearchAssetHits", () => {
           originalFileName: "11111111-1111-4111-8111-111111111111.jpg",
         },
       ],
-      { country: "Denmark", personNames: ["steffi"] },
+      { country: "Denmark", city: "Copenhagen", personNames: ["steffi"] },
     );
     expect(enriched[0]).toMatchObject({
-      country: "Denmark",
       personNames: ["steffi"],
     });
+    expect(enriched[0].country).toBeUndefined();
+    expect(enriched[0].city).toBeUndefined();
   });
 
   it("preserves API metadata when present", () => {

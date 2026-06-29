@@ -47,7 +47,7 @@ export function mapSearchAssetItem(
   };
 }
 
-/** Fill missing carousel labels from the active search plan (API may omit exif/people). */
+/** Fill missing carousel people labels from the search plan (API may omit people). */
 export function enrichSearchAssetHits(
   items: PhotoSearchAssetHit[],
   plan?: Partial<PhotoSearchPlan>,
@@ -62,13 +62,9 @@ export function enrichSearchAssetHits(
     ...(resolvedPersonName?.trim() ? [resolvedPersonName.trim()] : []),
   ];
   const uniquePersonNames = [...new Set(fallbackPersonNames)];
-  const fallbackCountry = plan?.country?.trim();
-  const fallbackCity = plan?.city?.trim();
 
   return items.map((item) => ({
     ...item,
-    country: item.country ?? fallbackCountry,
-    city: item.city ?? fallbackCity,
     personNames:
       item.personNames?.length && item.personNames.length > 0
         ? item.personNames
