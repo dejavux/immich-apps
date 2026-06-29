@@ -5,9 +5,9 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-28（bottom-up 盤點 · LINE PR #32–#34 · Denmark `d272c21` 待 release）  
+**最後更新**: 2026-06-30（Rich Menu 標籤修復 · 使用者驗收 2026-06-29）  
 **專案狀態**: ✅ **增強專案結案** · Phase 5a **PASS** · Phase 5b **~95%** · Phase 4 ✅ **COMPLETE**  
-**Ops 更新**: 2026-06-28 — Mac 冷備份 delta HDD **63G/146G** local · **17G/18G** icloud · cluster LINE Bot **`f75de69`**（git **`d272c21`** NEED RELEASE）  
+**Ops 更新**: 2026-06-29 — Mac 冷備份 delta HDD **63G/146G** local · **17G/18G** icloud · cluster LINE Bot 見 `make verify-deploy` · OA icon + 搜尋重測（小蕊哭／2年前／Disney）✅  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
 
@@ -18,9 +18,9 @@
 | 指標 | 數值 | 說明 |
 | ------ | ------ | ------ |
 | 🔴 高優先級任務 | 0 | — |
-| 🟡 中優先級任務 | 2 | Ops W2 rsync 收尾 · LINE Bot release `d272c21` |
+| 🟡 中優先級任務 | 2 | Ops W2 rsync 收尾 · Rich Menu deploy 驗收 |
 | 🟢 低優先級任務 | 5 | Similar images · album reconcile · LINE V1.1 · Photo Edit |
-| ✅ 本週完成 | 4 | PR #32–#34 搜尋 UX · Denmark country filter · 108 tests |
+| ✅ 本週完成 | 5 | PR #39 情緒／N年前／Disney · OA icon · 搜尋重測 · Rich Menu 標籤 |
 | 📈 整體進度 | **99%** | 增強專案主體 **結案** · L3 維運 backlog 獨立追蹤 |
 
 ---
@@ -799,7 +799,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | Phase 5a pg 2/2 + NFS 157.8G | ✅ PASS |
 | Phase 4 postgres → lama NVMe | ✅ 2026-06-24 |
 | Phase 5b Grafana / immich-ops | 🟡 ~95%（smoke 待確認） |
-| LINE Bot 搜尋 UX PR #32–#34 + Denmark `d272c21` | 🟡 **待 release**（cluster `f75de69`） |
+| LINE Bot 搜尋 UX PR #32–#39 + Rich Menu 標籤 | 🟡 **deploy 中**（`make verify-deploy`） |
 | Ops W2 Mac `.photoslibrary` → delta **HDD** | 🟡 **63G/146G** local · **17G/18G** icloud |
 | `make verify-deploy` | ✅ PR #31 |
 
@@ -863,7 +863,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 **立即** 🔴:
 
-1. **`make release`** — git `d272c21` 領先 cluster `f75de69`（Denmark country filter + PR #32–#34 已 merge 待 rollout）
+1. **`make release`** — Rich Menu 中文標籤 + PR #39 搜尋修復 → `make verify-deploy` PASS
 2. **Ops W2** — local-archive rsync **63G/146G** · icloud **17G/18G**（delta HDD）
 
 **進行中** 🚧:

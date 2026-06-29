@@ -1,6 +1,6 @@
 # UX / Product Review — Immich Apps
 
-**日期**: 2026-06-28（對齊 PR #32–#34 · `d272c21`）  
+**日期**: 2026-06-30（Rich Menu 標籤修復 · 使用者驗收 2026-06-29）  
 **範圍**: 使用者面向流程（LINE Bot · Immich Web · Mac Photos 維運）與下一階段產品優化  
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md) · **Sprint**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
@@ -12,7 +12,7 @@
 | ------ | ------ | ------ | ------ |
 | **後端 / 資料正確性** | 強 | ★★★★☆ | Photo sync、reconcile、tier policy 腳本鏈完整；Immich v2.7.5 穩定 |
 | **LINE 上傳** | 可用 | ★★★☆☆ | E2E 通過；但「照片 vs 原檔」認知負擔高 |
-| **LINE 搜尋** | 成熟 | ★★★★☆ | 確認 flow · help QR · 地點 metadata（含丹麥）· 口語歐洲；carousel 仍顯示檔名 |
+| **LINE 搜尋** | 成熟 | ★★★★☆ | 情緒／N年前／Disney（PR #39）· 使用者重測 ✅ 2026-06-29 |
 | **Immich Web** | 依 upstream | ★★★☆☆ | 相簿/時間軸可用；P0 驗收 checklist 未跑 |
 | **維運者 UX** | 腳本為主 | ★★★☆☆ | `tier-policy-status.sh` 已有；tier 仍多步 CLI |
 
@@ -67,13 +67,14 @@ graph LR
 | 人物消歧 | Quick Reply 按鈕 | 無頭像 | **P2** Flex 人名卡片（附縮圖若 API 允許） |
 | 結果呈現 | Flex carousel + deep link | bubble 顯示 UUID 檔名 | **P1** 地點/人物/場景標籤 |
 | 空結果 | Quick Reply 放寬條件 | 尚可 | 維持 |
-| 幫助 | Rich Menu + 範例 QR | 已改善 | 維持 |
+| 幫助 | Rich Menu + 範例 QR | 橫幅標籤曾顯示「-」（缺 CJK 字型）→ **已修** `generate-rich-menu.py` | 部署後實機確認三欄標題 |
 
 ### LINE 版面（Layout）建議
 
 1. **訊息層級**：先一行摘要（幾張、條件）→ 再 carousel；避免文字與圖同時過長。
-2. **Carousel bubble**：目前顯示日期 + UUID 前綴檔名 → 改為 **地點 / 人物 / 場景標籤**（若 API 有）。
-3. **品牌一致性**：altText、header 用同一套句式（「找到 N 張：小蕊 · 海邊 · 2024」）。
+2. **Carousel bubble**：副標已支援地點／人物（`withExif`/`withPeople`）；持續避免 UUID 檔名當主標。
+3. **Rich Menu**：compact 模式可見標題來自 **JPEG 圖**（非 API `label`）；`chatBarText` 為「選單」。
+4. **品牌一致性**：altText、header 用同一套句式（「找到 N 張：小蕊 · 海邊 · 2024」）。
 
 ---
 

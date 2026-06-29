@@ -38,10 +38,18 @@ https://immich-bot.3q.fi/webhook/line
 
 | 用途 | 路徑 | 規格 |
 | ------ | ------ | ------ |
-| OA 大頭貼（選用） | `deploy/line-bot/line-bot-icon-1040x1040.png` | 1040×1040 |
+| OA 大頭貼 | `deploy/line-bot/line-bot-icon-1040x1040.png` | 1040×1040 · **已上傳** LINE Developers Console（2026-06-29） |
 | Rich Menu 橫幅 | `deploy/line-bot/rich-menu.jpg` | 2500×843（compact）；三等分點擊區見 `src/line-bot/services/rich-menu.ts` |
 
-套用 Rich Menu：`bash scripts/line-bot/setup-rich-menu.sh`
+**Rich Menu 標題**（找照片／上傳教學／使用說明）必須畫在 JPEG 內；`action.label` 僅供無障礙／部分客戶端。
+
+```bash
+python3 scripts/line-bot/generate-rich-menu.py   # 重製橫幅（需 CJK 字型）
+eval "$(./scripts/dev/load-env-from-op.sh)"
+bash scripts/line-bot/setup-rich-menu.sh         # 建立選單 + 上傳圖片 + 設為預設
+```
+
+部署時若 `LINE_RICH_MENU_AUTO_SETUP=true`，Pod 啟動也會呼叫 `ensureDefaultRichMenu`（見 `src/line-bot/index.ts`）。
 
 ### 原檔測試（file 訊息）
 
