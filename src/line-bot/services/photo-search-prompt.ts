@@ -73,6 +73,15 @@ intent 取值：
 使用者「找跳舞的照片」→
 {"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":"跳舞","sceneQueryEn":"dancing dance performance"}
 
+使用者「找小蕊哭的照片」→
+{"intent":"search_photos","personNames":["小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":"哭","sceneQueryEn":"crying tears sad"}
+
+使用者「找 2年前的照片」→
+{"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":"2024-01-01","dateTo":"2024-12-31","birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":null,"sceneQueryEn":null}
+
+使用者「找 Steffi 小蕊在迪士尼的照片」→
+{"intent":"search_photos","personNames":["Steffi","小蕊"],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":"迪士尼","sceneQueryEn":"Disney theme park","anyDate":true}
+
 使用者「年齡不限」或「不限年齡」（通常是回覆之前詢問年齡的問題）→
 {"intent":"search_photos","personNames":[],"ageYears":null,"ageMonths":null,"dateFrom":null,"dateTo":null,"birthDate":null,"personChoice":null,"country":null,"city":null,"sceneQuery":null,"sceneQueryEn":null,"anyDate":true}
 
@@ -235,6 +244,7 @@ function normalizeIntent(value: string | undefined): PhotoSearchPlan["intent"] {
 function cleanPersonName(name: string): string {
   return name
     .replace(/^(?:幫|我|找|搜|查)+/, "")
+    .replace(/\.+$/g, "")
     .replace(/的$/, "")
     .trim();
 }
@@ -296,7 +306,24 @@ export function filterSearchPersonNames(names: string[]): string[] {
 }
 
 export function splitPersonNames(raw: string): string[] {
-  return raw
+  const cleaned = raw.trim();
+  const hasConjunction = /(?:和|跟|與|以及|、|,|&)/.test(cleaned);
+  if (/\s/.test(cleaned) && !hasConjunction) {
+    const spaceParts = cleaned
+      .split(/\s+/)
+      .map((part) => cleanPersonName(part.trim()))
+      .filter(
+        (name) =>
+          name.length > 0 &&
+          !isPersonStopword(name) &&
+          !isKnownLocation(name) &&
+          !isEmotionWord(name),
+      );
+    if (spaceParts.length > 1) {
+      return spaceParts;
+    }
+  }
+  return cleaned
     .split(PERSON_NAME_SPLIT)
     .map((part) => cleanPersonName(part.trim()))
     .filter(
@@ -567,6 +594,74 @@ export function ensureAgeFromText(
 const ACTIVITY_WORDS =
   "吃飯|用餐|進食|睡覺|午睡|玩耍|遊玩|游泳|跑步|讀書|看書|唱歌|跳舞|刷牙|洗澡|畫畫|寫字|騎車|開車|坐車|搭車|看電視";
 
+export const EMOTION_WORDS =
+  "哭|笑|開心|難過|傷心|生氣|生气|微笑|大笑|哭泣|生氣的";
+
+const BARE_SCENE_WORDS = `${ACTIVITY_WORDS}|${EMOTION_WORDS}`;
+
+export function isEmotionWord(text: string): boolean {
+  const trimmed = text.trim();
+  return new RegExp(`^(?:${EMOTION_WORDS})$`).test(trimmed);
+}
+
+export function isBareActivityScene(scene: string): boolean {
+  const trimmed = scene.trim();
+  return (
+    isEmotionWord(trimmed) ||
+    new RegExp(`^(?:${ACTIVITY_WORDS})$`).test(trimmed) ||
+    /^(?:穿|戴)/.test(trimmed)
+  );
+}
+
+function isRelativeDateFragment(text: string): boolean {
+  return /年前|個月前|天前|週前|周前/.test(text.trim());
+}
+
+function isDateOnlyRemainder(text: string): boolean {
+  return /^(?:幫)?(?:我)?(?:找|搜|查+)+(?:找)?(?:的)?$/.test(text.trim());
+}
+
+/**
+ * 「找小蕊哭的照片」— 人物 + 情緒/活動，中間無「在」。
+ */
+export function tryParsePersonBareScenePhoto(
+  text: string,
+): { personNames: string[]; sceneQuery: string } | undefined {
+  const trimmed = text.trim();
+  if (tryParsePersonAge(trimmed)) {
+    return undefined;
+  }
+  if (/(?<!不)在/.test(trimmed)) {
+    return undefined;
+  }
+
+  const patterns = [
+    new RegExp(
+      `^${SEARCH_PREFIX}(.+?)\\s+(${BARE_SCENE_WORDS})${PHOTO_SUFFIX}`,
+    ),
+    new RegExp(`^${SEARCH_PREFIX}(.+?)(${BARE_SCENE_WORDS})${PHOTO_SUFFIX}`),
+    new RegExp(`^(.+?)\\s+(${BARE_SCENE_WORDS})${PHOTO_SUFFIX}`),
+    new RegExp(`^(.+?)(${BARE_SCENE_WORDS})${PHOTO_SUFFIX}`),
+  ];
+
+  for (const pattern of patterns) {
+    const match = trimmed.match(pattern);
+    if (!match) {
+      continue;
+    }
+    const personNames = splitPersonNames(match[1]);
+    if (personNames.length === 0) {
+      continue;
+    }
+    const scene = match[2].trim();
+    if (!scene || isRelativeDateFragment(scene)) {
+      continue;
+    }
+    return { personNames, sceneQuery: scene };
+  }
+  return undefined;
+}
+
 function buildPersonScenePatterns(): RegExp[] {
   return [
     // 找小蕊不在台灣的照片（必須早於「在」模式）
@@ -578,6 +673,8 @@ function buildPersonScenePatterns(): RegExp[] {
     new RegExp(`^(.{1,8}?)(穿|戴)(.+?)${PHOTO_SUFFIX}`),
     new RegExp(`^${SEARCH_PREFIX}(.{1,8}?)(${ACTIVITY_WORDS})${PHOTO_SUFFIX}`),
     new RegExp(`^(.{1,8}?)(${ACTIVITY_WORDS})${PHOTO_SUFFIX}`),
+    new RegExp(`^${SEARCH_PREFIX}(.{1,8}?)(${EMOTION_WORDS})${PHOTO_SUFFIX}`),
+    new RegExp(`^(.{1,8}?)(${EMOTION_WORDS})${PHOTO_SUFFIX}`),
     new RegExp(
       `^${SEARCH_PREFIX}(.{1,8}?)([^在的照片\\d\\s][^的照片]{1,18}?)${PHOTO_SUFFIX}`,
     ),
@@ -608,7 +705,14 @@ export function tryParsePersonScenePhoto(
     const scene = pattern.source.includes("不在")
       ? `不在${match[2].trim()}`
       : cleanScenePhrase(sceneRaw);
-    if (!person || isPersonStopword(person) || !scene || isAgePhrase(scene)) {
+    if (
+      !person ||
+      isPersonStopword(person) ||
+      !scene ||
+      isAgePhrase(scene) ||
+      isRelativeDateFragment(scene) ||
+      /^\d+$/.test(person)
+    ) {
       continue;
     }
     return { personNames: [person], sceneQuery: scene };
@@ -772,6 +876,10 @@ const SCENE_TRANSLATIONS: Array<[RegExp, string]> = [
   [/讀書|看書/, "reading book study"],
   [/跑步/, "running jogging"],
   [/跳舞|舞蹈/, "dancing dance performance"],
+  [/哭|哭泣|難過|傷心/, "crying tears sad emotional"],
+  [/笑|開心|微笑|大笑/, "smiling happy laughing joyful"],
+  [/生氣|生气/, "angry upset mad expression"],
+  [/迪士尼|Disney/i, "Disney theme park amusement"],
   [/畫畫|寫字/, "drawing writing art"],
   [/穿裙子|裙子|洋裝|連身裙/, "wearing dress skirt girl"],
   [/穿.*褲/, "wearing pants trousers"],
@@ -886,6 +994,26 @@ export function parseSearchPlanFallback(
   const rel = detectRelativeDateInText(trimmed, now);
   const working = rel ? stripRelativeDateTokens(trimmed) : trimmed;
 
+  if (rel && isDateOnlyRemainder(working)) {
+    return {
+      intent: "search_photos",
+      personNames: [],
+      dateFrom: rel.dateFrom,
+      dateTo: rel.dateTo,
+      dateRangeLabel: rel.label,
+    };
+  }
+
+  const emotionFollowUp = tryParseEmotionFollowUp(trimmed);
+  if (emotionFollowUp) {
+    return ensureSceneQueryEn({
+      intent: "search_photos",
+      personNames: [],
+      sceneQuery: emotionFollowUp.sceneQuery,
+      anyDate: true,
+    });
+  }
+
   const personAge = tryParsePersonAge(working);
   if (personAge) {
     const plan: PhotoSearchPlan = {
@@ -928,6 +1056,22 @@ export function parseSearchPlanFallback(
       intent: "search_photos",
       personNames: [],
       sceneQuery: sceneOnly.sceneQuery,
+    };
+    if (rel) {
+      plan.dateFrom = rel.dateFrom;
+      plan.dateTo = rel.dateTo;
+      plan.dateRangeLabel = rel.label;
+    }
+    return ensureSceneQueryEn(plan);
+  }
+
+  const personBareScene = tryParsePersonBareScenePhoto(working);
+  if (personBareScene) {
+    const plan: PhotoSearchPlan = {
+      intent: "search_photos",
+      personNames: personBareScene.personNames,
+      sceneQuery: personBareScene.sceneQuery,
+      anyDate: personBareScene.personNames.length > 0 ? true : undefined,
     };
     if (rel) {
       plan.dateFrom = rel.dateFrom;
@@ -1023,23 +1167,54 @@ export function parseSearchPlanFallback(
     );
     const rawName = nameMatch ? nameMatch[1].replace(/的$/, "").trim() : "";
     const cleanedName = rawName ? cleanPersonName(rawName) : "";
-    const plan: PhotoSearchPlan = {
-      intent: "search_photos",
-      // Guard: do not use stopwords or location names as person names
-      personNames:
-        cleanedName &&
-        !isPersonStopword(cleanedName) &&
-        !isKnownLocation(cleanedName)
-          ? [cleanedName]
-          : [],
-    };
-    if (rel) {
-      plan.dateFrom = rel.dateFrom;
-      plan.dateTo = rel.dateTo;
-      plan.dateRangeLabel = rel.label;
+    if (
+      cleanedName &&
+      !isPersonStopword(cleanedName) &&
+      !isKnownLocation(cleanedName) &&
+      !isRelativeDateFragment(cleanedName) &&
+      !/^\d+$/.test(cleanedName)
+    ) {
+      const plan: PhotoSearchPlan = {
+        intent: "search_photos",
+        personNames: [cleanedName],
+      };
+      if (rel) {
+        plan.dateFrom = rel.dateFrom;
+        plan.dateTo = rel.dateTo;
+        plan.dateRangeLabel = rel.label;
+      }
+      return plan;
     }
-    return plan;
+    if (rel) {
+      return {
+        intent: "search_photos",
+        personNames: [],
+        dateFrom: rel.dateFrom,
+        dateTo: rel.dateTo,
+        dateRangeLabel: rel.label,
+      };
+    }
   }
 
   return { intent: "unknown", personNames: [] };
+}
+
+/** Multi-turn refinement after empty results, e.g.「只要哭的」. */
+function tryParseEmotionFollowUp(
+  text: string,
+): { sceneQuery: string } | undefined {
+  const trimmed = text.trim();
+  const match = trimmed.match(
+    new RegExp(`^(?:只要|改|篩|篩選)?(?:的)?(${EMOTION_WORDS})(?:的)?$`),
+  );
+  if (!match) {
+    return undefined;
+  }
+  return { sceneQuery: match[1] };
+}
+
+/** Venue/theme-park queries should use CLIP smart search, not EXIF city filter. */
+export function isVenueSceneQuery(plan: Partial<PhotoSearchPlan>): boolean {
+  const scene = `${plan.sceneQuery ?? ""} ${plan.sceneQueryEn ?? ""}`;
+  return /迪士尼|Disney/i.test(scene);
 }

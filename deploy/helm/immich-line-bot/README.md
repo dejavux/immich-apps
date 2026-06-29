@@ -34,6 +34,15 @@ curl -sS https://immich-bot.3q.fi/health
 https://immich-bot.3q.fi/webhook/line
 ```
 
+## LINE OA assets
+
+| 用途 | 路徑 | 規格 |
+| ------ | ------ | ------ |
+| OA 大頭貼（選用） | `deploy/line-bot/line-bot-icon-1040x1040.png` | 1040×1040 |
+| Rich Menu 橫幅 | `deploy/line-bot/rich-menu.jpg` | 2500×843（compact）；三等分點擊區見 `src/line-bot/services/rich-menu.ts` |
+
+套用 Rich Menu：`bash scripts/line-bot/setup-rich-menu.sh`
+
 ### 原檔測試（file 訊息）
 
 在 LINE 用 **「檔案」** 傳圖（勿用相簿「照片」）。Bot 以 `line-file` 模式上傳並保留檔名。

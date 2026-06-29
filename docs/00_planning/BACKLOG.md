@@ -198,6 +198,8 @@ P2  可選     album reconcile · Similar images · thumbs NVMe
 - [x] 「找照片」help Quick Reply 範例（PR #33）
 - [x] 口語「小光和老婆在歐洲」· 關係詞過濾 · 歐洲 sceneQuery（PR #34）
 - [x] Denmark / 丹麥 country metadata filter + `normalizeCountryForImmich`（`d272c21`）
+- [x] 搜尋 parser P0：人物+情緒（哭）· `N年前` 相對日期 · 中文數字 · Disney 場景 + EXIF 過濾（2026-06-29）
+- [x] 情緒篩選 MVP（哭/笑/開心）· 多輪「只要哭的」· Rich Menu 2500×843 重製 · OA icon（2026-06-29）
 
 ---
 

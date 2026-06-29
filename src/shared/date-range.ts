@@ -103,6 +103,87 @@ export type RelativeDateKind =
   | "this_month"
   | "last_month";
 
+const CHINESE_DIGIT_VALUES: Record<string, number> = {
+  零: 0,
+  〇: 0,
+  一: 1,
+  二: 2,
+  兩: 2,
+  两: 2,
+  三: 3,
+  四: 4,
+  五: 5,
+  六: 6,
+  七: 7,
+  八: 8,
+  九: 9,
+};
+
+/** Parse simple Chinese numerals (一～九十九) used in casual date phrases. */
+export function parseChineseNumeral(text: string): number | undefined {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  if (/^\d+(?:\.\d+)?$/.test(trimmed)) {
+    const value = Number.parseFloat(trimmed);
+    return Number.isFinite(value) ? value : undefined;
+  }
+  if (trimmed === "十") {
+    return 10;
+  }
+  if (/^十[一二三四五六七八九]$/.test(trimmed)) {
+    const digit = CHINESE_DIGIT_VALUES[trimmed[1]];
+    return digit === undefined ? undefined : 10 + digit;
+  }
+  if (/^[一二三四五六七八九]十[一二三四五六七八九]?$/.test(trimmed)) {
+    const tens = CHINESE_DIGIT_VALUES[trimmed[0]];
+    if (tens === undefined) {
+      return undefined;
+    }
+    const ones = trimmed.length > 2 ? CHINESE_DIGIT_VALUES[trimmed[2]] : 0;
+    if (ones === undefined) {
+      return undefined;
+    }
+    return tens * 10 + ones;
+  }
+  if (trimmed.length === 1 && trimmed in CHINESE_DIGIT_VALUES) {
+    return CHINESE_DIGIT_VALUES[trimmed];
+  }
+  return undefined;
+}
+
+const YEARS_AGO_PATTERN =
+  /(?:(\d+(?:\.\d+)?)|([一二三四五六七八九十兩两〇零]+))\s*年\s*前/;
+
+export function detectYearsAgoInText(
+  text: string,
+  now: Date = new Date(),
+): { dateFrom: string; dateTo: string; label: string } | undefined {
+  const match = YEARS_AGO_PATTERN.exec(text);
+  if (!match) {
+    return undefined;
+  }
+  const years = match[1]
+    ? Number.parseFloat(match[1])
+    : parseChineseNumeral(match[2]);
+  if (years === undefined || !Number.isFinite(years) || years <= 0) {
+    return undefined;
+  }
+  const roundedYears = Math.round(years);
+  const targetYear = now.getUTCFullYear() - roundedYears;
+  const label = match[0].replace(/\s+/g, "");
+  return {
+    dateFrom: `${targetYear}-01-01`,
+    dateTo: `${targetYear}-12-31`,
+    label,
+  };
+}
+
+export function stripYearsAgoTokens(text: string): string {
+  return text.replace(YEARS_AGO_PATTERN, "").replace(/\s+/g, " ").trim();
+}
+
 export function relativeDateRange(
   kind: RelativeDateKind,
   now: Date = new Date(),
@@ -162,6 +243,10 @@ export function detectRelativeDateInText(
   text: string,
   now: Date = new Date(),
 ): { dateFrom: string; dateTo: string; label: string } | undefined {
+  const yearsAgo = detectYearsAgoInText(text, now);
+  if (yearsAgo) {
+    return yearsAgo;
+  }
   for (const { pattern, kind } of RELATIVE_DATE_PATTERNS) {
     if (pattern.test(text)) {
       return relativeDateRange(kind, now);
@@ -171,7 +256,7 @@ export function detectRelativeDateInText(
 }
 
 export function stripRelativeDateTokens(text: string): string {
-  return text
+  return stripYearsAgoTokens(text)
     .replace(/今年|去年|(?:這個月|本月)|上(?:個|一)月/g, "")
     .replace(/\s+/g, "")
     .trim();
