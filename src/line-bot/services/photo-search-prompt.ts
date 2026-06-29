@@ -646,26 +646,17 @@ export function ensureActivityFromText(
   };
 }
 
+import { GENERATED_COUNTRY_LOOKUP } from "../data/country-lookup.generated";
+import { COUNTRY_LOOKUP_OVERRIDES } from "../data/country-lookup-overrides";
+import { resolveImmichCountryAlias } from "./country-lookup-runtime";
+
 /**
  * Maps Chinese location keywords to Immich country names (from reverse geocoding).
- * The values must match what Immich stores in exifInfo.country.
+ * Overrides first, then CLDR-generated zh-Hant → Immich names.
  */
 export const COUNTRY_LOOKUP: Array<[RegExp, string]> = [
-  [/台灣|臺灣/, "Taiwan, Province of China"],
-  [/日本/, "Japan"],
-  [/韓國|南韓|首爾/, "South Korea"],
-  [/挪威/, "Norway"],
-  [/新加坡/, "Singapore"],
-  [/美國|紐約|洛杉磯|舊金山/, "United States"],
-  [/英國|倫敦/, "United Kingdom"],
-  [/法國|巴黎/, "France"],
-  [/德國/, "Germany"],
-  [/義大利|羅馬|威尼斯/, "Italy"],
-  [/澳洲|雪梨/, "Australia"],
-  [/泰國|曼谷/, "Thailand"],
-  [/香港/, "Hong Kong"],
-  [/中國|北京|上海/, "China"],
-  [/丹麥|哥本哈根/, "Denmark"],
+  ...COUNTRY_LOOKUP_OVERRIDES,
+  ...GENERATED_COUNTRY_LOOKUP,
 ];
 
 /**
@@ -690,9 +681,7 @@ export const CITY_LOOKUP: Array<[RegExp, string]> = [
  * Tries to extract a country or city from a Chinese location phrase.
  * Returns the matched Immich country/city names, or undefined if nothing matches.
  */
-const IMMICH_COUNTRY_VALUES = new Set(
-  COUNTRY_LOOKUP.map(([, name]) => name),
-);
+const IMMICH_COUNTRY_VALUES = new Set(COUNTRY_LOOKUP.map(([, name]) => name));
 
 /**
  * Maps Chinese country keywords or alternate LLM output to Immich EXIF country names.
@@ -704,6 +693,10 @@ export function normalizeCountryForImmich(
     return undefined;
   }
   const trimmed = country.trim();
+  const aliased = resolveImmichCountryAlias(trimmed);
+  if (aliased && IMMICH_COUNTRY_VALUES.has(aliased)) {
+    return aliased;
+  }
   if (IMMICH_COUNTRY_VALUES.has(trimmed)) {
     return trimmed;
   }
@@ -713,7 +706,7 @@ export function normalizeCountryForImmich(
     }
   }
   const { country: extracted } = extractLocationFromQuery(trimmed);
-  return extracted ?? trimmed;
+  return extracted ?? aliased ?? trimmed;
 }
 
 export function extractLocationFromQuery(query: string): {

@@ -5,9 +5,9 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-25（Ops W2 HDD · PR #31 · rsync ~45G/164G）  
+**最後更新**: 2026-06-28（bottom-up 盤點 · LINE PR #32–#34 · Denmark `d272c21` 待 release）  
 **專案狀態**: ✅ **增強專案結案** · Phase 5a **PASS** · Phase 5b **~95%** · Phase 4 ✅ **COMPLETE**  
-**Ops 更新**: 2026-06-25 — Mac 備份改 delta HDD（`/mnt/volume1/nfs-models`）· 首輪 rsync screen 執行中 · LINE Bot `af23fe4` · docs `c41f09d`  
+**Ops 更新**: 2026-06-28 — Mac 冷備份 delta HDD **63G/146G** local · **17G/18G** icloud · cluster LINE Bot **`f75de69`**（git **`d272c21`** NEED RELEASE）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
 
@@ -18,9 +18,9 @@
 | 指標 | 數值 | 說明 |
 | ------ | ------ | ------ |
 | 🔴 高優先級任務 | 0 | — |
-| 🟡 中優先級任務 | 1 | Ops W2 Mac→delta HDD 首輪 rsync |
-| 🟢 低優先級任務 | 4 | Similar images · album reconcile · LINE V1.1 |
-| ✅ 本週完成 | 12+ | 專案結案評估 · agent-prompts · LINE PR #26–#28 · Phase 3.5 豁免結案 |
+| 🟡 中優先級任務 | 2 | Ops W2 rsync 收尾 · LINE Bot release `d272c21` |
+| 🟢 低優先級任務 | 5 | Similar images · album reconcile · LINE V1.1 · Photo Edit |
+| ✅ 本週完成 | 4 | PR #32–#34 搜尋 UX · Denmark country filter · 108 tests |
 | 📈 整體進度 | **99%** | 增強專案主體 **結案** · L3 維運 backlog 獨立追蹤 |
 
 ---
@@ -65,12 +65,12 @@
 | [phase-5b-monitoring.md](./agent-prompts/phase-5b-monitoring.md) | ✅ | 🟡 Grafana RBAC 修復 · smoke 已重送 | **~95%** |
 | [phase-4-storage-ssd.md](./agent-prompts/phase-4-storage-ssd.md) | ✅ | postgres → NVMe 2026-06-24 | **100%** |
 
-**Phase 1「85%」**（2026-06-22 deploy）：
+**Phase 1「~90%」**（2026-06-22 deploy · Redis 2026-06-23）：
 
 - [x] Immich K8s · GPU ML · 1Password · MetalLB · Caddy · 儲存盤點
 - [x] Health probes（server `/api/server/ping`、postgres readiness、redis `PING`、ml `/ping`）
 - [x] NetworkPolicy · `immich-configmap` 文檔化
-- [ ] Redis/Valkey 密碼（`Immich-Redis` item 待建；目前 optional 無密碼）
+- [x] Redis/Valkey 密碼 + `Immich-Redis` OP item + rollout（2026-06-23）
 
 **Phase 5 既有**：v2.7.5 升級時 **手動** pg_dump 一次（`immich-pg-backup-20260612.sql` 149MB）— **不等於** Phase 5a 自動備份。
 
@@ -287,33 +287,17 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 
 ### 2.7 監控設定
 
-**狀態**: 🚧 metrics 就緒；Grafana 待建  
+**狀態**: 🟡 Phase 5b ~95%（`immich-ops` 有資料；LINE Bot panel 待補）  
 **負責**: SRE Team
 
 **任務**:
 
 - [x] LINE Bot `/metrics`（`prom-client`：uploads、latency、imageSet batches）
 - [x] Helm pod annotations `prometheus.io/scrape`
-- [ ] 驗證 Prometheus 指標 scrape + Grafana panel
-
-  ```bash
-  kubectl port-forward -n immich svc/immich-line-bot 3000:80
-  curl http://localhost:3000/metrics
-  ```
-
-- [ ] 建立 Grafana Dashboard
-  - [ ] Webhook 請求總數
-  - [ ] 上傳成功率
-  - [ ] P95 延遲
-  - [ ] AI 標註延遲
-  - [ ] 錯誤率分佈
-
-- [ ] 設定告警規則
-  - [ ] 成功率 < 90% → 發送告警
-  - [ ] P95 延遲 > 10 秒 → 發送告警
-  - [ ] Pod 重啟次數 > 5 → 發送告警
-
-**驗收**: Grafana Dashboard 可視化所有指標，告警規則測試通過
+- [x] PrometheusRule `immich.rules`（backup · pod · LINE 5xx）
+- [x] Grafana `immich-ops` ConfigMap + deep link 有資料（2026-06-24 RBAC 修復）
+- [ ] LINE Bot 專用 Grafana panel / 7 天 SLO（P2）
+- [ ] Telegram smoke 告警最終確認（3 條已重送）
 
 ---
 
@@ -618,7 +602,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 ### 3.5.4 整合
 
-- [ ] LaunchAgent / cron
+- [x] LaunchAgent / cron（`install-tier-launchd.sh` · 週日 03:30 ismissing；operator 確認是否已 load）
 - [x] runbook [TIER_POLICY.md](../20_guides/photo-sync/runbooks/TIER_POLICY.md)
 
 **已完成**: config schema · M1/M2 研究 · M3 腳本 · 第一輪 1615 張 export→import→verify
@@ -815,8 +799,8 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | Phase 5a pg 2/2 + NFS 157.8G | ✅ PASS |
 | Phase 4 postgres → lama NVMe | ✅ 2026-06-24 |
 | Phase 5b Grafana / immich-ops | 🟡 ~95%（smoke 待確認） |
-| LINE Bot 多人地點搜尋 | ✅ `af23fe4` |
-| Ops W2 Mac `.photoslibrary` → delta **HDD** | 🟡 首輪 rsync ~45G/164G（screen） |
+| LINE Bot 搜尋 UX PR #32–#34 + Denmark `d272c21` | 🟡 **待 release**（cluster `f75de69`） |
+| Ops W2 Mac `.photoslibrary` → delta **HDD** | 🟡 **63G/146G** local · **17G/18G** icloud |
 | `make verify-deploy` | ✅ PR #31 |
 
 ---
@@ -875,26 +859,31 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 > 詳細步驟見 [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-### 本週收尾清單（2026-06-25）
+### 本週收尾清單（2026-06-28）
+
+**立即** 🔴:
+
+1. **`make release`** — git `d272c21` 領先 cluster `f75de69`（Denmark country filter + PR #32–#34 已 merge 待 rollout）
+2. **Ops W2** — local-archive rsync **63G/146G** · icloud **17G/18G**（delta HDD）
 
 **進行中** 🚧:
 
-1. **Ops W2** — Mac 冷備份首輪 rsync 至 delta HDD（`screen immich-mac-backup`）
-2. **Phase 5b** — Telegram smoke 告警最終確認（3 條）
+1. Phase 5b — Telegram smoke 告警最終確認
+2. Ops W2 — 首輪 rsync Complete + checksum 抽樣
 
 **待 rsync 完成後**:
 
-1. `du -sh` 比對 Mac dry-run 體積 vs delta HDD
+1. `du -sh` 比對 Mac dry-run vs delta HDD
 2. checksum 抽樣還原演練
-3. 更新本檔 Ops W2 → Complete
+3. 更新 Ops W2 → Complete
 
-**已完成** ✅（2026-06-22 ~ 06-25）:
+**已完成** ✅（2026-06-22 ~ 06-28）:
 
 1. Phase 4 postgres → NVMe（2026-06-24）
 2. Phase 5a PASS · Grafana RBAC 修復
-3. LINE Bot 多人地點搜尋（`af23fe4`）
-4. Mac 備份 NVMe→HDD 遷移 + PR #31（`c41f09d`）
-5. `make verify-deploy` 腳本
+3. LINE Bot 搜尋 UX：確認 flow · help Quick Reply · 口語歐洲/關係詞（PR #32–#34）
+4. Denmark `COUNTRY_LOOKUP` + `normalizeCountryForImmich`（`d272c21` · 108 tests）
+5. Mac 備份 NVMe→HDD + PR #31 · `make verify-deploy`
 
 **明確 Defer（獨立維運 backlog）**:
 
@@ -926,7 +915,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | ------ | ------ | ------ | ------ |
 | **L1 核心產品** | Phase 0/2/3/3.6 | ✅ **已結案** | LINE · sync · reconcile 工具鏈上線 |
 | **L2 tier 分層** | Phase 3.5 | ✅ **已結案** | bulk/import/reconcile 完成；purge **豁免**（family shared） |
-| **L3 維運增強** | Phase 1/4/5 | 📋 **獨立 backlog** | **僅 agent prompt 文件**；cluster **0%**；不阻擋增強專案結案 |
+| **L3 維運增強** | Phase 1/4/5 | 🟡 **~90%** | Phase 4/5a **COMPLETE** · 5b ~95% · Redis ✅ |
 
 ### 結案宣告（2026-06-22）
 

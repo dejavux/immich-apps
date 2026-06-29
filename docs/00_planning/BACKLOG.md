@@ -2,7 +2,7 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-06-25（Ops W2 HDD 遷移 · PR #31 · rsync ~45G/164G）  
+**最後更新**: 2026-06-29（P1 #4/#5/#7 實作 · rsync du 複查 63G+17G）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
@@ -20,16 +20,17 @@
 
 ---
 
-## 當前 Sprint（2026-06-22 · 增強專案已結案）
+## 當前 Sprint（2026-06-28 · 維運收尾 + LINE V1.1 規劃）
 
 | 軌道 | 任務 | 狀態 | 備註 |
 | ------ | ------ | ------ | ------ |
 | — | **Immich Enhancement** | ✅ 結案 | Phase 0–3.6 + 3.5（purge 豁免） |
+| **Release** | LINE Bot `d272c21` | 🔴 **待 deploy** | cluster `f75de69` · `make verify-deploy` NEED RELEASE |
 | **Ops W1** | Phase 5a NFS + pg_dump | ✅ **PASS** | pg 2/2 · NFS Job ✅ · B2 已刪 |
-| **Ops** | Phase 1 probes/Redis | ✅ **已 deploy** | probes + NetworkPolicy · Redis item 待建 |
-| **Ops W3** | Phase 5b monitoring | 🟡 **~95%** | RBAC 修復 · immich-ops 有資料 · smoke 已重送 |
+| **Ops** | Phase 1 probes/Redis | ✅ **已 deploy** | probes + NetworkPolicy + Redis secret（2026-06-23） |
+| **Ops W3** | Phase 5b monitoring | 🟡 **~95%** | immich-ops 有資料 · Telegram smoke 待確認 |
 | **P2** | album reconcile | 📋 可選 | stale 27 / missing 123 |
-| **Ops W2** | Mac library → delta **HDD** | 🟡 **首輪 rsync** | NVMe→HDD（PR #31）· icloud ~17G · local ~28G · screen 執行中 |
+| **Ops W2** | Mac library → delta **HDD** | 🟡 **~50%** | local **63G/146G** · icloud **17G/18G**（2026-06-28 `du`） |
 | **Ops W4** | Phase 4 SSD 遷移 | ✅ **COMPLETE** | 2026-06-24 · postgres → `/nvme/immich-postgres` |
 
 ---
@@ -37,13 +38,14 @@
 ## 優先順序總覽
 
 ```text
+🔴  立即     make release（d272c21）· 驗證「丹麥」country filter E2E
 ✅  結案     Immich Enhancement（Phase 0–3.6 + 3.5 豁免）
 Ops W1       Phase 5a ✅ PASS（pg 2/2 · NFS ✅）
-Ops W2       Mac → delta **HDD** 首輪 rsync 進行中（~45G/164G · LaunchAgent 已 load）
-Ops W3       Phase 5b 告警 + immich-ops Grafana（RBAC 修復 · ~95%）
+Ops W2       Mac → delta HDD rsync ~50%（63G/146G local · 17G/18G icloud）
+Ops W3       Phase 5b 告警 + immich-ops Grafana（~95%）
 Ops W4       Phase 4 SSD ✅ COMPLETE 2026-06-24
-Observability  fuqi 儀表板併入 monitoring 或獨立子網域 → OBSERVABILITY_ROADMAP.md
-P2  可選     album reconcile · Similar images · LINE V1.1 vision
+LINE V1.1    國名自動化 · carousel 中繼資料 · AI 對話助理（見下方路線圖）
+P2  可選     album reconcile · Similar images · thumbs NVMe
 ```
 
 ---
@@ -62,7 +64,7 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 - [x] `make verify-line-bot` / `verify-deploy` 腳本（PR #31）
 - [x] NVMe 舊 partial copy 清理（~48G 釋放 · 2026-06-25）
 - [x] LaunchAgent `com.immich.mac-library-backup` 已 `launchctl load`
-- [ ] 首輪 rsync Complete（2026-06-25 重啟至 HDD · screen `immich-mac-backup`）
+- [ ] 首輪 rsync Complete（local **63G/146G** · icloud **17G/18G** · 2026-06-29 `du` 複查無變）
 - [ ] 還原演練 checksum 抽樣
 
 **不取代**：Immich `/data/upload` → NFS 週備份（已 deploy）。
@@ -104,7 +106,7 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 
 ## Immich Ops（Phase 1 / 4 / 5 — 獨立 backlog）
 
-> **釐清**：2026-06-22 [agent-prompts/](./agent-prompts/) 派工文件已 commit；**2026-06-22** manifest deploy 至 cluster（probes、NetworkPolicy、CronJob、PrometheusRule）。5a gate 仍 PARTIAL（B2 + pg 2/2 排程）。
+> **釐清**：2026-06-22 agent-prompts 派工；cluster deploy 完成（probes、NetworkPolicy、CronJob、PrometheusRule）。Phase 5a **PASS**（2026-06-24）。
 
 ### Phase 1 — 基礎設施強化（prompt ✅ · 執行 ✅ deploy）
 
@@ -114,9 +116,9 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 - [x] probes（server/postgres/redis/ml）— 2026-06-22 deploy
 - [x] NetworkPolicy（`immich` namespace）
 - [x] `immich-configmap.yaml` 文檔化（legacy nginx，未掛載）
-- [ ] Redis/Valkey 密碼（`Immich-Redis` 1Password item 待建）
+- [x] Redis/Valkey 密碼 + `Immich-Redis` 1Password item + rollout（2026-06-23）
 
-### Phase 5 — Backup（prompt ✅ · 執行 🟡 PARTIAL）
+### Phase 5 — Backup（prompt ✅ · 執行 ✅ PASS）
 
 → [agent-prompts/phase-5a-backup.md](./agent-prompts/phase-5a-backup.md) · [BACKUP_RESTORE.md](../20_guides/infra/runbooks/BACKUP_RESTORE.md)
 
@@ -192,10 +194,76 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 - [x] 首次對話 welcome 訊息（follow event → WELCOME_MESSAGE · 已上線）
 - [x] 人物消歧 Quick Reply（buildPersonQuickReply · 已上線）
 - [x] 上傳成功 Flex 單張預覽（hero 縮圖 + 在 Immich 查看按鈕 · PR #25）
-- [x] 搜尋結果「查看更多」deep link 至 Immich（人物頁 or `/search?query=` · PR #25）
+- [x] 搜尋前確認 flow · 空結果 Quick Reply · 上傳進度/失敗 Flex（PR #32）
+- [x] 「找照片」help Quick Reply 範例（PR #33）
+- [x] 口語「小光和老婆在歐洲」· 關係詞過濾 · 歐洲 sceneQuery（PR #34）
+- [x] Denmark / 丹麥 country metadata filter + `normalizeCountryForImmich`（`d272c21`）
+
+---
+
+## Repo 盤點（bottom-up · 2026-06-28）
+
+| 層 | 路徑 | 現況 |
+| ------ | ------ | ------ |
+| **LINE Bot** | `src/line-bot/`（20 TS） | webhook · Qwen 搜尋 · fallback parser · imageSet 上傳 · Rich Menu · media proxy · 108 tests |
+| **共用** | `src/shared/` | `immich-client` · date-range · upload-timestamps · OpenAPI types |
+| **Photo Sync** | `scripts/photo-sync/`（~35 腳本） | sync · tier policy · reconcile · audit · LaunchAgent 範例 |
+| **部署** | `deploy/helm` + `deploy/manifests` | line-bot Helm · server PVC/Deployment · 1Password items |
+| **CI/CD** | `ci/tekton/` | PR L0 · BuildKit release · `make release` |
+| **Cluster** | `immich` namespace | server v2.7.5 · postgres NVMe · LINE Bot **`f75de69`**（**待** `d272c21`） |
+
+**程式 vs 文件落差**（已在本輪修正）：
+
+- §2.7 監控仍寫「Grafana 待建」→ 實際 `immich-ops` 已上線
+- L3 結案表寫「cluster 0%」→ Phase 4/5a 已 deploy
+- Denmark fix 已 commit 未 release
+
+---
+
+## 下一階段路線圖（2026-06-28）
+
+### P0 — 本週（維運 + 部署）
+
+| # | 項目 | 類型 | 說明 |
+| --- | ------ | ------ | ------ |
+| 1 | `make release` + `verify-deploy` | Infra | rollout `d272c21`（Denmark + 搜尋 UX） |
+| 2 | Ops W2 rsync 收尾 | Ops | 63G→146G · checksum 抽樣 · 更新 runbook |
+| 3 | Phase 5b Telegram smoke | Ops | 確認 3 條告警送達 |
+
+### P1 — 產品體驗（2–4 週）
+
+| # | 項目 | 類型 | 狀態 | 說明 |
+| --- | ------ | ------ | ------ | ------ |
+| 4 | 國名對照自動化 | Feature | ✅ | `scripts/generate-country-lookup.py` · CLDR 264 筆 + runtime explore alias |
+| 5 | Carousel bubble 中繼資料 | UX | ✅ | 地點/人物標籤取代 UUID 檔名（`mapSearchAssetItem`） |
+| 6 | Web + LINE E2E 驗收 | UX | 📋 | [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md) P0 checklist（alias · 時間軸 · Smart Search 對照） |
+| 7 | 上傳「處理中 N/M」 | UX | ✅ | imageSet 每張 push「處理中 N/M…」（非僅偶數張） |
+
+### P2 — 平台與資料品質（Q3 · **Defer**）
+
+| # | 項目 | 類型 | 狀態 | 說明 |
+| --- | ------ | ------ | ------ | ------ |
+| 8 | Immich 升級路徑 | Infra | 📋 Defer | v2.7.5 → 下一穩定版 · OpenAPI sync · GPU ML 回歸 |
+| 9 | Similar images eval | Feature | 📋 Defer | Duplicate Detection + ground truth 20 組 |
+| 10 | album reconcile | Data | 📋 Defer | stale 27 / missing 123 → 可選收斂 |
+| 11 | LINE Bot Grafana panel | Observability | 📋 Defer | `/metrics` → immich-ops 子面板 + 7 天 SLO |
+| 12 | thumbs → NVMe | Infra | 📋 Defer | 可選；upload 仍 HDD |
+
+### P3 — AI Agent / 新場景（評估 · **Defer**）
+
+| # | 項目 | 類型 | 狀態 | 說明 |
+| --- | ------ | ------ | ------ | ------ |
+| 14 | **照片館對話助理** | AI Agent | 📋 Defer | 多輪記憶 + 主動建議 · session store 已有基礎 |
+| 15 | Qwen vision 繁中描述 | AI | 📋 Defer | 上傳後回覆場景描述；觀察 Immich CLIP tags |
+| 16 | LIFF 迷你 App | UX | 📋 Defer | Quick Reply 已覆蓋多數場景 |
+| 17 | Photo Edit BFF | Feature | 📋 Defer | 去背/增強 before-after · 不覆蓋原圖 |
+| 18 | `make tier-next` wizard | Ops UX | 📋 Defer | tier/reconcile 狀態 → 建議下一步（唯讀） |
+
+---
 
 ### Immich Web（驗收導向）
 
+- [x] 搜尋結果「查看更多」deep link 至 Immich（人物頁 or `/search?query=` · PR #25）
 - [ ] P0：兩相簿時間軸 + EXIF 抽查
 - [ ] 人物命名與 LINE alias 對齊驗收
 
@@ -220,6 +288,10 @@ P2  可選     album reconcile · Similar images · LINE V1.1 vision
 
 | 項目 | 完成日 |
 | ------ | -------- |
+| P1 國名 CLDR 自動化 + carousel 中繼資料 + 處理中 N/M（115 tests） | 2026-06-29 |
+| Denmark country filter + normalizeCountryForImmich（`d272c21`） | 2026-06-28 |
+| LINE 搜尋 UX PR #32–#34（確認 flow · help QR · 歐洲口語） | 2026-06-25 |
+| Phase 4 postgres NVMe · Phase 5a PASS | 2026-06-24 |
 | 專案結案 · purge 豁免 · Ops 狀態釐清 | 2026-06-22 |
 | LINE 搜尋地點/anyDate/追問（PR #26–#28） | 2026-06-19 |
 | iCloud 災難復原 + 相簿 638/638 + 日期 450 筆（PR #24） | 2026-06-18 |

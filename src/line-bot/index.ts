@@ -7,7 +7,10 @@ import { registerMediaProxyRoutes } from "./routes/media-proxy";
 import { ensureDefaultRichMenu } from "./services/rich-menu";
 import { logger } from "../shared/logger";
 import { ImmichClient } from "../shared/immich-client";
+import { registerImmichCountryValues } from "./services/country-lookup-runtime";
 import { register } from "./metrics";
+
+import immichAliases from "./data/country-lookup-immich-aliases.json";
 
 const app = express();
 const immichClient = new ImmichClient(env.immichBaseUrl, env.immichApiKey);
@@ -52,4 +55,27 @@ app.listen(env.port, () => {
       logger.error({ error }, "Rich menu setup failed");
     });
   }
+
+  void bootstrapCountryAliases(immichClient);
 });
+
+async function bootstrapCountryAliases(client: ImmichClient): Promise<void> {
+  const rawCountries = (immichAliases as { countries?: unknown }).countries;
+  const fileCountries = Array.isArray(rawCountries)
+    ? rawCountries.filter((value): value is string => typeof value === "string")
+    : [];
+  if (fileCountries.length > 0) {
+    registerImmichCountryValues(fileCountries);
+  }
+
+  try {
+    const exploreCountries = await client.fetchExploreCountries();
+    registerImmichCountryValues(exploreCountries);
+    logger.info(
+      { count: exploreCountries.length },
+      "Registered Immich country aliases",
+    );
+  } catch (error) {
+    logger.warn({ error }, "Immich explore country bootstrap skipped");
+  }
+}

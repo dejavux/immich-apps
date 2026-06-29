@@ -1,5 +1,6 @@
 import {
   assetPreviewUrl,
+  buildAssetBubbleSubtitle,
   buildPhotoSearchFlexCarousel,
   buildSearchReplyMessages,
   buildViewAllButtonMessage,
@@ -32,6 +33,41 @@ describe("line-search-reply", () => {
     if (flex.contents.type === "carousel") {
       expect(flex.contents.contents[0].hero?.type).toBe("image");
     }
+  });
+
+  it("shows metadata labels instead of uuid filenames", () => {
+    const flex = buildPhotoSearchFlexCarousel({
+      assets: [
+        {
+          id: "11111111-1111-4111-8111-111111111111",
+          originalFileName: "11111111-1111-4111-8111-111111111111.jpg",
+          localDateTime: "2024-06-01T12:00:00.000Z",
+          country: "Japan",
+          city: "Tokyo",
+          personNames: ["rayna"],
+        },
+      ],
+      header: "🔍 找到 1 張照片",
+      publicBotBaseUrl: "https://immich-bot.3q.fi",
+      immichWebUrl: "https://immich.3q.fi",
+    });
+    if (flex.contents.type === "carousel") {
+      const body = flex.contents.contents[0].body;
+      expect(JSON.stringify(body)).toContain("Tokyo");
+      expect(JSON.stringify(body)).toContain("rayna");
+      expect(JSON.stringify(body)).not.toContain("11111111");
+    }
+  });
+
+  it("buildAssetBubbleSubtitle prefers location and people", () => {
+    expect(
+      buildAssetBubbleSubtitle({
+        id: "x",
+        country: "Denmark",
+        city: "Copenhagen",
+        personNames: ["steffi"],
+      }),
+    ).toBe("Copenhagen · 丹麥 · steffi");
   });
 
   it("returns text + flex for results", () => {

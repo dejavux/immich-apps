@@ -5,10 +5,44 @@ import type {
   PhotoSearchResult,
 } from "../../shared/types/photo-search";
 import type { ImmichPersonSummary } from "../../shared/types/immich";
+import { isUuidLikeFileName } from "../../shared/map-search-asset";
 
 const CAROUSEL_MAX_BUBBLES = 10;
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const COUNTRY_DISPLAY: Record<string, string> = {
+  Japan: "日本",
+  "Taiwan, Province of China": "台灣",
+  Denmark: "丹麥",
+  "United States": "美國",
+  "United Kingdom": "英國",
+  "South Korea": "韓國",
+};
+
+function formatCountryLabel(country: string): string {
+  return COUNTRY_DISPLAY[country] ?? country;
+}
+
+export function buildAssetBubbleSubtitle(asset: PhotoSearchAssetHit): string {
+  const parts: string[] = [];
+  if (asset.city) {
+    parts.push(asset.city);
+  }
+  if (asset.country) {
+    parts.push(formatCountryLabel(asset.country));
+  }
+  if (asset.personNames?.length) {
+    parts.push(asset.personNames.join("、"));
+  }
+  if (parts.length > 0) {
+    return parts.join(" · ");
+  }
+  if (asset.originalFileName && !isUuidLikeFileName(asset.originalFileName)) {
+    return asset.originalFileName;
+  }
+  return "";
+}
 
 export function assetPreviewUrl(
   publicBotBaseUrl: string,
@@ -33,7 +67,7 @@ export function buildPhotoSearchFlexCarousel(params: {
     const dateLabel = asset.localDateTime
       ? asset.localDateTime.slice(0, 10)
       : "未知日期";
-    const subtitle = asset.originalFileName ?? asset.id.slice(0, 8);
+    const subtitle = buildAssetBubbleSubtitle(asset) || "—";
 
     return {
       type: "bubble" as const,

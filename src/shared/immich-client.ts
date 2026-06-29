@@ -6,6 +6,7 @@ import {
   snapshotFromAssetResponse,
 } from "./asset-metadata";
 import { logger } from "./logger";
+import { mapSearchAssetItem } from "./map-search-asset";
 import type {
   AssetMetadataSnapshot,
   ImmichAlbumSummary,
@@ -290,15 +291,9 @@ export class ImmichClient {
       timeout: 60_000,
     });
 
-    const items = (response.data.assets?.items ?? []).map((item) => ({
-      id: String(item.id ?? ""),
-      originalFileName:
-        typeof item.originalFileName === "string"
-          ? item.originalFileName
-          : undefined,
-      localDateTime:
-        typeof item.localDateTime === "string" ? item.localDateTime : undefined,
-    }));
+    const items = (response.data.assets?.items ?? []).map((item) =>
+      mapSearchAssetItem(item),
+    );
 
     return {
       items: items.filter((item) => item.id.length > 0),
@@ -340,20 +335,40 @@ export class ImmichClient {
       timeout: 90_000,
     });
 
-    const items = (response.data.assets?.items ?? []).map((item) => ({
-      id: String(item.id ?? ""),
-      originalFileName:
-        typeof item.originalFileName === "string"
-          ? item.originalFileName
-          : undefined,
-      localDateTime:
-        typeof item.localDateTime === "string" ? item.localDateTime : undefined,
-    }));
+    const items = (response.data.assets?.items ?? []).map((item) =>
+      mapSearchAssetItem(item),
+    );
 
     return {
       items: items.filter((item) => item.id.length > 0),
       total: response.data.assets?.total ?? items.length,
     };
+  }
+
+  async fetchExploreCountries(): Promise<string[]> {
+    const response = await axios.get<
+      Array<{ fieldName?: string; items?: Array<{ value?: string }> }>
+    >(`${this.baseUrl}/api/search/explore`, {
+      headers: this.headers(),
+      timeout: 30_000,
+    });
+
+    const countries = new Set<string>();
+    for (const section of response.data) {
+      if (
+        section.fieldName !== "exifInfo.country" &&
+        section.fieldName !== "country"
+      ) {
+        continue;
+      }
+      for (const item of section.items ?? []) {
+        const value = item.value?.trim();
+        if (value) {
+          countries.add(value);
+        }
+      }
+    }
+    return [...countries].sort();
   }
 
   async fetchAssetThumbnail(
