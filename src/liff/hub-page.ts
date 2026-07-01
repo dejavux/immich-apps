@@ -85,10 +85,15 @@ export function renderLiffHubPage(): string {
     document.getElementById("unlock-btn").addEventListener("click", async () => {
       setStatus("驗證中…");
       try {
+        if (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) {
+          openPasskeyInExternalBrowser("unlock");
+          return;
+        }
         await unlockWithPasskey();
         const me = await fetchAuthMe();
         showHub(me);
       } catch (err) {
+        if (isPasskeyNotAllowedError(err) && openPasskeyInExternalBrowser("unlock")) return;
         setStatus("解鎖失敗：" + err.message);
       }
     });

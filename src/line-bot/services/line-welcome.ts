@@ -39,6 +39,7 @@ export const RICH_MENU_LABELS = {
   search: "找照片",
   upload: "上傳教學",
   help: "使用說明",
+  settings: "帳戶設定",
 } as const;
 
 /** Rich Menu message actions (sent as user text). */

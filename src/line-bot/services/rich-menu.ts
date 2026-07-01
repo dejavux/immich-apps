@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { messagingApi } from "@line/bot-sdk";
 
 import { logger } from "../../shared/logger";
+import { env } from "../config/env";
 import { RICH_MENU_LABELS, RICH_MENU_MESSAGES } from "./line-welcome";
 
 const { MessagingApiClient, MessagingApiBlobClient } = messagingApi;
@@ -28,8 +29,15 @@ function richMenuImageBytes(): Buffer {
   return readFileSync(resolveRichMenuImagePath());
 }
 
+function liffSettingsUri(): string {
+  if (env.liffId) {
+    return `https://liff.line.me/${env.liffId}/settings`;
+  }
+  return `${env.lineBotPublicUrl.replace(/\/$/, "")}/liff/settings`;
+}
+
 function buildRichMenuBody(): messagingApi.RichMenuRequest {
-  const third = Math.floor(MENU_WIDTH / 3);
+  const quarter = Math.floor(MENU_WIDTH / 4);
   return {
     size: { width: MENU_WIDTH, height: MENU_HEIGHT },
     selected: true,
@@ -37,7 +45,7 @@ function buildRichMenuBody(): messagingApi.RichMenuRequest {
     chatBarText: "選單",
     areas: [
       {
-        bounds: { x: 0, y: 0, width: third, height: MENU_HEIGHT },
+        bounds: { x: 0, y: 0, width: quarter, height: MENU_HEIGHT },
         action: {
           type: "message",
           label: RICH_MENU_LABELS.search,
@@ -45,7 +53,7 @@ function buildRichMenuBody(): messagingApi.RichMenuRequest {
         },
       },
       {
-        bounds: { x: third, y: 0, width: third, height: MENU_HEIGHT },
+        bounds: { x: quarter, y: 0, width: quarter, height: MENU_HEIGHT },
         action: {
           type: "message",
           label: RICH_MENU_LABELS.upload,
@@ -53,16 +61,24 @@ function buildRichMenuBody(): messagingApi.RichMenuRequest {
         },
       },
       {
-        bounds: {
-          x: third * 2,
-          y: 0,
-          width: MENU_WIDTH - third * 2,
-          height: MENU_HEIGHT,
-        },
+        bounds: { x: quarter * 2, y: 0, width: quarter, height: MENU_HEIGHT },
         action: {
           type: "message",
           label: RICH_MENU_LABELS.help,
           text: RICH_MENU_MESSAGES.help,
+        },
+      },
+      {
+        bounds: {
+          x: quarter * 3,
+          y: 0,
+          width: MENU_WIDTH - quarter * 3,
+          height: MENU_HEIGHT,
+        },
+        action: {
+          type: "uri",
+          label: RICH_MENU_LABELS.settings,
+          uri: liffSettingsUri(),
         },
       },
     ],

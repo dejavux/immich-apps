@@ -10,6 +10,7 @@ Regenerate after copy changes:
 
 from __future__ import annotations
 
+import math
 import sys
 from pathlib import Path
 
@@ -20,8 +21,8 @@ OUT = ROOT / "deploy/line-bot/rich-menu.jpg"
 
 WIDTH = 2500
 HEIGHT = 843
-LABELS = ("找照片", "上傳教學", "使用說明")
-COLORS = ("#1E54DB", "#0E7D74", "#712CE0")
+LABELS = ("找照片", "上傳教學", "使用說明", "帳戶設定")
+COLORS = ("#1E54DB", "#0E7D74", "#712CE0", "#B45309")
 
 FONT_CANDIDATES = (
     "/System/Library/Fonts/STHeiti Medium.ttc",
@@ -92,20 +93,47 @@ def draw_help_icon(draw: ImageDraw.ImageDraw, cx: int, cy: int, size: int) -> No
     draw.text((cx, cy), "?", fill="white", font=font, anchor="mm")
 
 
+def draw_settings_icon(draw: ImageDraw.ImageDraw, cx: int, cy: int, size: int) -> None:
+    r = size // 2
+    draw.ellipse(
+        (cx - r, cy - r, cx + r, cy + r),
+        outline="white",
+        width=max(12, size // 10),
+    )
+    tooth = size // 5
+    for angle in range(0, 360, 45):
+        rad = math.radians(angle)
+        x0 = cx + int((r - tooth // 2) * math.cos(rad))
+        y0 = cy + int((r - tooth // 2) * math.sin(rad))
+        x1 = cx + int((r + tooth) * math.cos(rad))
+        y1 = cy + int((r + tooth) * math.sin(rad))
+        draw.line((x0, y0, x1, y1), fill="white", width=max(10, size // 12))
+    inner = r // 2
+    draw.ellipse(
+        (cx - inner, cy - inner, cx + inner, cy + inner),
+        fill="white",
+    )
+
+
 def main() -> None:
     img = Image.new("RGB", (WIDTH, HEIGHT), "white")
     draw = ImageDraw.Draw(img)
-    third = WIDTH // 3
-    label_font = load_font(88)
-    icon_size = 200
+    quarter = WIDTH // 4
+    label_font = load_font(72)
+    icon_size = 180
     icon_y = int(HEIGHT * 0.34)
     label_y = int(HEIGHT * 0.72)
 
-    icon_drawers = (draw_search_icon, draw_upload_icon, draw_help_icon)
+    icon_drawers = (
+        draw_search_icon,
+        draw_upload_icon,
+        draw_help_icon,
+        draw_settings_icon,
+    )
 
     for index, (label, color) in enumerate(zip(LABELS, COLORS, strict=True)):
-        x0 = index * third
-        x1 = x0 + third if index < 2 else WIDTH
+        x0 = index * quarter
+        x1 = x0 + quarter if index < 3 else WIDTH
         draw.rectangle((x0, 0, x1, HEIGHT), fill=color)
         if index > 0:
             draw.line((x0, 0, x0, HEIGHT), fill="#FFFFFF", width=4)

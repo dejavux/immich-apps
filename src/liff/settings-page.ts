@@ -24,6 +24,9 @@ export function renderLiffSettingsPage(): string {
   </div>
 
   <div id="settings-panel" class="hidden">
+    <div id="liff-passkey-hint" class="setup hidden">
+      Passkey / Face ID 需在 <strong>Safari</strong> 完成。點下方按鈕將開啟外部瀏覽器。
+    </div>
     <div class="card">
       <h3>Passkey / Face ID</h3>
       <p id="passkey-summary">載入中…</p>
@@ -66,22 +69,57 @@ export function renderLiffSettingsPage(): string {
       }
     }
 
+    async function runPasskeyAction(action, fn) {
+      if (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) {
+        openPasskeyInExternalBrowser(action);
+        return;
+      }
+      await fn();
+    }
+
     async function bootstrap() {
-      const init = await initLiff();
+      const params = new URLSearchParams(window.location.search);
+      const passkeyAction = params.get("action");
+      const init = await initLiff({ allowExternalBrowser: true });
       if (!init.ok) return;
+      if (init.inClient) {
+        document.getElementById("liff-passkey-hint").classList.remove("hidden");
+      }
       const data = await loadSettings();
       if (data) {
         renderSettings(data);
+      }
+      if (passkeyAction === "register") {
+        setStatus("註冊 Passkey…");
+        try {
+          await registerPasskey();
+          const refreshed = await loadSettings();
+          if (refreshed) renderSettings(refreshed);
+          setStatus("Passkey 已註冊，可返回 LINE。");
+        } catch (err) {
+          setStatus("註冊失敗：" + err.message);
+        }
+      } else if (passkeyAction === "unlock") {
+        setStatus("驗證中…");
+        try {
+          await unlockWithPasskey();
+          const refreshed = await loadSettings();
+          if (refreshed) renderSettings(refreshed);
+          setStatus("已解鎖");
+        } catch (err) {
+          setStatus("解鎖失敗：" + err.message);
+        }
       }
     }
 
     document.getElementById("unlock-btn").addEventListener("click", async () => {
       setStatus("驗證中…");
       try {
-        await unlockWithPasskey();
+        await runPasskeyAction("unlock", unlockWithPasskey);
         const data = await loadSettings();
         if (data) renderSettings(data);
       } catch (err) {
+        if (isPasskeyNotAllowedError(err) && openPasskeyInExternalBrowser("unlock")) return;
         setStatus("解鎖失敗：" + err.message);
       }
     });
@@ -89,11 +127,14 @@ export function renderLiffSettingsPage(): string {
     document.getElementById("register-btn").addEventListener("click", async () => {
       setStatus("註冊 Passkey…");
       try {
-        await registerPasskey();
-        const data = await loadSettings();
-        if (data) renderSettings(data);
-        setStatus("Passkey 已註冊");
+        await runPasskeyAction("register", async () => {
+          await registerPasskey();
+          const data = await loadSettings();
+          if (data) renderSettings(data);
+          setStatus("Passkey 已註冊");
+        });
       } catch (err) {
+        if (isPasskeyNotAllowedError(err) && openPasskeyInExternalBrowser("register")) return;
         setStatus("註冊失敗：" + err.message);
       }
     });

@@ -89,18 +89,21 @@ export function renderLiffClientScript(liffId: string): string {
       if (el) el.textContent = msg;
     }
 
-    async function initLiff() {
+    async function initLiff(options) {
+      const opts = options || {};
+      const allowExternalBrowser = Boolean(opts.allowExternalBrowser);
       if (!liffId) {
         setStatus("開發模式：未綁定 LIFF_ID。");
         return { ok: false, reason: "no_liff" };
       }
       await liff.init({ liffId });
-      if (!liff.isInClient()) {
+      const inClient = liff.isInClient();
+      if (!inClient && !allowExternalBrowser) {
         setStatus("請在 LINE 內開啟此頁面。");
         return { ok: false, reason: "not_in_client" };
       }
       if (!liff.isLoggedIn()) {
-        setStatus("正在登入 LINE…");
+        setStatus(inClient ? "正在登入 LINE…" : "正在登入 LINE（Safari）…");
         liff.login({ redirectUri: window.location.href });
         return { ok: false, reason: "login_redirect" };
       }
@@ -120,7 +123,31 @@ export function renderLiffClientScript(liffId: string): string {
         return { ok: false, reason: "session_failed" };
       }
       setSessionToken(data.sessionToken);
-      return { ok: true, role: data.role, authLevel: data.authLevel };
+      return { ok: true, role: data.role, authLevel: data.authLevel, inClient };
+    }
+
+    function liffPasskeyUrl(action) {
+      const base = "https://liff.line.me/" + liffId + "/settings";
+      if (!action) return base;
+      return base + "?action=" + encodeURIComponent(action);
+    }
+
+    /** LINE 內建 WebView 不支援 WebAuthn；改以 Safari / 系統瀏覽器完成 Passkey。 */
+    function openPasskeyInExternalBrowser(action) {
+      if (!liff.isInClient()) return false;
+      liff.openWindow({ url: liffPasskeyUrl(action), external: true });
+      setStatus("已於 Safari 開啟，請在該視窗完成 Face ID / Passkey 操作後返回 LINE。");
+      return true;
+    }
+
+    function isPasskeyNotAllowedError(err) {
+      const msg = String(err && err.message ? err.message : err).toLowerCase();
+      return (
+        msg.includes("not allowed") ||
+        msg.includes("not supported") ||
+        msg.includes("securityerror") ||
+        msg.includes("invalid state")
+      );
     }
 
     async function fetchAuthMe() {
