@@ -65,8 +65,18 @@ export function renderLiffHubPage(): string {
     }
 
     async function bootstrap() {
+      installAuthSyncOnVisibility(async () => {
+        try {
+          await refreshAuthSession();
+          const me = await fetchAuthMe();
+          if (!me.requiresUnlock) {
+            showHub(me);
+          }
+        } catch (_) {}
+      });
       const init = await initLiff();
       if (!init.ok) return;
+      await refreshAuthSession();
       let me;
       try {
         me = await fetchAuthMe();

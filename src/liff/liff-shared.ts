@@ -162,6 +162,52 @@ export function renderLiffClientScript(liffId: string): string {
       return { ok: true, role: data.role, authLevel: data.authLevel, inClient };
     }
 
+    async function refreshAuthSession() {
+      if (!sessionToken) {
+        return null;
+      }
+      const res = await fetch("/api/v1/auth/session/refresh", {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return null;
+      }
+      if (data.sessionToken) {
+        setSessionToken(data.sessionToken);
+      }
+      return data;
+    }
+
+    function installAuthSyncOnVisibility(onVisible) {
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState !== "visible") {
+          return;
+        }
+        refreshAuthSession()
+          .then((data) => {
+            if (onVisible) onVisible(data);
+          })
+          .catch(() => {});
+      });
+    }
+
+    async function finishPasskeyFlow(message, onDone) {
+      await refreshAuthSession();
+      setStatus(message);
+      if (onDone) {
+        await onDone();
+      }
+      try {
+        if (typeof liff !== "undefined" && liff.closeWindow && !liff.isInClient()) {
+          setTimeout(() => liff.closeWindow(), 1500);
+        }
+      } catch (_) {
+        /* closeWindow only works when opened from LINE */
+      }
+    }
+
     function liffPasskeyUrl(action) {
       const qs = action ? "?action=" + encodeURIComponent(action) : "";
       return liffEntryPath("/settings", qs);
@@ -171,7 +217,7 @@ export function renderLiffClientScript(liffId: string): string {
     function openPasskeyInExternalBrowser(action) {
       if (!liff.isInClient()) return false;
       liff.openWindow({ url: liffPasskeyUrl(action), external: true });
-      setStatus("已於 Safari 開啟，請在該視窗完成 Face ID / Passkey 操作後返回 LINE。");
+      setStatus("已於 Safari 開啟。完成 Face ID 後將自動返回 LINE；若未返回，切回 LINE 會自動同步登入狀態。");
       return true;
     }
 
@@ -222,6 +268,7 @@ export function renderLiffClientScript(liffId: string): string {
         throw new Error(upgradeBody.error || ("HTTP " + upgradeRes.status));
       }
       setSessionToken(upgradeBody.sessionToken);
+      await refreshAuthSession();
       return upgradeBody;
     }
 
@@ -248,6 +295,7 @@ export function renderLiffClientScript(liffId: string): string {
       if (!verifyRes.ok) {
         throw new Error(verifyBody.error || ("HTTP " + verifyRes.status));
       }
+      await refreshAuthSession();
       return verifyBody;
     }
   `;

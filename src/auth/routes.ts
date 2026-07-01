@@ -19,6 +19,11 @@ import {
   type AuthenticatedRequest,
 } from "./middleware";
 import { getPasskeyStore } from "./passkey-store";
+import { resolveAuthLevelForLineUser } from "./auth-level";
+import {
+  clearPasskeyUnlockGrant,
+  setPasskeyUnlockGrant,
+} from "./passkey-unlock-grant";
 import { resolveAuthRole } from "./roles";
 import { issueAuthSession, isAuthSessionConfigured } from "./session";
 import {
@@ -55,10 +60,11 @@ authRoutes.post("/session", async (req, res) => {
   }
   const lineUserId = verified.user.lineUserId;
   const role = resolveAuthRole(lineUserId);
+  const authLevel = await resolveAuthLevelForLineUser(lineUserId);
   const issued = issueAuthSession({
     lineUserId,
     role,
-    authLevel: "liff",
+    authLevel,
   });
   if (!issued) {
     res.status(503).json({ ok: false, error: "session_not_configured" });
@@ -69,7 +75,53 @@ authRoutes.post("/session", async (req, res) => {
     sessionToken: issued.sessionToken,
     expiresInSec: issued.expiresInSec,
     role,
+    authLevel,
+  });
+});
+
+authRoutes.post("/session/refresh", requireAuthSession, async (req: AuthenticatedRequest, res) => {
+  const session = req.authSession!;
+  const passkeyStore = await getPasskeyStore();
+  const passkeys = await passkeyStore.listByLineUser(session.sub);
+
+  if (session.authLevel === "passkey") {
+    res.json({
+      ok: true,
+      authLevel: "passkey",
+      requiresUnlock: false,
+      passkeyCount: passkeys.length,
+      unchanged: true,
+    });
+    return;
+  }
+
+  const authLevel = await resolveAuthLevelForLineUser(session.sub);
+  if (authLevel === "passkey") {
+    const issued = issueAuthSession({
+      lineUserId: session.sub,
+      role: session.role,
+      authLevel: "passkey",
+    });
+    if (!issued) {
+      res.status(503).json({ ok: false, error: "session_not_configured" });
+      return;
+    }
+    res.json({
+      ok: true,
+      authLevel: "passkey",
+      requiresUnlock: false,
+      passkeyCount: passkeys.length,
+      sessionToken: issued.sessionToken,
+      expiresInSec: issued.expiresInSec,
+    });
+    return;
+  }
+
+  res.json({
+    ok: true,
     authLevel: "liff",
+    requiresUnlock: passkeys.length > 0,
+    passkeyCount: passkeys.length,
   });
 });
 
@@ -228,6 +280,7 @@ webauthnRoutes.post(
         counter: cred.counter,
         transports: cred.transports,
       });
+      await setPasskeyUnlockGrant(session.sub);
       res.json({ ok: true, verified: true, credentialId: cred.id });
     } catch (error) {
       console.error("[auth/webauthn] register/verify", error);
@@ -323,6 +376,7 @@ webauthnRoutes.post(
         res.status(503).json({ ok: false, error: "session_not_configured" });
         return;
       }
+      await setPasskeyUnlockGrant(session.sub);
       res.json({
         ok: true,
         verified: true,
@@ -355,6 +409,10 @@ webauthnRoutes.post(
     if (!revoked) {
       res.status(404).json({ ok: false, error: "credential_not_found" });
       return;
+    }
+    const remaining = await store.listByLineUser(session.sub);
+    if (remaining.length === 0) {
+      await clearPasskeyUnlockGrant(session.sub);
     }
     res.json({ ok: true, revoked: true });
   },

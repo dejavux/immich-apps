@@ -25,7 +25,7 @@ export function renderLiffSettingsPage(): string {
 
   <div id="settings-panel" class="hidden">
     <div id="liff-passkey-hint" class="setup hidden">
-      Passkey / Face ID 需在 <strong>Safari</strong> 完成。點下方按鈕將開啟外部瀏覽器。
+      Passkey / Face ID 需在 <strong>Safari</strong> 完成（LINE 內無法 Face ID）。完成後會自動返回 LINE 並同步登入狀態（約 8 小時有效）。
     </div>
     <div class="card">
       <h3>Passkey / Face ID</h3>
@@ -80,8 +80,17 @@ export function renderLiffSettingsPage(): string {
     async function bootstrap() {
       const params = new URLSearchParams(window.location.search);
       const passkeyAction = params.get("action");
+      installAuthSyncOnVisibility(async () => {
+        const data = await loadSettings();
+        if (data) renderSettings(data);
+        else if (unlockPanel.classList.contains("hidden") === false) {
+          const refreshed = await loadSettings();
+          if (refreshed) renderSettings(refreshed);
+        }
+      });
       const init = await initLiff({ allowExternalBrowser: true });
       if (!init.ok) return;
+      await refreshAuthSession();
       if (init.inClient) {
         document.getElementById("liff-passkey-hint").classList.remove("hidden");
       }
@@ -90,22 +99,22 @@ export function renderLiffSettingsPage(): string {
         renderSettings(data);
       }
       if (passkeyAction === "register") {
-        setStatus("註冊 Passkey…");
         try {
           await registerPasskey();
-          const refreshed = await loadSettings();
-          if (refreshed) renderSettings(refreshed);
-          setStatus("Passkey 已註冊，可返回 LINE。");
+          await finishPasskeyFlow("Passkey 已註冊，可返回 LINE。", async () => {
+            const refreshed = await loadSettings();
+            if (refreshed) renderSettings(refreshed);
+          });
         } catch (err) {
           setStatus("註冊失敗：" + err.message);
         }
       } else if (passkeyAction === "unlock") {
-        setStatus("驗證中…");
         try {
           await unlockWithPasskey();
-          const refreshed = await loadSettings();
-          if (refreshed) renderSettings(refreshed);
-          setStatus("已解鎖");
+          await finishPasskeyFlow("已解鎖，可返回 LINE。", async () => {
+            const refreshed = await loadSettings();
+            if (refreshed) renderSettings(refreshed);
+          });
         } catch (err) {
           setStatus("解鎖失敗：" + err.message);
         }
@@ -129,9 +138,10 @@ export function renderLiffSettingsPage(): string {
       try {
         await runPasskeyAction("register", async () => {
           await registerPasskey();
-          const data = await loadSettings();
-          if (data) renderSettings(data);
-          setStatus("Passkey 已註冊");
+          await finishPasskeyFlow("Passkey 已註冊", async () => {
+            const data = await loadSettings();
+            if (data) renderSettings(data);
+          });
         });
       } catch (err) {
         if (isPasskeyNotAllowedError(err) && openPasskeyInExternalBrowser("register")) return;

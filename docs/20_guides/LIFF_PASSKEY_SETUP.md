@@ -32,11 +32,12 @@
 2. `liff.getIDToken()` → `POST /api/v1/auth/session`
 3. 可開啟 `IMMICH_WEB_URL` 瀏覽相簿
 4. 設定頁可註冊 Passkey；之後需 Face ID 解鎖才能進設定/管理員頁
-5. **Passkey 須在 Safari 完成**：LINE 內建瀏覽器不支援 WebAuthn；點註冊/解鎖會以 `liff.openWindow({ external: true })` 開啟 `liff.line.me/{id}/settings?action=…`，Safari 完成 LINE 登入後再註冊 Face ID
+5. **Passkey 須在 Safari 完成**：LINE 內建瀏覽器不支援 WebAuthn。Safari 驗證後伺服器會記錄 **unlock grant（8h）**，返回 LINE 時呼叫 `POST /api/v1/auth/session/refresh` 同步為已解鎖；Safari 頁面亦會嘗試 `liff.closeWindow()` 自動返回
 
 ## 4. API
 
-- `POST /api/v1/auth/session` — LINE idToken 換 session
+- `POST /api/v1/auth/session` — LINE idToken 換 session（有 unlock grant 時直接發 passkey session）
+- `POST /api/v1/auth/session/refresh` — LINE 內返回時同步 Safari 解鎖狀態
 - `GET /api/v1/auth/me` — 目前使用者狀態
 - `POST /api/v1/auth/webauthn/register/*` — 註冊 Passkey
 - `POST /api/v1/auth/webauthn/assert/options` + `session/upgrade` — Face ID 解鎖
