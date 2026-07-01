@@ -89,6 +89,20 @@ spec:
               value: {{ .Values.env.searchPersonAliases | quote }}
             - name: LINE_RICH_MENU_AUTO_SETUP
               value: {{ .Values.env.lineRichMenuAutoSetup | quote }}
+            - name: LIFF_ID
+              value: {{ .Values.env.liffId | quote }}
+            - name: LINE_LOGIN_CHANNEL_ID
+              value: {{ .Values.env.lineLoginChannelId | quote }}
+            - name: WEBAUTHN_RP_ID
+              value: {{ .Values.env.webauthnRpId | quote }}
+            - name: WEBAUTHN_RP_NAME
+              value: {{ .Values.env.webauthnRpName | quote }}
+            - name: ADMIN_LINE_USER_IDS
+              value: {{ .Values.env.adminLineUserIds | quote }}
+            {{- if .Values.env.redisUrl }}
+            - name: REDIS_URL
+              value: {{ .Values.env.redisUrl | quote }}
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:

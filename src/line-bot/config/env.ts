@@ -12,6 +12,14 @@ function optional(name: string, fallback: string): string {
   return process.env[name] ?? fallback;
 }
 
+function parseAdminLineUserIds(raw: string): ReadonlySet<string> {
+  const ids = raw
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+  return new Set(ids);
+}
+
 export const env = {
   port: Number.parseInt(optional("PORT", "3000"), 10),
   nodeEnv: optional("NODE_ENV", "development"),
@@ -66,4 +74,18 @@ export const env = {
   ).replace(/\/$/, ""),
   lineRichMenuAutoSetup:
     optional("LINE_RICH_MENU_AUTO_SETUP", "false") === "true",
+  /** LIFF app ID (LINE Login channel). Endpoint: /liff/hub */
+  liffId: optional("LIFF_ID", ""),
+  /** LINE Login channel ID for idToken verify (LIFF ID prefix if unset). */
+  lineLoginChannelId: optional("LINE_LOGIN_CHANNEL_ID", ""),
+  /** HMAC session secret; defaults to LINE_CHANNEL_SECRET */
+  authSessionSecret: optional("AUTH_SESSION_SECRET", ""),
+  /** Comma-separated LINE userIds with admin role (Immich ops). */
+  adminLineUserIds: parseAdminLineUserIds(
+    optional("ADMIN_LINE_USER_IDS", ""),
+  ),
+  webauthnRpId: optional("WEBAUTHN_RP_ID", ""),
+  webauthnRpName: optional("WEBAUTHN_RP_NAME", "Immich LINE"),
+  /** Optional Redis for passkey credential persistence */
+  redisUrl: optional("REDIS_URL", ""),
 };

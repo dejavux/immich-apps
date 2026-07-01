@@ -1,6 +1,9 @@
 import express from "express";
 import { middleware } from "@line/bot-sdk";
 
+import { authRoutes } from "../auth/routes";
+import { isAuthSessionConfigured } from "../auth/session";
+import { liffRoutes } from "../liff/routes";
 import { env } from "./config/env";
 import { handleWebhookEvents } from "./handlers/line-webhook";
 import { registerMediaProxyRoutes } from "./routes/media-proxy";
@@ -15,16 +18,27 @@ import immichAliases from "./data/country-lookup-immich-aliases.json";
 const app = express();
 const immichClient = new ImmichClient(env.immichBaseUrl, env.immichApiKey);
 
+app.use(express.json());
+
 registerMediaProxyRoutes(app, immichClient);
 
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "immich-line-bot" });
+  res.json({
+    status: "ok",
+    service: "immich-line-bot",
+    liffConfigured: Boolean(env.liffId),
+    authSessionConfigured: isAuthSessionConfigured(),
+    redisConfigured: Boolean(env.redisUrl),
+  });
 });
 
 app.get("/metrics", async (_req, res) => {
   res.set("Content-Type", register.contentType);
   res.end(await register.metrics());
 });
+
+app.use("/api/v1/auth", authRoutes);
+app.use("/liff", liffRoutes);
 
 app.post(
   "/webhook/line",

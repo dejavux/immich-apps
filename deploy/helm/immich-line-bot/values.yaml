@@ -52,6 +52,12 @@ env:
   immichBaseUrl: http://immich-server:2283
   immichWebUrl: https://immich.3q.fi
   lineBotPublicUrl: https://immich-bot.3q.fi
+  liffId: "2010563517-ubCFnmWa"
+  lineLoginChannelId: "2010563517"
+  webauthnRpId: "3q.fi"
+  webauthnRpName: "Immich LINE"
+  adminLineUserIds: "U4a509f80d173b72640b22f2317d41576"
+  redisUrl: ""
 
 onepassword:
   enabled: true
