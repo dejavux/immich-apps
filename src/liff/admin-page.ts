@@ -51,7 +51,7 @@ export function renderLiffAdminPage(): string {
     }
 
     async function bootstrap() {
-      const init = await initLiff();
+      const init = await initLiff({ allowExternalBrowser: true });
       if (!init.ok) return;
       const data = await loadAdmin();
       if (!data) return;
@@ -64,9 +64,14 @@ export function renderLiffAdminPage(): string {
     document.getElementById("unlock-btn").addEventListener("click", async () => {
       setStatus("驗證中…");
       try {
+        if (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) {
+          openPasskeyInExternalBrowser("unlock");
+          return;
+        }
         await unlockWithPasskey();
         await bootstrap();
       } catch (err) {
+        if (isPasskeyNotAllowedError(err) && openPasskeyInExternalBrowser("unlock")) return;
         setStatus("解鎖失敗：" + err.message);
       }
     });

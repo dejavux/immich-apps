@@ -10,6 +10,8 @@
 4. Login channel 狀態需 **Published**
 5. **Linked bots**：關聯 Immich LINE Bot OA
 
+> **路徑對應**：Endpoint 在 `/liff/hub` 時，`https://liff.line.me/{LIFF_ID}/settings` 會開啟 `/liff/hub/settings`（非 `/liff/settings`）。Passkey 頁面必須走 `liff.line.me` 子路徑，勿在 Safari 直接輸入 `immich-bot.3q.fi/liff/hub`。
+
 ## 2. 環境變數
 
 | 變數 | 說明 |
@@ -30,7 +32,7 @@
 2. `liff.getIDToken()` → `POST /api/v1/auth/session`
 3. 可開啟 `IMMICH_WEB_URL` 瀏覽相簿
 4. 設定頁可註冊 Passkey；之後需 Face ID 解鎖才能進設定/管理員頁
-5. **Passkey 須在 Safari 完成**：LINE 內建瀏覽器不支援 WebAuthn，點註冊/解鎖會自動以 `liff.openWindow({ external: true })` 開啟 Safari
+5. **Passkey 須在 Safari 完成**：LINE 內建瀏覽器不支援 WebAuthn；點註冊/解鎖會以 `liff.openWindow({ external: true })` 開啟 `liff.line.me/{id}/settings?action=…`，Safari 完成 LINE 登入後再註冊 Face ID
 
 ## 4. API
 

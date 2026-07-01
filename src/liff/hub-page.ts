@@ -41,8 +41,8 @@ export function renderLiffHubPage(): string {
       <h3>LINE Bot</h3>
       <p>在聊天室傳照片或輸入搜尋關鍵字（例：去年聖誕）。</p>
     </div>
-    <a class="btn secondary" href="/liff/settings">帳戶與 Passkey</a>
-    <a class="btn secondary hidden" id="admin-link" href="/liff/admin">管理員設定</a>
+    <a class="btn secondary" href="/liff/hub/settings">帳戶與 Passkey</a>
+    <a class="btn secondary hidden" id="admin-link" href="/liff/hub/admin">管理員設定</a>
   </div>
 
   <p id="status">初始化中…</p>

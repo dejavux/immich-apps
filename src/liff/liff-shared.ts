@@ -89,6 +89,31 @@ export function renderLiffClientScript(liffId: string): string {
       if (el) el.textContent = msg;
     }
 
+    function liffEntryPath(subpath, query) {
+      const path = subpath ? (subpath.startsWith("/") ? subpath : "/" + subpath) : "";
+      const qs = query || "";
+      return "https://liff.line.me/" + liffId + path + qs;
+    }
+
+    function canonicalLiffPath() {
+      const path = window.location.pathname;
+      if (path === "/liff/settings" || path.startsWith("/liff/settings/")) {
+        return "/liff/hub/settings" + path.slice("/liff/settings".length) + window.location.search;
+      }
+      if (path === "/liff/admin" || path.startsWith("/liff/admin/")) {
+        return "/liff/hub/admin" + path.slice("/liff/admin".length) + window.location.search;
+      }
+      return null;
+    }
+
+    function liffSubpathFromLocation() {
+      const path = window.location.pathname;
+      if (path.startsWith("/liff/hub")) {
+        return path.slice("/liff/hub".length) || "";
+      }
+      return "";
+    }
+
     async function initLiff(options) {
       const opts = options || {};
       const allowExternalBrowser = Boolean(opts.allowExternalBrowser);
@@ -96,11 +121,22 @@ export function renderLiffClientScript(liffId: string): string {
         setStatus("開發模式：未綁定 LIFF_ID。");
         return { ok: false, reason: "no_liff" };
       }
+      const canonical = canonicalLiffPath();
+      if (canonical) {
+        window.location.replace(canonical);
+        return { ok: false, reason: "canonical_redirect" };
+      }
       await liff.init({ liffId });
       const inClient = liff.isInClient();
       if (!inClient && !allowExternalBrowser) {
-        setStatus("請在 LINE 內開啟此頁面。");
-        return { ok: false, reason: "not_in_client" };
+        const subpath = liffSubpathFromLocation();
+        const qs = window.location.search || "";
+        const target = subpath === "" || subpath === "/"
+          ? liffEntryPath("/settings", qs)
+          : liffEntryPath(subpath, qs);
+        setStatus("正在導向 LINE 登入…");
+        window.location.replace(target);
+        return { ok: false, reason: "liff_redirect" };
       }
       if (!liff.isLoggedIn()) {
         setStatus(inClient ? "正在登入 LINE…" : "正在登入 LINE（Safari）…");
@@ -127,9 +163,8 @@ export function renderLiffClientScript(liffId: string): string {
     }
 
     function liffPasskeyUrl(action) {
-      const base = "https://liff.line.me/" + liffId + "/settings";
-      if (!action) return base;
-      return base + "?action=" + encodeURIComponent(action);
+      const qs = action ? "?action=" + encodeURIComponent(action) : "";
+      return liffEntryPath("/settings", qs);
     }
 
     /** LINE 內建 WebView 不支援 WebAuthn；改以 Safari / 系統瀏覽器完成 Passkey。 */
