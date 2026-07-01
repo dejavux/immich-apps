@@ -18,6 +18,8 @@ RUN npm ci
 # Copy source code
 COPY src/line-bot ./src/line-bot
 COPY src/shared ./src/shared
+COPY src/auth ./src/auth
+COPY src/liff ./src/liff
 
 # Build TypeScript
 RUN npm run build
