@@ -18,8 +18,6 @@ import immichAliases from "./data/country-lookup-immich-aliases.json";
 const app = express();
 const immichClient = new ImmichClient(env.immichBaseUrl, env.immichApiKey);
 
-app.use(express.json());
-
 registerMediaProxyRoutes(app, immichClient);
 
 app.get("/health", (_req, res) => {
@@ -37,9 +35,6 @@ app.get("/metrics", async (_req, res) => {
   res.end(await register.metrics());
 });
 
-app.use("/api/v1/auth", authRoutes);
-app.use("/liff", liffRoutes);
-
 app.post(
   "/webhook/line",
   middleware({ channelSecret: env.lineChannelSecret }),
@@ -53,6 +48,10 @@ app.post(
     res.sendStatus(200);
   },
 );
+
+// LINE webhook 須用 raw body 驗簽；不可在全域套用 express.json()
+app.use("/api/v1/auth", express.json(), authRoutes);
+app.use("/liff", liffRoutes);
 
 app.listen(env.port, () => {
   logger.info(
