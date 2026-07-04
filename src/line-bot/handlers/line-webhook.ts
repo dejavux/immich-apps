@@ -9,7 +9,8 @@ import { WELCOME_MESSAGE } from "../services/line-welcome";
 import { ImmichClient } from "../../shared/immich-client";
 import { downloadLineMessageContent } from "../../shared/line-content";
 import {
-  isImageFileName,
+  isSupportedMediaFileName,
+  isVideoFileName,
   lineEventTimeIso,
   resolveUploadFilename,
 } from "../../shared/media-types";
@@ -69,6 +70,11 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
     return;
   }
 
+  if (event.type === "message" && event.message.type === "video") {
+    await handleVideoMessage(event as MessageEvent);
+    return;
+  }
+
   if (event.type === "message" && event.message.type === "file") {
     await handleFileMessage(event as MessageEvent);
     return;
@@ -87,12 +93,28 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
     });
     return;
   }
+
+  if (event.type === "message") {
+    logger.info(
+      { messageType: event.message.type, userId: event.source.userId },
+      "Ignoring unsupported LINE message type",
+    );
+  }
 }
 
 async function handleImageMessage(event: MessageEvent): Promise<void> {
   await uploadLineMedia(event, {
     source: "line-image",
     preferredFileName: undefined,
+    fallbackExt: "jpg",
+  });
+}
+
+async function handleVideoMessage(event: MessageEvent): Promise<void> {
+  await uploadLineMedia(event, {
+    source: "line-video",
+    preferredFileName: undefined,
+    fallbackExt: "mp4",
   });
 }
 
@@ -102,23 +124,28 @@ async function handleFileMessage(event: MessageEvent): Promise<void> {
   }
 
   const fileName = event.message.fileName;
-  if (!isImageFileName(fileName)) {
+  if (!isSupportedMediaFileName(fileName)) {
     await replyText(
       event.replyToken,
-      `❌ 目前僅支援圖片檔案（JPG/HEIC/PNG 等）。收到：${fileName}\n請改以「檔案」傳送圖片原檔。`,
+      `❌ 目前支援圖片（JPG/HEIC/PNG）與影片（MOV/MP4）。收到：${fileName}\n轉傳影片可直接傳送，或改以「檔案」傳送原檔。`,
     );
     return;
   }
 
   await uploadLineMedia(event, {
-    source: "line-file",
+    source: isVideoFileName(fileName) ? "line-video" : "line-file",
     preferredFileName: fileName,
+    fallbackExt: isVideoFileName(fileName) ? "mp4" : "jpg",
   });
 }
 
 async function uploadLineMedia(
   event: MessageEvent,
-  params: { source: "line-image" | "line-file"; preferredFileName?: string },
+  params: {
+    source: "line-image" | "line-file" | "line-video";
+    preferredFileName?: string;
+    fallbackExt?: string;
+  },
 ): Promise<void> {
   const userId = event.source.userId ?? "unknown";
   const messageId = event.message.id;
@@ -140,7 +167,11 @@ async function uploadLineMedia(
   );
 
   const modeLabel =
-    params.source === "line-file" ? "原檔（file）" : "照片（image）";
+    params.source === "line-file"
+      ? "原檔（file）"
+      : params.source === "line-video"
+        ? "影片（video）"
+        : "照片（image）";
 
   let summaryItem: UploadSummaryItem;
 
@@ -153,6 +184,7 @@ async function uploadLineMedia(
       messageId,
       preferredFileName: params.preferredFileName,
       contentType,
+      fallbackExt: params.fallbackExt,
     });
 
     const timestampPlan = await resolveUploadTimestamps(buffer, eventTime);

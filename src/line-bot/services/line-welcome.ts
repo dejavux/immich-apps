@@ -26,8 +26,9 @@ export const SEARCH_HELP_QUICK_REPLIES = [
 export function buildUploadHelpText(): string {
   return (
     "📸 上傳方式：\n" +
-    "• 一般照片：直接傳圖\n" +
-    "• 保留原檔：用「檔案」傳送 JPG/HEIC/PNG\n\n" +
+    "• 照片：直接傳圖\n" +
+    "• 影片：直接轉傳或傳送影片 clip\n" +
+    "• 保留原檔：用「檔案」傳送 JPG/HEIC/PNG/MOV/MP4\n\n" +
     "🔍 搜尋方式：\n" +
     "• 幫我找小蕊一歲半的照片\n" +
     "• 找在海邊的照片\n" +

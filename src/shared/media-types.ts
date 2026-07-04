@@ -16,6 +16,17 @@ const IMAGE_EXTENSIONS = new Set([
   "orf",
 ]);
 
+const VIDEO_EXTENSIONS = new Set([
+  "mov",
+  "mp4",
+  "m4v",
+  "avi",
+  "mkv",
+  "webm",
+  "hevc",
+  "3gp",
+]);
+
 const MIME_TO_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/jpg": "jpg",
@@ -25,6 +36,11 @@ const MIME_TO_EXT: Record<string, string> = {
   "image/webp": "webp",
   "image/gif": "gif",
   "image/tiff": "tiff",
+  "video/mp4": "mp4",
+  "video/quicktime": "mov",
+  "video/x-m4v": "m4v",
+  "video/webm": "webm",
+  "video/3gpp": "3gp",
 };
 
 export function extensionFromFileName(fileName: string): string | undefined {
@@ -39,6 +55,15 @@ export function extensionFromFileName(fileName: string): string | undefined {
 export function isImageFileName(fileName: string): boolean {
   const ext = extensionFromFileName(fileName);
   return ext !== undefined && IMAGE_EXTENSIONS.has(ext);
+}
+
+export function isVideoFileName(fileName: string): boolean {
+  const ext = extensionFromFileName(fileName);
+  return ext !== undefined && VIDEO_EXTENSIONS.has(ext);
+}
+
+export function isSupportedMediaFileName(fileName: string): boolean {
+  return isImageFileName(fileName) || isVideoFileName(fileName);
 }
 
 export function extensionFromContentType(
@@ -81,7 +106,7 @@ export function resolveUploadFilename(params: {
   const mime =
     contentType?.split(";")[0]?.trim() ??
     mimeFromExtension(ext) ??
-    "image/jpeg";
+    (VIDEO_EXTENSIONS.has(ext) ? "video/mp4" : "image/jpeg");
   return { filename: `line-${messageId}.${ext}`, contentType: mime };
 }
 
@@ -90,6 +115,9 @@ function mimeFromExtension(ext: string): string | undefined {
     if (mapped === ext) {
       return mime;
     }
+  }
+  if (VIDEO_EXTENSIONS.has(ext)) {
+    return ext === "mov" ? "video/quicktime" : "video/mp4";
   }
   return undefined;
 }
