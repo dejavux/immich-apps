@@ -41,7 +41,7 @@ env:
   assetMetadataWaitMs: "8000"
   photoSearchEnabled: "true"
   qwenBaseUrl: "http://qwen-coder.local-llm.svc.cluster.local:8001/v1"
-  qwenModel: default
+  qwenModel: "Qwen/Qwen2.5-Coder-7B-Instruct"
   qwenTimeoutMs: "30000"
   searchMaxResults: "5"
   searchAgeWindowDays: "45"

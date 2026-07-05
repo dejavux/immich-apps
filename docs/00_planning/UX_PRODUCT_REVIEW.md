@@ -1,6 +1,6 @@
 # UX / Product Review — Immich Apps
 
-**日期**: 2026-06-30（Rich Menu 標籤修復 · 使用者驗收 2026-06-29）  
+**日期**: 2026-07-05（LINE 影片上傳 · LIFF Passkey hub）  
 **範圍**: 使用者面向流程（LINE Bot · Immich Web · Mac Photos 維運）與下一階段產品優化  
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md) · **Sprint**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
@@ -11,12 +11,13 @@
 | 維度 | 現況 | 評分 | 說明 |
 | ------ | ------ | ------ | ------ |
 | **後端 / 資料正確性** | 強 | ★★★★☆ | Photo sync、reconcile、tier policy 腳本鏈完整；Immich v2.7.5 穩定 |
-| **LINE 上傳** | 可用 | ★★★☆☆ | E2E 通過；但「照片 vs 原檔」認知負擔高 |
+| **LINE 上傳** | 可用 | ★★★★☆ | 圖片 E2E 通過；**video clip** 已支援（`631e855`）· 待驗收 |
+| **LINE 帳戶** | 新上線 | ★★★☆☆ | LIFF hub + Passkey（Safari 外部瀏覽器）· 待家族實機 |
 | **LINE 搜尋** | 成熟 | ★★★★☆ | 情緒／N年前／Disney（PR #39）· 使用者重測 ✅ 2026-06-29 |
 | **Immich Web** | 依 upstream | ★★★☆☆ | 相簿/時間軸可用；P0 驗收 checklist 未跑 |
 | **維運者 UX** | 腳本為主 | ★★★☆☆ | `tier-policy-status.sh` 已有；tier 仍多步 CLI |
 
-**結論**：增強專案主體已結案；**下一階段 UX** 聚焦：(1) carousel 顯示地點/人物而非 UUID、(2) Web+LINE P0 驗收、(3) 國名對照自動化避免再出現「丹麥」類缺口、(4) AI 對話助理延伸 session store。
+**結論**：增強專案主體已結案；**下一階段 UX** 聚焦：(1) **上傳管道 onboarding**（照片／原檔／影片）、(2) Web+LINE P0 驗收、(3) LIFF Passkey 家族 onboarding、(4) Qwen 搜尋穩定度。
 
 ---
 
@@ -52,7 +53,8 @@ graph LR
 
 | 步驟 | 現況 | 痛點 | 建議 |
 | ------ | ------ | ------ | ------ |
-| 選擇管道 | 「照片」壓縮 vs「檔案」原檔 | 使用者不知差異；iPhone 無法從照片 App 選檔 | **P1** Rich Menu：「分享照片」「分享原檔」+ 一則圖文教學 |
+| 選擇管道 | 「照片」壓縮 vs「檔案」原檔 vs **video clip** | 使用者不知差異；iPhone 無法從照片 App 選檔 | **P1** Rich Menu / welcome 圖文：照片·原檔·影片三種管道 |
+| 影片轉傳 | ✅ `line-video` 上傳（2026-07-05） | 先前靜默忽略 | **P0** 家族驗收 + welcome 補充影片說明 |
 | 等待回覆 | imageSet 批次 summary | 多張時仍可能覺得慢 | **P2** 處理中 typing indicator / 「上傳中 3/8」 |
 | 成功回覆 | 連結 + metadata note | 連結在 LINE 內開瀏覽器體驗一般 | **P2** Flex bubble 單張預覽（與搜尋 carousel 一致） |
 | 失敗 | 純文字 ❌ | 缺少可操作的下一步 | **P1** 結構化錯誤：「請改以檔案傳送」+ 圖示說明 |
@@ -73,8 +75,9 @@ graph LR
 
 1. **訊息層級**：先一行摘要（幾張、條件）→ 再 carousel；避免文字與圖同時過長。
 2. **Carousel bubble**：副標已支援地點／人物（`withExif`/`withPeople`）；持續避免 UUID 檔名當主標。
-3. **Rich Menu**：compact 模式可見標題來自 **JPEG 圖**（非 API `label`）；`chatBarText` 為「選單」。
-4. **品牌一致性**：altText、header 用同一套句式（「找到 N 張：小蕊 · 海邊 · 2024」）。
+3. **Rich Menu**：compact 模式可見標題來自 **JPEG 圖**（非 API `label`）；四欄含 **帳戶設定**（LIFF）。
+4. **LIFF hub**：Passkey 須 Safari 完成；LINE 內 WebView 不支援 WebAuthn — 見 [LIFF_PASSKEY_SETUP.md](../20_guides/LIFF_PASSKEY_SETUP.md)。
+5. **品牌一致性**：altText、header 用同一套句式（「找到 N 張：小蕊 · 海邊 · 2024」）。
 
 ---
 

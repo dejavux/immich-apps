@@ -5,9 +5,9 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-06-30（Rich Menu 標籤修復 · 使用者驗收 2026-06-29）  
+**最後更新**: 2026-07-05（LINE 影片上傳 · LIFF Passkey hub · webhook 簽章修復）  
 **專案狀態**: ✅ **增強專案結案** · Phase 5a **PASS** · Phase 5b **~95%** · Phase 4 ✅ **COMPLETE**  
-**Ops 更新**: 2026-06-29 — Mac 冷備份 delta HDD **63G/146G** local · **17G/18G** icloud · cluster LINE Bot 見 `make verify-deploy` · OA icon + 搜尋重測（小蕊哭／2年前／Disney）✅  
+**Ops 更新**: 2026-07-05 — LINE Bot **`631e855`**（video clip + LIFF hub）· Mac 冷備份 delta HDD **63G/146G** local · **17G/18G** icloud · Qwen 搜尋 fallback 404（非上傳阻塞）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
 
@@ -18,9 +18,9 @@
 | 指標 | 數值 | 說明 |
 | ------ | ------ | ------ |
 | 🔴 高優先級任務 | 0 | — |
-| 🟡 中優先級任務 | 2 | Ops W2 rsync 收尾 · Rich Menu deploy 驗收 |
-| 🟢 低優先級任務 | 5 | Similar images · album reconcile · LINE V1.1 · Photo Edit |
-| ✅ 本週完成 | 5 | PR #39 情緒／N年前／Disney · OA icon · 搜尋重測 · Rich Menu 標籤 |
+| 🟡 中優先級任務 | 3 | Ops W2 rsync 收尾 · 影片上傳 E2E 驗收 · Qwen 404 修復 |
+| 🟢 低優先級任務 | 5 | Similar images · album reconcile · LINE V1.1 vision · Photo Edit |
+| ✅ 本週完成 | 6 | LIFF Passkey hub · 影片 clip 上傳 · webhook 簽章 · Rich Menu 帳戶設定 |
 | 📈 整體進度 | **99%** | 增強專案主體 **結案** · L3 維運 backlog 獨立追蹤 |
 
 ---
@@ -165,6 +165,7 @@
 - [x] 成功/失敗回覆用戶
 - [x] `scripts/dev/load-env-from-op.sh` — 從 1Password 載入憑證
 - [x] **file 訊息**支援（PR #6）— 保留檔名 + Content-Type；iPhone 需經「檔案」App
+- [x] **video 訊息**支援（`631e855`）— LINE 轉傳 clip + MOV/MP4 檔案；`source: line-video`
 - [x] **P0 中繼資料**：`fileCreatedAt` 用 webhook `event.timestamp`；MIME 自 LINE response
 - [x] `.envrc` + Cursor lint-fix-agent 整合
 - [x] 預設分支 **`main`**（PR #5）
@@ -219,7 +220,7 @@ npm run dev
 
 **狀態**: ✅ 完成（2026-06-12）  
 **文檔**: [K8S_DEPLOYMENT.md](../20_guides/infra/K8S_DEPLOYMENT.md) ⭐  
-**目前映像**: `registry-internal.3q.fi/immich-line-bot:f906783`（Helm revision 9+）
+**目前映像**: `registry-internal.3q.fi/immich-line-bot:631e855`（Helm revision 51+）
 
 **目標架構**:
 
@@ -261,7 +262,8 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 - [x] Immich Web UI 確認 + ML 人臉偵測 log
 - [x] LINE 相機直拍 EXIF 調查（無相機 metadata，見 §2.3.1）
 - [ ] 連續 10 張壓力測試 + 成功率統計
-- [ ] 非圖片訊息 / 大檔案邊界案例
+- [x] **video clip** 轉傳上傳（`a562d4f` + `631e855` · 2026-07-05 deploy）
+- [ ] 大檔案 / 超長影片邊界案例 · 非支援格式錯誤回覆
 
 **待強化（Phase 2.5+）**:
 
@@ -278,7 +280,11 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 - [x] V1: LINE 自然語言搜尋（人名 + 年齡/日期）— Qwen + `/search/metadata` + session 追問
 - [x] V1.5: Smart Search 場景語意（CLIP query，英文）+ Flex carousel 縮圖
 - [x] V1 UI: 搜尋結果 Flex carousel（`/media/assets/{id}/preview.jpg` proxy）
+- [x] **LIFF hub** + Passkey 帳戶設定（PR #42 · `/liff/hub` · Safari 外部瀏覽器解鎖 · unlock grant 8h）
+- [x] Rich Menu 四欄：找照片｜上傳教學｜使用說明｜**帳戶設定**（→ `liff.line.me/{id}/settings`）
+- [x] webhook 簽章修復（`cde1b58` — 移除全域 `express.json()` 破壞 LINE signature）
 - [ ] P3: Qwen vision 繁中 description（V1.1；叢集 `local-llm/qwen-coder`；Immich CLIP 觀察後再決定）
+- [ ] P2: `REDIS_URL` — Passkey unlock grant 跨 pod 持久化（目前 in-memory）
 - [ ] Immich CLIP smart tags 觀察（上傳後數分鐘，用 observe 腳本）
 
 **驗收**: 核心 E2E ✅；進階案例與強化功能待下一迭代
@@ -799,9 +805,23 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | Phase 5a pg 2/2 + NFS 157.8G | ✅ PASS |
 | Phase 4 postgres → lama NVMe | ✅ 2026-06-24 |
 | Phase 5b Grafana / immich-ops | 🟡 ~95%（smoke 待確認） |
-| LINE Bot 搜尋 UX PR #32–#39 + Rich Menu 標籤 | 🟡 **deploy 中**（`make verify-deploy`） |
+| LINE Bot 搜尋 UX PR #32–#39 + Rich Menu 標籤 | ✅ deploy + 驗收 |
 | Ops W2 Mac `.photoslibrary` → delta **HDD** | 🟡 **63G/146G** local · **17G/18G** icloud |
 | `make verify-deploy` | ✅ PR #31 |
+
+---
+
+### Week 5 (2026-06-30 ~ 2026-07-05) — LIFF · 影片上傳 · 維運修復
+
+| 項目 | 狀態 |
+| ------ | ------ |
+| LIFF hub + Passkey（PR #42） | ✅ merge · `269dbc9` Dockerfile 補 auth/liff |
+| Rich Menu 帳戶設定（四欄） | ✅ `702d154` |
+| Safari Passkey unlock grant 同步 LINE session | ✅ `ece94b6` |
+| webhook 簽章修復（搜尋無反應） | ✅ `cde1b58` |
+| **LINE video clip 上傳** | ✅ `631e855` deploy · **待使用者 E2E** |
+| photo-sync allowlist orphan trash（PR #41） | ✅ 8 張 PNG |
+| Qwen `/v1/chat/completions` 404 | 🟡 fallback parser 仍可用 · 待修 local-llm |
 
 ---
 
@@ -814,6 +834,9 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | #4 | icloud-primary 全量 | ✅ 2026-06-12（0 new dry-run） |
 | #5 | Immich server v2.0.1 → v2.7.5 升級 | ✅ 2026-06-12 |
 | #9 | LaunchAgent 增量實測 | ✅ 2026-06-12 |
+| #12 | LINE video clip 靜默忽略 | ✅ `631e855`（2026-07-05） |
+| #13 | webhook 全域 JSON 破壞簽章 | ✅ `cde1b58` |
+| #14 | Qwen coder 404 影響搜尋 plan | 🟡 fallback 可用 |
 
 ---
 
@@ -859,42 +882,48 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 > 詳細步驟見 [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-### 本週收尾清單（2026-06-28）
+### 本週收尾清單（2026-07-05）
 
 **立即** 🔴:
 
-1. **`make release`** — Rich Menu 中文標籤 + PR #39 搜尋修復 → `make verify-deploy` PASS
-2. **Ops W2** — local-archive rsync **63G/146G** · icloud **17G/18G**（delta HDD）
+1. **影片 E2E** — 轉傳 video clip → Immich 出現 `line-{messageId}.mp4` · logs `source: line-video`
+2. **LIFF Passkey 實機** — Rich Menu「帳戶設定」→ Safari Face ID → 返回 LINE 已解鎖
+3. **Qwen 404** — 確認 `local-llm/qwen-coder` endpoint 或暫時接受 fallback parser
 
 **進行中** 🚧:
 
-1. Phase 5b — Telegram smoke 告警最終確認
-2. Ops W2 — 首輪 rsync Complete + checksum 抽樣
+1. Ops W2 — local-archive rsync **63G/146G** · icloud **17G/18G**（delta HDD）
+2. Phase 5b — Telegram smoke 告警最終確認
 
-**待 rsync 完成後**:
+**已完成** ✅（2026-06-30 ~ 07-05）:
 
-1. `du -sh` 比對 Mac dry-run vs delta HDD
-2. checksum 抽樣還原演練
-3. 更新 Ops W2 → Complete
+1. LIFF hub + Passkey（PR #42）· Rich Menu 四欄 · unlock grant
+2. LINE **video clip** 上傳（`631e855`）
+3. webhook 簽章修復 · Dockerfile auth/liff
+4. photo-sync allowlist orphan trash（PR #41）
 
-**已完成** ✅（2026-06-22 ~ 06-28）:
+**下一階段規劃（2026-07 起）**:
 
-1. Phase 4 postgres → NVMe（2026-06-24）
-2. Phase 5a PASS · Grafana RBAC 修復
-3. LINE Bot 搜尋 UX：確認 flow · help Quick Reply · 口語歐洲/關係詞（PR #32–#34）
-4. Denmark `COUNTRY_LOOKUP` + `normalizeCountryForImmich`（`d272c21` · 108 tests）
-5. Mac 備份 NVMe→HDD + PR #31 · `make verify-deploy`
+| 軌道 | 優先 | 項目 | 說明 |
+| ------ | ------ | ------ | ------ |
+| **LINE 產品** | P1 | 上傳管道 UX | welcome / Rich Menu 明確區分「照片壓縮 vs 原檔 vs 影片」 |
+| **LINE 產品** | P1 | Web + LINE P0 驗收 | 兩相簿時間軸 · 人物 alias · Smart Search 對照 |
+| **LINE 平台** | P2 | `REDIS_URL` | Passkey grant 跨 pod；多 replica 前必做 |
+| **LINE 平台** | P2 | Qwen 搜尋恢復 | 修 local-llm 或換 fallback 強化規則 |
+| **LINE AI** | P3 | Qwen vision 繁中描述 | 上傳後場景摘要 |
+| **Immich Ops** | P1 | Ops W2 rsync 收尾 | checksum 抽樣還原演練 |
+| **Immich Ops** | P2 | album reconcile | stale 27 / missing 123 |
+| **Immich Ops** | P2 | Similar images eval | hash-miss ~1506 視覺去重 |
+| **新場景** | P3 | Photo Edit BFF | 去背/增強 · 不覆蓋原圖 |
 
 **明確 Defer（獨立維運 backlog）**:
 
 | 項目 | 優先 | 預計 |
 | ------ | ------ | ------ |
 | LINE Bot Grafana / 7 天 SLO | P2 | Q3 |
-| LINE Bot V1.1 Qwen vision 繁中描述 | P3 | TBD |
-| LINE LIFF 迷你 App（見 UX 討論） | P3 | 評估中 |
-| Similar Images 重複偵測 | P2 Optional | TBD |
+| LIFF 進階（搜尋瀏覽 UI） | P3 | hub 已上線；瀏覽器內搜尋 defer |
 | Photo Edit + AI | P3 | TBD |
-| album reconcile stale/missing | P2 | 可選 |
+| Immich 升級下一穩定版 | P2 | TBD |
 
 **已完成** ✅（近期）:
 
@@ -963,9 +992,9 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 **專案狀態**: ✅ **增強專案結案**（2026-06-22）  
 **Immich Ops backlog**: Phase 1 ~90% · 5a **PASS** · 5b ~95% · 4 **已批准（執行待排程）**
 
-**Defer（P2/P3）**: album reconcile · fuqi Grafana 併入 monitoring · Ops W2 Mac NFS（Q3 執行 · prep 可平行） · Similar Images · Photo Edit  
-**Infra**: immich v2.7.5 · LINE bot release `6ec5aaa` 線上
+**Defer（P2/P3）**: album reconcile · Similar Images · Photo Edit · LIFF 搜尋瀏覽 UI  
+**Infra**: immich v2.7.5 · LINE bot release **`631e855`** 線上
 
-**最後更新**: 2026-06-24  
+**最後更新**: 2026-07-05  
 **維護者**: Infrastructure Team + App Dev Team  
 **更新頻率**: Phase 里程碑或全量 sync 階段變更時

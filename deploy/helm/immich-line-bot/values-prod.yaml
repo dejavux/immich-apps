@@ -5,3 +5,5 @@ image:
 
 env:
   logLevel: info
+  # Passkey unlock grant persistence (immich-redis ClusterIP in immich namespace)
+  redisUrl: "redis://immich-redis:6379"

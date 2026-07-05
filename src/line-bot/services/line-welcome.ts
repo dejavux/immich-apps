@@ -4,7 +4,11 @@ export const WELCOME_MESSAGE =
   "👋 歡迎使用 Immich 照片助手！\n\n" +
   "我可以幫你：\n" +
   "🔍 用自然語言找照片\n" +
-  "📸 把 LINE 照片備份到 Immich\n\n" +
+  "📸 把 LINE 媒體備份到 Immich\n\n" +
+  "上傳方式：\n" +
+  "• 照片：直接傳圖（LINE 會壓縮，適合日常備份）\n" +
+  "• 檔案：用「檔案」傳送（保留原檔 JPG/HEIC/PNG/MOV/MP4）\n" +
+  "• 影片：轉傳或傳送影片 clip\n\n" +
   "請點下方選單，或直接輸入：\n" +
   "• 找在海邊的照片\n" +
   "• 幫我找小蕊一歲半的照片";
@@ -26,9 +30,9 @@ export const SEARCH_HELP_QUICK_REPLIES = [
 export function buildUploadHelpText(): string {
   return (
     "📸 上傳方式：\n" +
-    "• 照片：直接傳圖\n" +
-    "• 影片：直接轉傳或傳送影片 clip\n" +
-    "• 保留原檔：用「檔案」傳送 JPG/HEIC/PNG/MOV/MP4\n\n" +
+    "• 照片（壓縮）：直接傳圖，LINE 會壓縮畫質，適合快速備份\n" +
+    "• 檔案（原檔）：點「＋」→ 檔案，傳 JPG/HEIC/PNG/MOV/MP4 保留原始畫質\n" +
+    "• 影片 clip：轉傳聊天室影片，或直接傳送短影片\n\n" +
     "🔍 搜尋方式：\n" +
     "• 幫我找小蕊一歲半的照片\n" +
     "• 找在海邊的照片\n" +

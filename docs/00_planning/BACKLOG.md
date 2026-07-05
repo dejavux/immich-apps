@@ -2,7 +2,7 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-06-30（Rich Menu 中文標籤修復 · 使用者驗收 2026-06-29）  
+**最後更新**: 2026-07-05（LINE 影片上傳 · LIFF Passkey hub）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
@@ -20,17 +20,20 @@
 
 ---
 
-## 當前 Sprint（2026-06-28 · 維運收尾 + LINE V1.1 規劃）
+## 當前 Sprint（2026-07-05 · LIFF hub + 影片上傳 + 維運收尾）
 
 | 軌道 | 任務 | 狀態 | 備註 |
 | ------ | ------ | ------ | ------ |
 | — | **Immich Enhancement** | ✅ 結案 | Phase 0–3.6 + 3.5（purge 豁免） |
-| **Release** | LINE Bot rich menu fix | 🟡 **deploy 中** | 見 `make verify-deploy` · 搜尋／OA 驗收 ✅ 2026-06-29 |
+| **LINE** | LIFF hub + Passkey | ✅ | PR #42 · `/liff/hub` · Rich Menu 帳戶設定 |
+| **LINE** | video clip 上傳 | ✅ deploy | `631e855` · **待 E2E 驗收** |
+| **LINE** | webhook 簽章修復 | ✅ | `cde1b58` |
+| **LINE** | Qwen 搜尋 404 | 🟡 | fallback parser 可用 |
 | **Ops W1** | Phase 5a NFS + pg_dump | ✅ **PASS** | pg 2/2 · NFS Job ✅ · B2 已刪 |
 | **Ops** | Phase 1 probes/Redis | ✅ **已 deploy** | probes + NetworkPolicy + Redis secret（2026-06-23） |
 | **Ops W3** | Phase 5b monitoring | 🟡 **~95%** | immich-ops 有資料 · Telegram smoke 待確認 |
 | **P2** | album reconcile | 📋 可選 | stale 27 / missing 123 |
-| **Ops W2** | Mac library → delta **HDD** | 🟡 **~50%** | local **63G/146G** · icloud **17G/18G**（2026-06-28 `du`） |
+| **Ops W2** | Mac library → delta **HDD** | 🟡 **~50%** | local **63G/146G** · icloud **17G/18G** |
 | **Ops W4** | Phase 4 SSD 遷移 | ✅ **COMPLETE** | 2026-06-24 · postgres → `/nvme/immich-postgres` |
 
 ---
@@ -38,14 +41,14 @@
 ## 優先順序總覽
 
 ```text
-🔴  立即     make release（d272c21）· 驗證「丹麥」country filter E2E
+🔴  立即     影片 clip E2E · LIFF Passkey 實機 · Qwen 404 排查
 ✅  結案     Immich Enhancement（Phase 0–3.6 + 3.5 豁免）
-Ops W1       Phase 5a ✅ PASS（pg 2/2 · NFS ✅）
+LINE         LIFF hub ✅ · video upload ✅ deploy · 搜尋 fallback 🟡
 Ops W2       Mac → delta HDD rsync ~50%（63G/146G local · 17G/18G icloud）
 Ops W3       Phase 5b 告警 + immich-ops Grafana（~95%）
-Ops W4       Phase 4 SSD ✅ COMPLETE 2026-06-24
-LINE V1.1    國名自動化 · carousel 中繼資料 · AI 對話助理（見下方路線圖）
-P2  可選     album reconcile · Similar images · thumbs NVMe
+P1  產品     上傳管道 UX · Web+LINE P0 驗收
+P2  平台     REDIS_URL（Passkey grant）· LINE Grafana panel · Similar images
+P3  AI       Qwen vision · Photo Edit BFF · LIFF 搜尋瀏覽 UI
 ```
 
 ---
@@ -167,13 +170,17 @@ P2  可選     album reconcile · Similar images · thumbs NVMe
 - [ ] album reconcile stale/missing → 0/0
 - [ ] rollback 實測文件 · tier LaunchAgent/cron
 
-## LINE Bot V1.1（P2/P3 · **Defer**）
+## LINE Bot V1.1+（P1–P3）
 
-> 📋 CLIP Smart Search 已可用；Grafana metrics 端點就緒，dashboard 可隨時接
+> 📋 CLIP Smart Search 已可用；LIFF hub 已上線（帳戶設定 / Passkey）
 
+- [x] **LIFF hub + Passkey**（PR #42）— `/liff/hub` · Safari 外部瀏覽器 · unlock grant 8h
+- [x] Rich Menu 四欄含「帳戶設定」
+- [x] **video clip 上傳**（`631e855`）— `line-video` source
+- [ ] `REDIS_URL` — Passkey grant 跨 pod（P2）
 - [ ] Qwen vision 繁中描述（P3）
 - [ ] Grafana dashboard + 7 天 SLO（P2）
-- [ ] **LIFF 迷你 App 評估**（P3）— 搜尋瀏覽／上傳教學 UI；見 [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md) §LINE
+- [ ] **LIFF 搜尋瀏覽 UI**（P3 defer）— hub 已覆蓋設定；全功能瀏覽器內搜尋待評估
 
 ---
 
@@ -200,7 +207,9 @@ P2  可選     album reconcile · Similar images · thumbs NVMe
 - [x] Denmark / 丹麥 country metadata filter + `normalizeCountryForImmich`（`d272c21`）
 - [x] 搜尋 parser P0：人物+情緒（哭）· `N年前` 相對日期 · 中文數字 · Disney 場景 + EXIF 過濾（2026-06-29）
 - [x] 情緒篩選 MVP（哭/笑/開心）· 多輪「只要哭的」· 搜尋重測（小蕊哭／2年前／Disney）· OA icon 上傳（2026-06-29 · PR #39）
-- [x] Rich Menu 橫幅中文標籤（找照片／上傳教學／使用說明）· `generate-rich-menu.py`（2026-06-30）
+- [x] Rich Menu 中文標籤（找照片／上傳教學／使用說明）· `generate-rich-menu.py`（2026-06-30）
+- [x] Rich Menu **帳戶設定**（四欄 · LIFF settings URI）
+- [x] **video clip** 轉傳上傳 Immich（`631e855` · 2026-07-05）
 
 ---
 
@@ -213,7 +222,7 @@ P2  可選     album reconcile · Similar images · thumbs NVMe
 | **Photo Sync** | `scripts/photo-sync/`（~35 腳本） | sync · tier policy · reconcile · audit · LaunchAgent 範例 |
 | **部署** | `deploy/helm` + `deploy/manifests` | line-bot Helm · server PVC/Deployment · 1Password items |
 | **CI/CD** | `ci/tekton/` | PR L0 · BuildKit release · `make release` |
-| **Cluster** | `immich` namespace | server v2.7.5 · postgres NVMe · LINE Bot **`f75de69`**（**待** `d272c21`） |
+| **Cluster** | `immich` namespace | server v2.7.5 · postgres NVMe · LINE Bot **`631e855`** |
 
 **程式 vs 文件落差**（已在本輪修正）：
 
@@ -223,44 +232,47 @@ P2  可選     album reconcile · Similar images · thumbs NVMe
 
 ---
 
-## 下一階段路線圖（2026-06-28）
+## 下一階段路線圖（2026-07-05）
 
-### P0 — 本週（維運 + 部署）
+### P0 — 本週（驗收 + 維運）
 
 | # | 項目 | 類型 | 說明 |
 | --- | ------ | ------ | ------ |
-| 1 | `make release` + `verify-deploy` | Infra | rollout `d272c21`（Denmark + 搜尋 UX） |
-| 2 | Ops W2 rsync 收尾 | Ops | 63G→146G · checksum 抽樣 · 更新 runbook |
-| 3 | Phase 5b Telegram smoke | Ops | 確認 3 條告警送達 |
+| 1 | 影片 clip E2E | LINE | 轉傳 video → Immich · logs `line-video` |
+| 2 | LIFF Passkey 實機 | LINE | Rich Menu 帳戶設定 → Safari Face ID → 返回已解鎖 |
+| 3 | Qwen 404 排查 | Infra | `local-llm/qwen-coder` endpoint 或強化 fallback |
+| 4 | Ops W2 rsync 收尾 | Ops | 63G→146G · checksum 抽樣 |
+| 5 | Phase 5b Telegram smoke | Ops | 確認 3 條告警送達 |
 
 ### P1 — 產品體驗（2–4 週）
 
 | # | 項目 | 類型 | 狀態 | 說明 |
 | --- | ------ | ------ | ------ | ------ |
-| 4 | 國名對照自動化 | Feature | ✅ | `scripts/generate-country-lookup.py` · CLDR 264 筆 + runtime explore alias |
-| 5 | Carousel bubble 中繼資料 | UX | ✅ | `withExif`/`withPeople` + plan enrich；副標顯示地點/人物 |
-| 6 | Web + LINE E2E 驗收 | UX | 📋 | [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md) · `smoke-photo-search-e2e.sh --country Denmark` |
-| 7 | 上傳「處理中 N/M」 | UX | ✅ | imageSet 每張 push「處理中 N/M…」（非僅偶數張） |
+| 6 | 上傳管道 onboarding | UX | 📋 | welcome / Rich Menu 區分照片·原檔·影片；見 [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md) |
+| 7 | Web + LINE E2E 驗收 | UX | 📋 | 兩相簿時間軸 · 人物 alias · Smart Search 對照 |
+| 8 | `REDIS_URL` for Passkey | Infra | 📋 | 多 replica 前必做 |
+| 9 | 國名對照自動化 | Feature | ✅ | CLDR 264 筆 + runtime alias |
+| 10 | Carousel bubble 中繼資料 | UX | ✅ | 地點/人物副標 |
 
-### P2 — 平台與資料品質（Q3 · **Defer**）
-
-| # | 項目 | 類型 | 狀態 | 說明 |
-| --- | ------ | ------ | ------ | ------ |
-| 8 | Immich 升級路徑 | Infra | 📋 Defer | v2.7.5 → 下一穩定版 · OpenAPI sync · GPU ML 回歸 |
-| 9 | Similar images eval | Feature | 📋 Defer | Duplicate Detection + ground truth 20 組 |
-| 10 | album reconcile | Data | 📋 Defer | stale 27 / missing 123 → 可選收斂 |
-| 11 | LINE Bot Grafana panel | Observability | 📋 Defer | `/metrics` → immich-ops 子面板 + 7 天 SLO |
-| 12 | thumbs → NVMe | Infra | 📋 Defer | 可選；upload 仍 HDD |
-
-### P3 — AI Agent / 新場景（評估 · **Defer**）
+### P2 — 平台與資料品質（Q3）
 
 | # | 項目 | 類型 | 狀態 | 說明 |
 | --- | ------ | ------ | ------ | ------ |
-| 14 | **照片館對話助理** | AI Agent | 📋 Defer | 多輪記憶 + 主動建議 · session store 已有基礎 |
-| 15 | Qwen vision 繁中描述 | AI | 📋 Defer | 上傳後回覆場景描述；觀察 Immich CLIP tags |
-| 16 | LIFF 迷你 App | UX | 📋 Defer | Quick Reply 已覆蓋多數場景 |
-| 17 | Photo Edit BFF | Feature | 📋 Defer | 去背/增強 before-after · 不覆蓋原圖 |
-| 18 | `make tier-next` wizard | Ops UX | 📋 Defer | tier/reconcile 狀態 → 建議下一步（唯讀） |
+| 11 | Immich 升級路徑 | Infra | 📋 Defer | v2.7.5 → 下一穩定版 |
+| 12 | Similar images eval | Feature | 📋 Defer | Duplicate Detection + ground truth |
+| 13 | album reconcile | Data | 📋 Defer | stale 27 / missing 123 |
+| 14 | LINE Bot Grafana panel | Observability | 📋 Defer | `/metrics` + 7 天 SLO |
+| 15 | thumbs → NVMe | Infra | 📋 Defer | 可選 |
+
+### P3 — AI / 新場景（評估）
+
+| # | 項目 | 類型 | 狀態 | 說明 |
+| --- | ------ | ------ | ------ | ------ |
+| 16 | 照片館對話助理 | AI Agent | 📋 Defer | 多輪記憶 + session store |
+| 17 | Qwen vision 繁中描述 | AI | 📋 Defer | 上傳後場景描述 |
+| 18 | LIFF 搜尋瀏覽 UI | UX | 📋 Defer | hub 已上線；完整瀏覽器內搜尋 |
+| 19 | Photo Edit BFF | Feature | 📋 Defer | 去背/增強 |
+| 20 | `make tier-next` wizard | Ops UX | 📋 Defer | tier 狀態建議下一步 |
 
 ---
 
@@ -291,6 +303,9 @@ P2  可選     album reconcile · Similar images · thumbs NVMe
 
 | 項目 | 完成日 |
 | ------ | -------- |
+| LINE video clip 上傳（`631e855`） | 2026-07-05 |
+| LIFF hub + Passkey（PR #42）· webhook 簽章修復 | 2026-07-04 |
+| photo-sync allowlist orphan trash（PR #41） | 2026-07-02 |
 | Rich Menu 中文標籤修復（CJK 字型 · generate-rich-menu.py） | 2026-06-30 |
 | 聖彼得堡 CITY_LOOKUP + carousel 不誤標地點 + Rich Menu 可見橫幅 | 2026-06-29 |
 | Carousel 副標 withExif + Rich Menu 圖片修復（117 tests） | 2026-06-29 |

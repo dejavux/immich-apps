@@ -1,9 +1,9 @@
 # 如何進行 — Immich Apps 執行指南
 
-**日期**: 2026-06-30  
+**日期**: 2026-07-05  
 **Repo**: <https://github.com/dejavux/immich-apps>  
 **進度 SSOT**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
-**路線圖**: [BACKLOG.md §下一階段路線圖](./BACKLOG.md#下一階段路線圖2026-06-28)  
+**路線圖**: [BACKLOG.md §下一階段路線圖](./BACKLOG.md#下一階段路線圖2026-07-05)  
 **Gate 狀態**: [agent-prompts/GATE_STATUS.md](./agent-prompts/GATE_STATUS.md)
 
 ---
@@ -13,9 +13,10 @@
 | 項目 | 狀態 |
 | ------ | ------ |
 | **Immich Enhancement** | ✅ **結案** |
-| LINE Bot git | 見 `git rev-parse --short HEAD` |
-| LINE Bot cluster | 見 `make verify-deploy` |
-| **使用者驗收** | ✅ **2026-06-29** — OA icon 上傳 · 搜尋重測（小蕊哭／2年前／Disney） |
+| LINE Bot git / cluster | **`631e855`**（`make verify-deploy`） |
+| **LIFF hub + Passkey** | ✅ PR #42 · [LIFF_PASSKEY_SETUP.md](../20_guides/LIFF_PASSKEY_SETUP.md) |
+| **LINE video clip 上傳** | ✅ deploy · **待 E2E 驗收** |
+| **使用者驗收** | 🟡 影片轉傳 · LIFF 帳戶設定 · 搜尋（Qwen fallback） |
 | **Immich Ops** | 5a **PASS** · 5b **~95%** · Phase 4 ✅ **COMPLETE** |
 
 ```bash
@@ -26,9 +27,11 @@ make verify-deploy   # 比對 git SHA vs cluster image tag
 
 ## 🔴 本週優先（P0）
 
-1. **`make release`** → `make verify-deploy` PASS → LINE Rich Menu 標籤實機確認（找照片／上傳教學／使用說明）
-2. **Ops W2** — 追蹤 rsync：`ssh delta.3q.fi 'du -sh .../mac-studio/*'`（2026-06-28：**63G/146G** local · **17G/18G** icloud）
-3. **Phase 5b** — 確認 Telegram smoke 3 條告警
+1. **影片 E2E** — 轉傳 video clip → Immich 有 `line-{messageId}.mp4` · `kubectl logs` 見 `source: line-video`
+2. **LIFF Passkey** — Rich Menu「帳戶設定」→ Safari Face ID → 返回 LINE 設定頁已解鎖
+3. **Qwen 404** — `kubectl logs deploy/immich-line-bot` 若見 `Qwen search plan failed` → 查 `local-llm/qwen-coder`
+4. **Ops W2** — rsync：`ssh delta.3q.fi 'du -sh .../mac-studio/*'`（**63G/146G** local · **17G/18G** icloud）
+5. **Phase 5b** — 確認 Telegram smoke 3 條告警
 
 ### Rich Menu 更新（維運）
 
@@ -120,13 +123,14 @@ open https://grafana.3q.fi/d/immich-ops
 
 ## 下一階段（摘要）
 
-完整 18 項見 [BACKLOG.md §下一階段路線圖](./BACKLOG.md#下一階段路線圖2026-06-28)。
+完整路線圖見 [BACKLOG.md §下一階段路線圖](./BACKLOG.md#下一階段路線圖2026-07-05)。
 
 | 優先 | 方向 | 代表項 |
 | ------ | ------ | ------ |
-| **P1** | 產品體驗 | 國名 CLDR 自動化 · carousel 地點/人物標籤 · Web E2E 驗收 |
-| **P2** | 平台 | Immich 升級 · Redis 密碼 · Similar images · LINE Grafana panel |
-| **P3** | AI / 新場景 | 照片館對話助理 · Qwen vision · Photo Edit BFF · LIFF（defer） |
+| **P0** | 驗收 | 影片 E2E · LIFF Passkey · Qwen 404 |
+| **P1** | 產品體驗 | 上傳管道 onboarding · Web+LINE P0 驗收 · `REDIS_URL` |
+| **P2** | 平台 | Similar images · album reconcile · LINE Grafana panel |
+| **P3** | AI / 新場景 | Qwen vision · Photo Edit BFF · LIFF 搜尋瀏覽 UI |
 
 ---
 
