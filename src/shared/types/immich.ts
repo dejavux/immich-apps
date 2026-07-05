@@ -18,7 +18,7 @@ export interface UploadAssetOptions extends UploadDeviceInfo {
   /** Omitted when Immich should read EXIF from the uploaded file. */
   fileCreatedAt?: string;
   fileModifiedAt?: string;
-  source: "line-image" | "line-file";
+  source: "line-image" | "line-file" | "line-video";
 }
 
 export interface AssetMetadataSnapshot {
