@@ -123,13 +123,17 @@ spec:
       labels:
         app: immich-machine-learning
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: worker3
-        nvidia.com/gpu: "true"
-      tolerations:
-        - key: "nvidia.com/gpu"
-          operator: "Exists"
-          effect: "NoSchedule"
+      # CPU-only：釋放 worker3 GPU 給 ComfyUI / GPT-SoVITS（見 infra-bootstrap docs/ops/GPU_LLM_DECISIONS.md）
+      # 回滾 GPU：加回 nvidia.com/gpu request + nodeSelector nvidia.com/gpu=true + toleration（勿與 Wan22 共卡）
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      - worker3
       containers:
         - name: immich-machine-learning
           image: ghcr.io/immich-app/immich-machine-learning:release
@@ -159,11 +163,9 @@ spec:
             requests:
               memory: "4Gi"
               cpu: "1000m"
-              nvidia.com/gpu: "1"
             limits:
               memory: "8Gi"
               cpu: "2000m"
-              nvidia.com/gpu: "1"
 ---
 apiVersion: apps/v1
 kind: Deployment
