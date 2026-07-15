@@ -85,11 +85,22 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
     event.message.type === "text" &&
     "replyToken" in event
   ) {
-    await handleTextMessage(event as MessageEvent, async (messages) => {
-      await messagingClient.replyMessage({
-        replyToken: event.replyToken,
-        messages,
-      });
+    await handleTextMessage(event as MessageEvent, {
+      reply: async (messages) => {
+        await messagingClient.replyMessage({
+          replyToken: event.replyToken,
+          messages,
+        });
+      },
+      push:
+        event.source.userId !== undefined
+          ? async (messages) => {
+              await messagingClient.pushMessage({
+                to: event.source.userId!,
+                messages,
+              });
+            }
+          : undefined,
     });
     return;
   }

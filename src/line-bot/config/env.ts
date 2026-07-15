@@ -55,7 +55,7 @@ export const env = {
   ).replace(/\/$/, ""),
   qwenApiKey: optional("QWEN_API_KEY", ""),
   qwenModel: optional("QWEN_MODEL", "Qwen/Qwen2.5-7B-Instruct"),
-  qwenTimeoutMs: Number.parseInt(optional("QWEN_TIMEOUT_MS", "30000"), 10),
+  qwenTimeoutMs: Number.parseInt(optional("QWEN_TIMEOUT_MS", "10000"), 10),
   searchMaxResults: Number.parseInt(optional("SEARCH_MAX_RESULTS", "5"), 10),
   searchAgeWindowDays: Number.parseInt(
     optional("SEARCH_AGE_WINDOW_DAYS", "45"),

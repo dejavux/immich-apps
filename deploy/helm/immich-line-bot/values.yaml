@@ -42,7 +42,7 @@ env:
   photoSearchEnabled: "true"
   qwenBaseUrl: "http://qwen-coder.local-llm.svc.cluster.local:8001/v1"
   qwenModel: "Qwen/Qwen2.5-7B-Instruct"
-  qwenTimeoutMs: "30000"
+  qwenTimeoutMs: "10000"
   searchMaxResults: "5"
   searchAgeWindowDays: "45"
   searchSessionTtlMs: "1800000"

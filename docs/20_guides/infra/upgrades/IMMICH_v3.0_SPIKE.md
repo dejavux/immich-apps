@@ -246,6 +246,100 @@ npm test
 
 **建議最早 production 日期**：staging spike DoD §7 全勾 + 維護窗口排程；參考 §6 **2026-07 中下旬 staging**，production **不早於 spike PASS 後一週**。
 
+---
+
+## 10. 維護窗口提案（排程 · 2026-07-16）
+
+> **狀態**：僅文件排程；**勿**於 spike DoD §7 全勾前執行 production cutover。  
+> **本次更新**：補齊具體時段、前後檢查與 rollback 決策點；**未**執行任何 kubectl / 映像升級。
+
+### 10.1 建議時段
+
+| 項目 | 建議 |
+| ------ | ------ |
+| **首選窗口** | **2026-08-09（六）02:00–05:00 HKT**（UTC+8） |
+| **備選窗口** | **2026-08-16（六）02:00–05:00 HKT** |
+| **窗口長度** | **3 小時**（含 migration、LINE Bot deploy、smoke、job 觀察） |
+| **公告時點** | **T−24h**（週五 02:00）於家族 LINE 群組 + 內部 Ops 頻道 |
+| **選定理由** | 週末凌晨家族上傳量低；與 §6「spike PASS 後至少一週」對齊（假設 7 月底前完成驗證 spike） |
+
+**排程前提**：下列 §10.5 阻擋項解除後，將首選日寫入家族日曆並於 T−7d 再次確認。
+
+### 10.2 窗口前檢查（T−7d → T−0）
+
+| 時點 | 檢查項 | 通過標準 |
+| ------ | ------ | ------ |
+| T−7d | DoD §7 全勾 | staging 或等效驗證 spike PASS（見 §10.5） |
+| T−7d | `immich-apps` v3 commit | `IMMICH_OPENAPI_VERSION=3.0.0 npm run openapi:sync` **已 push**；`npm test` · `type-check` 全綠 |
+| T−7d | LINE Bot 映像 | `make release` 產出 tag 已 push；`deploy/helm/immich-line-bot/values-prod.yaml` image tag 已更新（**先不 deploy**） |
+| T−24h | 家族公告 | LINE 群組：維護時段、預期 2–3h 無法上傳/搜尋、緊急聯絡人 |
+| T−2h | `pg_dump` | 沿用 [IMMICH_v2.7.5.md](./IMMICH_v2.7.5.md) A2；dump 可 `head`/`grep CREATE`；記錄檔名與大小 |
+| T−1h | baseline 快照 | `GET /api/server/version` = **2.7.5**；`GET /api/jobs` 佇列長度；`kubectl get deploy -n immich -o jsonpath='{..image}'` |
+| T−30m | LINE Bot smoke（**現行 v2.7.5**） | `bash scripts/line-bot/smoke-photo-search-e2e.sh` 全綠（確認維護前 baseline 正常） |
+| T−30m | VectorChord 健檢 | `SHOW shared_preload_libraries` = `vchord.so`（沿用 v2.7.5 A3） |
+| T−0 | 值班確認 | Ops + Apps 在線；rollback manifest（v2.7.5 pin）路徑就緒 |
+
+### 10.3 窗口內執行順序（對應 §9）
+
+| 階段 | 時間（相對） | 步驟 | 負責 |
+| ------ | ------ | ------ | ------ |
+| **A 備份** | T+0–30m | §9 #2 `pg_dump`（若 T−2h 已做可略過，但仍建議窗口內再 dump 一次） | Ops |
+| **A 備份** | T+0–10m | §9 #3 baseline 記錄 | Ops |
+| **B Server** | T+10–15m | §9 #4 更新 `deploy/manifests/immich-deployment.yaml` → `v3.0.0`（server + ML only） | Ops |
+| **B Server** | T+15–20m | §9 #5 `kubectl apply` | Ops |
+| **B Server** | T+20–60m | §9 #6 `rollout status` server → ML；tail migration log | Ops |
+| **B Server** | T+60–70m | §9 #7 `GET /api/server/version` = **3.0.0**；Web UI 登入 | Ops |
+| **C Apps** | T+70–85m | §9 #8 deploy v3 對齊之 `immich-line-bot` 映像 | Apps |
+| **C Apps** | T+85–115m | §9 #9 `smoke-photo-search-e2e.sh` + LINE 手動：上傳照片/原檔/影片、搜尋、carousel | Apps |
+| **D 觀察** | T+115–175m | §9 #10 job 排空：`metadataExtraction` / `smartSearch` / `faceDetection` | Ops |
+| **E 收尾** | T+175m+ | §9 #11 photo-sync `--dry-run`（各 library）；§9 #12 更新 §7 DoD | Ops |
+
+**窗口內中止點**：任一 **§10.4 Rollback 觸發條件** 成立 → 停止後續步驟，進入 rollback。
+
+### 10.4 Rollback 觸發條件與程序
+
+**立即 rollback（≤30 min）若出現任一項**：
+
+| # | 觸發條件 |
+| ------ | ------ |
+| R1 | server/ML `rollout` 失敗或 pod CrashLoop；migration log 出現不可恢復錯誤 |
+| R2 | 窗口內 **40 min** 後 `GET /api/server/version` 仍 ≠ **3.0.0** |
+| R3 | Web UI 無法登入或 `/api/server/ping` 非 `pong` |
+| R4 | `smoke-photo-search-e2e.sh` 失敗（上傳或搜尋 happy path） |
+| R5 | LINE 手動驗收：上傳或 carousel 搜尋連續 2 次失敗 |
+
+**Rollback 程序**（沿用 §9）：
+
+1. `kubectl apply` pin 回 `v2.7.5`（server + ML）→ `rollout status`
+2. 確認 `GET /api/server/version` = **2.7.5**
+3. 若已 deploy v3 LINE Bot → rollback 至維護前 image tag
+4. 重跑 `smoke-photo-search-e2e.sh`（對 v2.7.5）
+5. **DB restore**：僅當 migration 已寫入不可逆變更且 server 無法以 v2.7.5 啟動時，依 A2 dump restore（需另開決策會議；預設不 restore）
+
+**窗口後降級觀察（不 rollback 但標記風險）**：job 佇列 2h 內未下降、photo-sync dry-run 出現非預期 4xx/5xx → 當日不再跑增量 sync，次日評估。
+
+### 10.5 窗口後驗收（T+0 至 T+24h）
+
+| 檢查 | 指令 / 動作 | 通過標準 |
+| ------ | ------ | ------ |
+| API 版本 | `curl …/api/server/version` | `major` = 3 · `minor` = 0 |
+| LINE E2E | `smoke-photo-search-e2e.sh` + 家族抽樣上傳 | 全綠；至少 1 位家族成員確認 |
+| Web UI | 瀏覽器登入、月份瀏覽、縮圖載入 | 無 5xx |
+| Job 健康 | `GET /api/jobs` | 無異常堆積（對照 §9 #10 baseline） |
+| photo-sync | `./scripts/photo-sync/immich-sync.sh --dry-run` 各 library | **0 unexpected errors** |
+| 文件 | 更新 §7 DoD 全勾；§8 改記 v3 pin 日期 | committed |
+
+### 10.6 目前阻擋項（2026-07-16）
+
+| 阻擋 | 現況 | 解除條件 |
+| ------ | ------ | ------ |
+| **無 staging 叢集** | 僅 production `immich.3q.fi`；無法依 §5 Phase B 隔離驗證 | 建立 staging **或** 接受維護窗口內首次 pin v3 的風險並縮短觀察清單（**不建議**，見 §6） |
+| **immich-apps 未 deploy v3** | 程式／OpenAPI **已對齊 v3**（spec `3.0.0` · 777 KB；`deviceId` 上傳欄位已移除），但 production 仍跑 **v2.7.5 server** + 舊 LINE Bot 映像；§7 smoke／E2E **未對 v3** 驗證 | `make release` push + 對 v3 server 跑 smoke／手動 E2E PASS 後方可窗口 deploy |
+| **Spike DoD 未完成** | §7 全為 `[ ]` | 完成 §5 Phase A–D 驗證後方可排 §10.1 首選日 |
+| **Production 已 anti-drift** | §8 已 pin v2.7.5（2026-07-16） | 維持至窗口日；勿提前改 `:release` |
+
+**結論**：§10.1 首選日 **2026-08-09** 為目標占位；實際執行日須待 §10.6 阻擋項解除後 **至少 T+7d** 重新公告。
+
 ## 參考
 
 - 本 repo v2.7.5 升級紀錄：[IMMICH_v2.7.5.md](./IMMICH_v2.7.5.md)

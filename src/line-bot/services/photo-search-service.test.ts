@@ -11,6 +11,7 @@ import {
 } from "./photo-search-service";
 import { SearchSessionStore } from "./search-session-store";
 import type { ImmichClient } from "../../shared/immich-client";
+import type { QwenClient } from "./qwen-client";
 import {
   ensureActivityFromText,
   ensureAgeFromText,
@@ -141,6 +142,25 @@ describe("PhotoSearchService confirmation flow", () => {
     expect(result.message).toContain("歐洲");
     expect(result.plan?.personNames).toEqual(["小光"]);
     expect(result.plan?.sceneQuery).toBe("歐洲");
+  });
+
+  it("skips Qwen when rule parser already understands the query", async () => {
+    const qwenClient = {
+      chatJson: jest.fn().mockRejectedValue(new Error("should not be called")),
+    };
+    const service = new PhotoSearchService({
+      immichClient: createMockImmich(),
+      immichWebUrl: "https://immich.3q.fi",
+      sessionStore,
+      maxResults: 10,
+      ageWindowDays: 45,
+      personAliases: new Map(),
+      qwenClient: qwenClient as unknown as QwenClient,
+    });
+    const result = await service.handleMessage("u1", "找在海邊的照片");
+    expect(qwenClient.chatJson).not.toHaveBeenCalled();
+    expect(result.kind).toBe("confirm");
+    expect(result.message).toContain("海邊");
   });
 
   it("executes search after confirmation", async () => {

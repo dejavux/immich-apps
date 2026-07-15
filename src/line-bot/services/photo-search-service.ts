@@ -245,6 +245,15 @@ export class PhotoSearchService {
     message: string,
     session: ReturnType<SearchSessionStore["get"]>,
   ): Promise<PhotoSearchPlan> {
+    const fallback = this.normalizeSearchPlan(
+      parseSearchPlanFallback(message),
+      message,
+    );
+    // Rule parser covers most queries; skip slow LLM to stay within LINE's ~30s webhook window.
+    if (fallback.intent !== "unknown") {
+      return fallback;
+    }
+
     if (this.options.qwenClient) {
       try {
         const sessionSummary = session
@@ -266,7 +275,7 @@ export class PhotoSearchService {
         );
       }
     }
-    return this.normalizeSearchPlan(parseSearchPlanFallback(message), message);
+    return fallback;
   }
 
   private normalizeSearchPlan(
