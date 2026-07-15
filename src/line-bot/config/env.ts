@@ -54,7 +54,7 @@ export const env = {
     "http://qwen-coder.local-llm.svc.cluster.local:8001/v1",
   ).replace(/\/$/, ""),
   qwenApiKey: optional("QWEN_API_KEY", ""),
-  qwenModel: optional("QWEN_MODEL", "Qwen/Qwen2.5-Coder-7B-Instruct"),
+  qwenModel: optional("QWEN_MODEL", "Qwen/Qwen2.5-7B-Instruct"),
   qwenTimeoutMs: Number.parseInt(optional("QWEN_TIMEOUT_MS", "30000"), 10),
   searchMaxResults: Number.parseInt(optional("SEARCH_MAX_RESULTS", "5"), 10),
   searchAgeWindowDays: Number.parseInt(
