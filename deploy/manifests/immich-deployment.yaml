@@ -28,7 +28,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: immich-server
-          image: ghcr.io/immich-app/immich-server:release
+          image: ghcr.io/immich-app/immich-server:v2.7.5
           env:
             - name: NODE_ENV
               value: production
@@ -136,7 +136,7 @@ spec:
                       - worker3
       containers:
         - name: immich-machine-learning
-          image: ghcr.io/immich-app/immich-machine-learning:release
+          image: ghcr.io/immich-app/immich-machine-learning:v2.7.5
           env:
             - name: NODE_ENV
               value: production

@@ -205,8 +205,6 @@ async function uploadLineMedia(
     );
 
     const asset = await immichClient.uploadAsset(buffer, {
-      deviceId: `LINE-${userId}`,
-      deviceAssetId: messageId,
       filename,
       contentType: uploadContentType,
       ...(timestampPlan.omitFileTimestamps

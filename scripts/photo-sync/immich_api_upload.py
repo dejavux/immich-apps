@@ -100,7 +100,6 @@ def upload_asset_file(
     api_key: str,
     path: Path,
     file_created_at: datetime,
-    device_asset_id: str,
 ) -> dict:
     content = path.read_bytes()
     mime, _ = mimetypes.guess_type(path.name)
@@ -109,8 +108,6 @@ def upload_asset_file(
         file_created_at = file_created_at.replace(tzinfo=timezone.utc)
     created_iso = file_created_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
     fields = {
-        "deviceId": "mac-photo-sync",
-        "deviceAssetId": device_asset_id,
         "fileCreatedAt": created_iso,
         "fileModifiedAt": created_iso,
     }
@@ -301,7 +298,6 @@ def sync_library_api(
 
     def _upload(item: tuple[Path, str, datetime | None]) -> tuple[str | None, str | None]:
         path, checksum, capture_dt = item
-        device_asset_id = f"{lib_id}:{path.stem}:{checksum[:12]}"
         created = capture_dt or datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
         try:
             asset = upload_asset_file(
@@ -309,7 +305,6 @@ def sync_library_api(
                 api_key=api_key,
                 path=path,
                 file_created_at=created,
-                device_asset_id=device_asset_id,
             )
             asset_id = str(asset.get("id", "")) if isinstance(asset, dict) else ""
             return asset_id or None, None
