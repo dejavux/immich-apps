@@ -2,9 +2,9 @@
 # 統一管理 Immich server + LINE Bot + Photo Sync
 
 .PHONY: help build test deploy clean logs status verify-deploy verify-line-bot \
-	deploy-all deploy-server deploy-line-bot deploy-sync \
-	build-line-bot release-line-bot helm-lint \
-	ci-setup ci-setup-secrets ci-apply ci-apply-release ci-status ci-logs ci-release \
+	deploy-all deploy-server deploy-line-bot deploy-planner deploy-sync \
+	build-line-bot build-planner release-line-bot release-planner helm-lint helm-lint-planner \
+	ci-setup ci-setup-secrets ci-apply ci-apply-release ci-status ci-logs ci-release ci-release-planner \
 	lint lint-all lint-mechanical lint-changed-files lint-eslint lint-fix \
 	cursor-lint cursor-lint-changed cursor-lint-all \
 	git-commit auto-commit auto-commit-brief commit pull_request \
@@ -112,8 +112,22 @@ deploy-line-bot: ## 部署 LINE Bot (Helm)
 		--set image.tag=$(IMAGE_TAG)
 	@echo "$(GREEN)✓ LINE Bot Helm 部署完成$(NC)"
 
-helm-lint: ## Helm chart lint
+deploy-planner: ## 部署 Family Planner (Helm)
+	@echo "$(BLUE)部署 Family Planner (Helm)...$(NC)"
+	helm upgrade --install family-planner ./deploy/helm/family-planner \
+		--namespace $(NAMESPACE) \
+		--create-namespace \
+		-f ./deploy/helm/family-planner/values.yaml \
+		-f ./deploy/helm/family-planner/values-prod.yaml \
+		--set image.tag=$(IMAGE_TAG)
+	@echo "$(GREEN)✓ Family Planner Helm 部署完成$(NC)"
+
+helm-lint: ## Helm chart lint (line-bot + family-planner)
 	helm lint ./deploy/helm/immich-line-bot
+	helm lint ./deploy/helm/family-planner
+
+helm-lint-planner: ## Helm chart lint (family-planner only)
+	helm lint ./deploy/helm/family-planner
 
 # ═══════════════════════════════════════════════════════════════
 # Tekton CI / Release
@@ -145,6 +159,10 @@ ci-apply-ci: ci-apply-release ci-apply-pr ## 套用 release + PR CI
 
 ci-release: ## Tekton BuildKit release build（line-bot）
 	@bash scripts/release-tekton-build.sh line-bot
+
+ci-release-planner: ## Tekton BuildKit release build（planner stub）
+	@echo "$(YELLOW)⚠ planner Tekton pipeline 尚未建立；使用本機 build-planner$(NC)"
+	@$(MAKE) build-planner
 
 ci-status: ## 最近 PipelineRun 狀態
 	@kubectl get pipelineruns -n $(TEKTON_TENANT_NS) \
@@ -187,7 +205,15 @@ build-line-bot: ## 本機 Docker build + push LINE Bot
 	docker push $(REGISTRY)/immich-line-bot:$(IMAGE_TAG)
 	@echo "$(GREEN)✓ LINE Bot image built and pushed$(NC)"
 
+build-planner: ## 本機 Docker build + push Family Planner
+	@echo "$(BLUE)Building Family Planner Docker image...$(NC)"
+	docker build -f Dockerfile.planner -t $(REGISTRY)/family-planner:$(IMAGE_TAG) .
+	docker push $(REGISTRY)/family-planner:$(IMAGE_TAG)
+	@echo "$(GREEN)✓ Family Planner image built and pushed$(NC)"
+
 release-line-bot: build-line-bot deploy-line-bot ## 本機 build + Helm deploy
+
+release-planner: build-planner deploy-planner ## 本機 build + Helm deploy planner
 
 # ═══════════════════════════════════════════════════════════════
 # 本機開發
@@ -203,6 +229,10 @@ pf: ## Port-forward LINE Bot (30450)
 dev-line-bot: ## 本機開發 LINE Bot
 	@echo "$(BLUE)啟動 LINE Bot 開發模式...$(NC)"
 	npm run dev
+
+dev-planner: ## 本機開發 Family Planner
+	@echo "$(BLUE)啟動 Planner 開發模式...$(NC)"
+	npm run planner:dev
 
 logs: ## 查看 k8s logs
 	@echo "$(BLUE)=== Immich Server ===$(NC)"

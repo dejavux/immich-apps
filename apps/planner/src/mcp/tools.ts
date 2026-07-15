@@ -1,5 +1,5 @@
 /**
- * MCP tool 名稱與 REST 對照（Phase A2；streamable HTTP MCP 於 A3）
+ * MCP tool 名稱與 REST 對照（Phase A3 streamable HTTP 於 /mcp）
  */
 export const MCP_TOOL_ROUTES = {
   wizard_start: { method: "POST", path: "/wizard/sessions" },

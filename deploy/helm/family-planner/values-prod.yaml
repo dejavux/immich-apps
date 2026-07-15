@@ -1,0 +1,7 @@
+# Production overrides for family-planner
+
+image:
+  pullPolicy: Always
+
+env:
+  redisUrl: "redis://immich-redis:6379"

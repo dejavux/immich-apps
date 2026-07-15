@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "family-planner.fullname" . }}
+  labels:
+    {{- include "family-planner.labels" . | nindent 4 }}
+  {{- if .Values.onepassword.enabled }}
+  annotations:
+    operator.1password.io/auto-restart: "true"
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "family-planner.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "family-planner.selectorLabels" . | nindent 8 }}
+      {{- if and .Values.serviceMonitor.enabled .Values.serviceMonitor.podAnnotations }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.service.targetPort | quote }}
+        prometheus.io/path: "/metrics"
+      {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.serviceAccount.name }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: {{ .Values.env.nodeEnv | quote }}
+            - name: PORT
+              value: {{ .Values.service.targetPort | quote }}
+            - name: PLANNER_SEED_INVITE_CODE
+              value: {{ .Values.env.seedInviteCode | quote }}
+            - name: WIZARD_SESSION_TTL_HOURS
+              value: {{ .Values.env.wizardSessionTtlHours | quote }}
+            - name: EXTRACT_CACHE_TTL_HOURS
+              value: {{ .Values.env.extractCacheTtlHours | quote }}
+            - name: QUOTA_SEARCH_PER_DAY
+              value: {{ .Values.env.quotaSearchPerDay | quote }}
+            - name: QUOTA_EXTRACT_PER_DAY
+              value: {{ .Values.env.quotaExtractPerDay | quote }}
+            - name: GENERIC_EXTRACT_ENABLED
+              value: {{ .Values.env.genericExtractEnabled | quote }}
+            {{- if .Values.env.redisUrl }}
+            - name: REDIS_URL
+              value: {{ .Values.env.redisUrl | quote }}
+            {{- end }}
+            {{- if .Values.onepassword.enabled }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "family-planner.dbSecretName" . }}
+                  key: {{ .Values.secretKeys.databaseUrl }}
+                  optional: true
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

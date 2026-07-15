@@ -1,7 +1,7 @@
 # Immich v2.7.5 → v3.0.0 升級 Spike
 
 > **目的**：評估 `immich-apps`（LINE Bot · photo-sync · OpenAPI client）升級至 Immich v3.0.0 的影響與建議步驟。  
-> **環境**：`https://immich.3q.fi` · namespace `immich` · server 映像 `ghcr.io/immich-app/immich-server:release`  
+> **環境**：`https://immich.3q.fi` · namespace `immich` · server/ML 映像 **pin `v2.7.5`**（2026-07-16 自 `:release` 釘回，見 §8）  
 > **Spike 日期**：2026-07-05  
 > **前置升級紀錄**：[IMMICH_v2.7.5.md](./IMMICH_v2.7.5.md)
 
@@ -206,6 +206,45 @@ npm test
 - [ ] Rollback 演練文件更新
 
 ---
+
+
+---
+
+## 8. Production v2.7.5 釘版（anti-drift）
+
+| 時間 | 動作 |
+| ------ | ------ |
+| 2026-07-16 | `kubectl apply -f deploy/manifests/immich-deployment.yaml`（namespace `immich`） |
+| 套用前 | `immich-server` / `immich-machine-learning` 為 `:release`；API 仍回 **2.7.5** |
+| 套用後 | 兩者映像 `ghcr.io/immich-app/immich-server:v2.7.5`、`…/immich-machine-learning:v2.7.5` |
+| 驗證 | `GET /api/server/version` → `2.7.5` · `GET /api/server/ping` → `pong` |
+
+**注意**：manifest 亦含 redis/postgres/services；本次 diff 僅 server/ML 映像標籤變更，postgres pod 未重建。
+
+---
+
+## 9. v3.0.0 Production 維護窗口檢查清單（僅文件 · 待 spike PASS）
+
+> **勿**在未完成 Phase A–C（staging + openapi + smoke）前執行。預估總窗口 **2–3 小時**（含觀察 job 排空）；建議週末或低流量時段。
+
+| 順序 | 步驟 | 負責 | 預估 |
+| ------ | ------ | ------ | ------ |
+| 1 | 公告維護窗口（家族 LINE / 內部） | Ops | T−24h |
+| 2 | `pg_dump` 全庫至安全路徑（沿用 [IMMICH_v2.7.5.md](./IMMICH_v2.7.5.md) A2） | Ops | 15–30 min |
+| 3 | 記錄 baseline：version、job 佇列長度、`kubectl get deploy -n immich` 映像 | Ops | 5 min |
+| 4 | 更新 `deploy/manifests/immich-deployment.yaml` → `v3.0.0`（server + ML）；**勿**改 postgres 映像除非 upstream 要求 | Ops | 5 min |
+| 5 | `kubectl apply -f deploy/manifests/immich-deployment.yaml`（或僅 server/ML Deployment） | Ops | 5 min |
+| 6 | `kubectl rollout status` server → ML；tail migration log | Ops | 20–40 min |
+| 7 | `GET /api/server/version` = 3.0.0；Web UI 登入 smoke | Ops | 10 min |
+| 8 | Deploy **已對齊 v3 OpenAPI** 的 `immich-line-bot` 映像（`make release` commit） | Apps | 15 min |
+| 9 | `smoke-photo-search-e2e.sh` + LINE 手動上傳/搜尋 | Apps | 30 min |
+| 10 | 觀察 `metadataExtraction` / `smartSearch` / `faceDetection` 排空 | Ops | 30–60 min |
+| 11 | photo-sync：`--dry-run` 後選庫增量（若當日要跑） | Ops | 視量 |
+| 12 | 更新本文件 DoD §7；若失敗：映像 rollback `v2.7.5` + restore 決策 | Ops | 視情況 |
+
+**Rollback（≤30 min）**：`kubectl apply` pin 回 `v2.7.5`（server/ML）→ rollout → 確認 version；DB 僅在 migration 失敗且無法前進時才考慮 restore dump（需另開決策）。
+
+**建議最早 production 日期**：staging spike DoD §7 全勾 + 維護窗口排程；參考 §6 **2026-07 中下旬 staging**，production **不早於 spike PASS 後一週**。
 
 ## 參考
 

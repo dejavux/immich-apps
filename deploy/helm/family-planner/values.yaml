@@ -1,0 +1,70 @@
+replicaCount: 1
+
+image:
+  repository: registry-internal.3q.fi/family-planner
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: registry-secret
+
+nameOverride: ""
+fullnameOverride: family-planner
+
+serviceAccount:
+  create: false
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 3001
+  targetPort: 3001
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  host: planner.3q.fi
+  path: /
+  pathType: Prefix
+  tls:
+    enabled: true
+    secretName: planner-3q-fi-tls
+
+env:
+  nodeEnv: production
+  redisUrl: ""
+  seedInviteCode: "FAMILY-DEMO-2026"
+  wizardSessionTtlHours: "24"
+  extractCacheTtlHours: "12"
+  quotaSearchPerDay: "30"
+  quotaExtractPerDay: "20"
+  genericExtractEnabled: "false"
+
+onepassword:
+  enabled: true
+  plannerDbItemPath: vaults/Infra-Platform/items/Family-Planner-DB
+
+secretKeys:
+  databaseUrl: database-url
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+serviceMonitor:
+  enabled: true
+  createResource: false
+  podAnnotations: true
+  interval: 30s
+  scrapeTimeout: 10s

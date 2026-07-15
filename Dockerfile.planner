@@ -1,0 +1,38 @@
+# Family Memories Planner - Dockerfile
+# Multi-stage build for production
+
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY apps/planner/package.json ./apps/planner/
+COPY packages/planner-schema/package.json ./packages/planner-schema/
+
+RUN npm ci
+
+COPY apps/planner ./apps/planner
+COPY packages/planner-schema ./packages/planner-schema
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY apps/planner/package.json ./apps/planner/
+COPY packages/planner-schema/package.json ./packages/planner-schema/
+
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY apps/planner ./apps/planner
+COPY packages/planner-schema ./packages/planner-schema
+
+EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+USER node
+
+CMD ["npm", "run", "start", "-w", "@family-memories/planner"]

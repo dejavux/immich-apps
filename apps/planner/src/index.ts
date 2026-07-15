@@ -2,6 +2,7 @@ import express from "express";
 
 import { env } from "./config/env.js";
 import { requireFamilyApiKey } from "./auth/middleware.js";
+import { registerMcpRoutes } from "./mcp/routes.js";
 import { listMcpTools } from "./mcp/tools.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerFamilyRoutes } from "./routes/families.js";
@@ -17,12 +18,14 @@ export function createPlannerApp(): express.Express {
   app.use(express.json());
 
   registerHealthRoutes(app);
+  registerMcpRoutes(app);
 
   app.get("/", (_req, res) => {
     res.json({
       service: env.serviceName,
       apiPrefix: API_PREFIX,
-      phase: "A2-search-extract-shortlist",
+      phase: "A3-mcp-deploy",
+      mcpEndpoint: "/mcp",
       mcpTools: listMcpTools().map((t) => t.name),
     });
   });
