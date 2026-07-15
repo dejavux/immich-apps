@@ -35,9 +35,9 @@ BASE_BRANCH="${PR_BASE_BRANCH:-main}"
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 
 case "$BUILD_TARGET" in
-  line-bot | all) ;;
+  line-bot | planner | all) ;;
   *)
-    echo -e "${RED}❌ unknown build-target: ${BUILD_TARGET} (use line-bot|all)${NC}" >&2
+    echo -e "${RED}❌ unknown build-target: ${BUILD_TARGET} (use line-bot|planner|all)${NC}" >&2
     exit 1
     ;;
 esac
@@ -67,7 +67,8 @@ echo "  namespace    : ${NS}"
 echo "  revision     : ${SHORT_SHA}"
 echo "  build-target : ${BUILD_TARGET}"
 echo "  registry     : ${REGISTRY}"
-echo "  image        : ${REGISTRY}/immich-line-bot:${SHORT_SHA}"
+echo "  image        : ${REGISTRY}/immich-line-bot:${SHORT_SHA} (line-bot)"
+echo "                 ${REGISTRY}/family-planner:${SHORT_SHA} (planner)"
 echo ""
 
 for secret in github-clone registry-push; do

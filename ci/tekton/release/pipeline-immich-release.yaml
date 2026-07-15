@@ -25,7 +25,7 @@ spec:
     - name: build-target
       type: string
       default: line-bot
-      description: line-bot | all
+      description: line-bot | planner | all
   workspaces:
     - name: source
     - name: git-credentials
@@ -66,6 +66,29 @@ spec:
           value: ""
         - name: cache-ref
           value: $(params.registry)/buildkit-cache/immich-line-bot
+      workspaces:
+        - name: source
+          workspace: source
+        - name: dockerconfig
+          workspace: dockerconfig
+
+    - name: build-planner
+      runAfter: [fetch-source]
+      when:
+        - input: $(params.build-target)
+          operator: in
+          values: ["planner", "all"]
+      taskRef:
+        name: immich-buildkit-build
+      params:
+        - name: image
+          value: $(params.registry)/family-planner:$(params.image-tag)
+        - name: dockerfile
+          value: Dockerfile.planner
+        - name: context-subpath
+          value: ""
+        - name: cache-ref
+          value: $(params.registry)/buildkit-cache/family-planner
       workspaces:
         - name: source
           workspace: source

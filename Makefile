@@ -160,9 +160,10 @@ ci-apply-ci: ci-apply-release ci-apply-pr ## 套用 release + PR CI
 ci-release: ## Tekton BuildKit release build（line-bot）
 	@bash scripts/release-tekton-build.sh line-bot
 
-ci-release-planner: ## Tekton BuildKit release build（planner stub）
-	@echo "$(YELLOW)⚠ planner Tekton pipeline 尚未建立；使用本機 build-planner$(NC)"
-	@$(MAKE) build-planner
+ci-release-planner: ## Tekton BuildKit release build（family-planner）
+	@bash scripts/release-tekton-build.sh planner
+
+release-planner-tekton: ci-release-planner deploy-planner ## Tekton build + Helm deploy planner
 
 ci-status: ## 最近 PipelineRun 狀態
 	@kubectl get pipelineruns -n $(TEKTON_TENANT_NS) \
@@ -213,7 +214,7 @@ build-planner: ## 本機 Docker build + push Family Planner
 
 release-line-bot: build-line-bot deploy-line-bot ## 本機 build + Helm deploy
 
-release-planner: build-planner deploy-planner ## 本機 build + Helm deploy planner
+release-planner: release-planner-tekton ## Tekton build + Helm deploy planner（本機 registry TLS 異常時用此路徑）
 
 # ═══════════════════════════════════════════════════════════════
 # 本機開發
