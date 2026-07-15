@@ -2,7 +2,7 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-07-05（LINE 影片上傳 · LIFF Passkey hub）  
+**最後更新**: 2026-07-15（影片 E2E · REDIS_URL · Qwen model 對齊 Instruct）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
@@ -26,9 +26,9 @@
 | ------ | ------ | ------ | ------ |
 | — | **Immich Enhancement** | ✅ 結案 | Phase 0–3.6 + 3.5（purge 豁免） |
 | **LINE** | LIFF hub + Passkey | ✅ | PR #42 · `/liff/hub` · Rich Menu 帳戶設定 |
-| **LINE** | video clip 上傳 | ✅ deploy | `631e855` · **待 E2E 驗收** |
+| **LINE** | video clip 上傳 | ✅ | `631e855` · **E2E 驗收通過**（使用者驗證 2026-07-15） |
 | **LINE** | webhook 簽章修復 | ✅ | `cde1b58` |
-| **LINE** | Qwen 搜尋 404 | 🟡 | fallback parser 可用 |
+| **LINE** | Qwen 搜尋 model 對齊 | ✅ | `QWEN_MODEL` → `Qwen/Qwen2.5-7B-Instruct`（使用者驗證 2026-07-15） |
 | **Ops W1** | Phase 5a NFS + pg_dump | ✅ **PASS** | pg 2/2 · NFS Job ✅ · B2 已刪 |
 | **Ops** | Phase 1 probes/Redis | ✅ **已 deploy** | probes + NetworkPolicy + Redis secret（2026-06-23） |
 | **Ops W3** | Phase 5b monitoring | 🟡 **~95%** | immich-ops 有資料 · Telegram smoke 待確認 |
@@ -41,13 +41,13 @@
 ## 優先順序總覽
 
 ```text
-🔴  立即     影片 clip E2E · LIFF Passkey 實機 · Qwen 404 排查
+🔴  立即     LIFF Passkey 實機
 ✅  結案     Immich Enhancement（Phase 0–3.6 + 3.5 豁免）
-LINE         LIFF hub ✅ · video upload ✅ deploy · 搜尋 fallback 🟡
+LINE         LIFF hub ✅ · video upload ✅ E2E · Qwen Instruct ✅ · REDIS_URL ✅
 Ops W2       Mac → delta HDD rsync ~50%（63G/146G local · 17G/18G icloud）
 Ops W3       Phase 5b 告警 + immich-ops Grafana（~95%）
 P1  產品     上傳管道 UX · Web+LINE P0 驗收
-P2  平台     REDIS_URL（Passkey grant）· LINE Grafana panel · Similar images
+P2  平台     LINE Grafana panel · Similar images
 P3  AI       Qwen vision · Photo Edit BFF · LIFF 搜尋瀏覽 UI
 ```
 
@@ -176,8 +176,8 @@ P3  AI       Qwen vision · Photo Edit BFF · LIFF 搜尋瀏覽 UI
 
 - [x] **LIFF hub + Passkey**（PR #42）— `/liff/hub` · Safari 外部瀏覽器 · unlock grant 8h
 - [x] Rich Menu 四欄含「帳戶設定」
-- [x] **video clip 上傳**（`631e855`）— `line-video` source
-- [ ] `REDIS_URL` — Passkey grant 跨 pod（P2）
+- [x] **video clip 上傳**（`631e855`）— `line-video` source · **E2E 驗收通過**（使用者驗證 2026-07-15）
+- [x] `REDIS_URL` — Passkey grant 跨 pod（P2；使用者驗證 2026-07-15）
 - [ ] Qwen vision 繁中描述（P3）
 - [ ] Grafana dashboard + 7 天 SLO（P2）
 - [ ] **LIFF 搜尋瀏覽 UI**（P3 defer）— hub 已覆蓋設定；全功能瀏覽器內搜尋待評估
@@ -238,9 +238,9 @@ P3  AI       Qwen vision · Photo Edit BFF · LIFF 搜尋瀏覽 UI
 
 | # | 項目 | 類型 | 說明 |
 | --- | ------ | ------ | ------ |
-| 1 | 影片 clip E2E | LINE | 轉傳 video → Immich · logs `line-video` |
+| 1 | 影片 clip E2E | LINE | ✅ 使用者驗證 2026-07-15 |
 | 2 | LIFF Passkey 實機 | LINE | Rich Menu 帳戶設定 → Safari Face ID → 返回已解鎖 |
-| 3 | Qwen 404 排查 | Infra | `local-llm/qwen-coder` endpoint 或強化 fallback |
+| 3 | Qwen model 對齊 Instruct | Infra | ✅ `QWEN_MODEL` → `Qwen/Qwen2.5-7B-Instruct`（使用者驗證 2026-07-15） |
 | 4 | Ops W2 rsync 收尾 | Ops | 63G→146G · checksum 抽樣 |
 | 5 | Phase 5b Telegram smoke | Ops | 確認 3 條告警送達 |
 
@@ -250,7 +250,7 @@ P3  AI       Qwen vision · Photo Edit BFF · LIFF 搜尋瀏覽 UI
 | --- | ------ | ------ | ------ | ------ |
 | 6 | 上傳管道 onboarding | UX | 📋 | welcome / Rich Menu 區分照片·原檔·影片；見 [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md) |
 | 7 | Web + LINE E2E 驗收 | UX | 📋 | 兩相簿時間軸 · 人物 alias · Smart Search 對照 |
-| 8 | `REDIS_URL` for Passkey | Infra | 📋 | 多 replica 前必做 |
+| 8 | `REDIS_URL` for Passkey | Infra | ✅ | 使用者驗證 2026-07-15 |
 | 9 | 國名對照自動化 | Feature | ✅ | CLDR 264 筆 + runtime alias |
 | 10 | Carousel bubble 中繼資料 | UX | ✅ | 地點/人物副標 |
 

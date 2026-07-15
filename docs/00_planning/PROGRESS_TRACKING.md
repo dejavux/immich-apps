@@ -5,9 +5,9 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-07-05（LINE 影片上傳 · LIFF Passkey hub · webhook 簽章修復）  
+**最後更新**: 2026-07-15（影片 E2E · REDIS_URL · Qwen model 對齊 Instruct）  
 **專案狀態**: ✅ **增強專案結案** · Phase 5a **PASS** · Phase 5b **~95%** · Phase 4 ✅ **COMPLETE**  
-**Ops 更新**: 2026-07-05 — LINE Bot **`631e855`**（video clip + LIFF hub）· Mac 冷備份 delta HDD **63G/146G** local · **17G/18G** icloud · Qwen 搜尋 fallback 404（非上傳阻塞）  
+**Ops 更新**: 2026-07-15 — 影片 E2E ✅ · `REDIS_URL` ✅ · `QWEN_MODEL` 對齊 `Qwen/Qwen2.5-7B-Instruct`（叢集 vLLM 已載入 Instruct，非 Coder）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
 
@@ -18,9 +18,9 @@
 | 指標 | 數值 | 說明 |
 | ------ | ------ | ------ |
 | 🔴 高優先級任務 | 0 | — |
-| 🟡 中優先級任務 | 3 | Ops W2 rsync 收尾 · 影片上傳 E2E 驗收 · Qwen 404 修復 |
+| 🟡 中優先級任務 | 1 | Ops W2 rsync 收尾 |
 | 🟢 低優先級任務 | 5 | Similar images · album reconcile · LINE V1.1 vision · Photo Edit |
-| ✅ 本週完成 | 6 | LIFF Passkey hub · 影片 clip 上傳 · webhook 簽章 · Rich Menu 帳戶設定 |
+| ✅ 本週完成 | 9 | 影片 E2E · REDIS_URL · Qwen Instruct · LIFF Passkey hub · webhook 簽章 · Rich Menu 帳戶設定 |
 | 📈 整體進度 | **99%** | 增強專案主體 **結案** · L3 維運 backlog 獨立追蹤 |
 
 ---
@@ -284,7 +284,7 @@ kubectl logs -n immich deployment/immich-line-bot --tail=20
 - [x] Rich Menu 四欄：找照片｜上傳教學｜使用說明｜**帳戶設定**（→ `liff.line.me/{id}/settings`）
 - [x] webhook 簽章修復（`cde1b58` — 移除全域 `express.json()` 破壞 LINE signature）
 - [ ] P3: Qwen vision 繁中 description（V1.1；叢集 `local-llm/qwen-coder`；Immich CLIP 觀察後再決定）
-- [ ] P2: `REDIS_URL` — Passkey unlock grant 跨 pod 持久化（目前 in-memory）
+- [x] P2: `REDIS_URL` — Passkey unlock grant 跨 pod 持久化（使用者驗證 2026-07-15）
 - [ ] Immich CLIP smart tags 觀察（上傳後數分鐘，用 observe 腳本）
 
 **驗收**: 核心 E2E ✅；進階案例與強化功能待下一迭代
@@ -819,9 +819,9 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | Rich Menu 帳戶設定（四欄） | ✅ `702d154` |
 | Safari Passkey unlock grant 同步 LINE session | ✅ `ece94b6` |
 | webhook 簽章修復（搜尋無反應） | ✅ `cde1b58` |
-| **LINE video clip 上傳** | ✅ `631e855` deploy · **待使用者 E2E** |
+| **LINE video clip 上傳** | ✅ `631e855` deploy · **E2E 驗收通過**（使用者驗證 2026-07-15） |
 | photo-sync allowlist orphan trash（PR #41） | ✅ 8 張 PNG |
-| Qwen `/v1/chat/completions` 404 | 🟡 fallback parser 仍可用 · 待修 local-llm |
+| Qwen `QWEN_MODEL` 對齊 Instruct | ✅ `Qwen/Qwen2.5-7B-Instruct`（使用者驗證 2026-07-15） |
 
 ---
 
@@ -836,7 +836,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | #9 | LaunchAgent 增量實測 | ✅ 2026-06-12 |
 | #12 | LINE video clip 靜默忽略 | ✅ `631e855`（2026-07-05） |
 | #13 | webhook 全域 JSON 破壞簽章 | ✅ `cde1b58` |
-| #14 | Qwen coder 404 影響搜尋 plan | 🟡 fallback 可用 |
+| #14 | Qwen model 與叢集不一致（Coder vs Instruct） | ✅ `QWEN_MODEL` 改 Instruct（2026-07-15） |
 
 ---
 
@@ -852,6 +852,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | #8 | icloud 預期大量 dup | 實測 **3512 dup / 0 new**（union 後） | 2026-06-12 |
 | #10 | icloud 首跑 115 failed | 續傳 +114/0 failed；dry-run 0 new | 2026-06-12 |
 | #11 | v2.7.5 升級 | pg_dump + vectors.so fix + pin v2.7.5 + openapi sync | 2026-06-12 |
+| #14 | Qwen model 與叢集不一致 | `QWEN_MODEL` → `Qwen/Qwen2.5-7B-Instruct` | 2026-07-15 |
 
 ---
 
@@ -886,21 +887,23 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 
 **立即** 🔴:
 
-1. **影片 E2E** — 轉傳 video clip → Immich 出現 `line-{messageId}.mp4` · logs `source: line-video`
+1. ~~**影片 E2E**~~ — ✅ 使用者驗證 2026-07-15
 2. **LIFF Passkey 實機** — Rich Menu「帳戶設定」→ Safari Face ID → 返回 LINE 已解鎖
-3. **Qwen 404** — 確認 `local-llm/qwen-coder` endpoint 或暫時接受 fallback parser
+3. ~~**Qwen 404**~~ — ✅ `QWEN_MODEL` → `Qwen/Qwen2.5-7B-Instruct`（使用者驗證 2026-07-15）
 
 **進行中** 🚧:
 
 1. Ops W2 — local-archive rsync **63G/146G** · icloud **17G/18G**（delta HDD）
 2. Phase 5b — Telegram smoke 告警最終確認
 
-**已完成** ✅（2026-06-30 ~ 07-05）:
+**已完成** ✅（2026-06-30 ~ 07-15）:
 
 1. LIFF hub + Passkey（PR #42）· Rich Menu 四欄 · unlock grant
-2. LINE **video clip** 上傳（`631e855`）
+2. LINE **video clip** 上傳（`631e855`）· **E2E 驗收**（使用者驗證 2026-07-15）
 3. webhook 簽章修復 · Dockerfile auth/liff
 4. photo-sync allowlist orphan trash（PR #41）
+5. `REDIS_URL` Passkey grant 跨 pod（使用者驗證 2026-07-15）
+6. `QWEN_MODEL` 對齊 `Qwen/Qwen2.5-7B-Instruct`（使用者驗證 2026-07-15）
 
 **下一階段規劃（2026-07 起）**:
 
@@ -908,8 +911,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | ------ | ------ | ------ | ------ |
 | **LINE 產品** | P1 | 上傳管道 UX | welcome / Rich Menu 明確區分「照片壓縮 vs 原檔 vs 影片」 |
 | **LINE 產品** | P1 | Web + LINE P0 驗收 | 兩相簿時間軸 · 人物 alias · Smart Search 對照 |
-| **LINE 平台** | P2 | `REDIS_URL` | Passkey grant 跨 pod；多 replica 前必做 |
-| **LINE 平台** | P2 | Qwen 搜尋恢復 | 修 local-llm 或換 fallback 強化規則 |
+| **LINE 平台** | P2 | Qwen 搜尋恢復 | ✅ model 對齊 Instruct（2026-07-15） |
 | **LINE AI** | P3 | Qwen vision 繁中描述 | 上傳後場景摘要 |
 | **Immich Ops** | P1 | Ops W2 rsync 收尾 | checksum 抽樣還原演練 |
 | **Immich Ops** | P2 | album reconcile | stale 27 / missing 123 |

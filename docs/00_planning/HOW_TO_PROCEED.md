@@ -15,8 +15,8 @@
 | **Immich Enhancement** | ✅ **結案** |
 | LINE Bot git / cluster | **`631e855`**（`make verify-deploy`） |
 | **LIFF hub + Passkey** | ✅ PR #42 · [LIFF_PASSKEY_SETUP.md](../20_guides/LIFF_PASSKEY_SETUP.md) |
-| **LINE video clip 上傳** | ✅ deploy · **待 E2E 驗收** |
-| **使用者驗收** | 🟡 影片轉傳 · LIFF 帳戶設定 · 搜尋（Qwen fallback） |
+| **LINE video clip 上傳** | ✅ deploy · **E2E 驗收通過**（使用者驗證 2026-07-15） |
+| **使用者驗收** | 🟡 LIFF 帳戶設定 · 搜尋（Qwen 已對齊 Instruct） |
 | **Immich Ops** | 5a **PASS** · 5b **~95%** · Phase 4 ✅ **COMPLETE** |
 
 ```bash
@@ -27,9 +27,9 @@ make verify-deploy   # 比對 git SHA vs cluster image tag
 
 ## 🔴 本週優先（P0）
 
-1. **影片 E2E** — 轉傳 video clip → Immich 有 `line-{messageId}.mp4` · `kubectl logs` 見 `source: line-video`
+1. ~~**影片 E2E**~~ — ✅ 使用者驗證 2026-07-15（`line-{messageId}.mp4` · logs `source: line-video`）
 2. **LIFF Passkey** — Rich Menu「帳戶設定」→ Safari Face ID → 返回 LINE 設定頁已解鎖
-3. **Qwen 404** — `kubectl logs deploy/immich-line-bot` 若見 `Qwen search plan failed` → 查 `local-llm/qwen-coder`
+3. ~~**Qwen 404**~~ — ✅ `QWEN_MODEL` 改為 `Qwen/Qwen2.5-7B-Instruct`（對齊叢集 vLLM；使用者驗證 2026-07-15）
 4. **Ops W2** — rsync：`ssh delta.3q.fi 'du -sh .../mac-studio/*'`（**63G/146G** local · **17G/18G** icloud）
 5. **Phase 5b** — 確認 Telegram smoke 3 條告警
 
@@ -127,8 +127,8 @@ open https://grafana.3q.fi/d/immich-ops
 
 | 優先 | 方向 | 代表項 |
 | ------ | ------ | ------ |
-| **P0** | 驗收 | 影片 E2E · LIFF Passkey · Qwen 404 |
-| **P1** | 產品體驗 | 上傳管道 onboarding · Web+LINE P0 驗收 · `REDIS_URL` |
+| **P0** | 驗收 | LIFF Passkey |
+| **P1** | 產品體驗 | 上傳管道 onboarding · Web+LINE P0 驗收 |
 | **P2** | 平台 | Similar images · album reconcile · LINE Grafana panel |
 | **P3** | AI / 新場景 | Qwen vision · Photo Edit BFF · LIFF 搜尋瀏覽 UI |
 
