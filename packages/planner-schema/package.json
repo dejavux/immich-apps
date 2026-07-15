@@ -1,0 +1,14 @@
+{
+  "name": "@family-memories/planner-schema",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Family Memories planner shared types (TourSummary, WizardSession)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "MIT"
+}

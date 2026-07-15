@@ -2,7 +2,7 @@
 
 > `docs/00_planning/` — **進行中專案需求** only
 
-**最後更新**: 2026-06-18（UX 產品檢視 · Phase 3.6 歸檔完成）
+**最後更新**: 2026-07-15（Family Memories Phase A 實作計畫）
 
 ---
 
@@ -14,10 +14,22 @@
 | [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md) | 本週 Sprint |
 | [BACKLOG.md](./BACKLOG.md) | 待辦優先序 |
 | [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md) | UI/UX/Flow 檢視與下一階段建議 |
+| [FAMILY_MEMORIES_ARCHITECTURE.md](./FAMILY_MEMORIES_ARCHITECTURE.md) | Family Memories 平台架構（MCP-first · planner · 三期） |
 
 ---
 
 ## 進行中專案
+
+### [Family Memories](./FAMILY_MEMORIES_ARCHITECTURE.md)
+
+行前 `apps/planner`（wizard、旅行社 extract）＋行後 Memory 路線圖；repo 演進 `family-memories`。
+
+| 文件 | 說明 |
+| ------ | ------ |
+| [FAMILY_MEMORIES_ARCHITECTURE.md](./FAMILY_MEMORIES_ARCHITECTURE.md) | 平台架構 SSOT |
+| [planner/10_PHASE_A_IMPLEMENTATION_PLAN.md](./planner/10_PHASE_A_IMPLEMENTATION_PLAN.md) | Phase A 實作計畫（wizard · MCP · 雄獅 adapter） |
+
+### [Photo Sync Phase 3.5](./photo-sync/tier-policy/README.md)
 
 ### [Photo Sync Phase 3.5](./photo-sync/tier-policy/README.md)
 

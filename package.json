@@ -2,6 +2,11 @@
   "name": "immich-apps",
   "version": "0.1.0",
   "description": "Immich complete apps: server + LINE Bot + photo sync",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "main": "src/line-bot/index.ts",
   "scripts": {
     "dev": "nodemon --exec ts-node src/line-bot/index.ts",
@@ -11,6 +16,9 @@
     "lint": "eslint src eslint.config.mjs",
     "lint:fix": "eslint src eslint.config.mjs --fix",
     "type-check": "tsc --noEmit",
+    "type-check:planner": "npm run typecheck -w @family-memories/planner-schema && npm run typecheck -w @family-memories/planner",
+    "test:planner": "jest --roots apps/planner",
+    "planner:dev": "npm run dev -w @family-memories/planner",
     "format": "prettier --write \"**/*.{ts,json,yaml,yml,md}\"",
     "format:check": "prettier --check \"**/*.{ts,json,yaml,yml,md}\"",
     "lint:md": "markdownlint-cli2 \"**/*.md\" \"!node_modules/**\"",
@@ -31,6 +39,8 @@
   "author": "Infrastructure Team",
   "license": "MIT",
   "dependencies": {
+    "@family-memories/planner": "*",
+    "@family-memories/planner-schema": "*",
     "@line/bot-sdk": "^9.3.0",
     "@simplewebauthn/server": "^13.1.2",
     "axios": "^1.7.9",

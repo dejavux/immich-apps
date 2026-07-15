@@ -1,0 +1,260 @@
+{
+  "tours": [
+    {
+      "officialTitle": "濟州無購物｜保證五星.韓國最高峰漢拏山.牛島漫遊.柱狀節理帶.天帝淵瀑布.水月峰遺址.森林小火車.藍鼎百匯饗宴五日",
+      "agency": "lion",
+      "groupId": "26JK801TWJ-T",
+      "days": 5,
+      "departDate": "2026/08/01",
+      "returnDate": "2026/08/05",
+      "priceFromTwd": 31900,
+      "flights": {
+        "outbound": {
+          "date": "2026/08/01",
+          "airline": "德威航空",
+          "departTime": "14:25",
+          "arriveTime": "17:30",
+          "from": "TPE",
+          "to": "CJU",
+          "duration": "2h5m"
+        },
+        "inbound": {
+          "date": "2026/08/05",
+          "airline": "德威航空",
+          "departTime": "12:20",
+          "arriveTime": "13:25",
+          "from": "CJU",
+          "to": "TPE",
+          "duration": "2h5m"
+        }
+      },
+      "hotels": [
+        {
+          "nights": 3,
+          "names": ["JEJU IN", "HAEMA", "BLACK SANDS", "PARKSIDE", "SIMS"],
+          "note": "或同級",
+          "guaranteed": false
+        },
+        {
+          "nights": 1,
+          "names": ["神話藍鼎"],
+          "note": "保證五星或同級 + 藍鼎百匯",
+          "guaranteed": true
+        }
+      ],
+      "highlights": [
+        "牛島",
+        "城山日出峰",
+        "漢拏山1100高地",
+        "EcoLand小火車",
+        "柱狀節理帶",
+        "天帝淵瀑布",
+        "水月峰",
+        "藍鼎百匯"
+      ],
+      "dayPlans": [
+        { "day": 1, "highlights": ["抵濟州", "漢拏樹木園夜市"] },
+        { "day": 2, "highlights": ["牛島", "城山日出峰", "涉地岬", "東門市場"] },
+        { "day": 3, "highlights": ["漢拏山1100", "思連伊", "榧子林", "EcoLand", "蓮洞"] },
+        { "day": 4, "highlights": ["Osulloc", "水月峰", "柱狀節理", "天帝淵", "藍鼎百匯"] },
+        { "day": 5, "highlights": ["返台"] }
+      ],
+      "familyNotes": [
+        "無購物節奏較鬆",
+        "自然景點偏多、刺激設施少",
+        "一晚神話五星＋藍鼎吃到飽是賣點",
+        "價位同系列偏高"
+      ],
+      "sourceUrl": "https://travel.liontravel.com/detail?NormGroupID=93ef5ca9-a580-407e-a6cb-f935bcaccdc1&GroupID=26JK801TWJ-T"
+    },
+    {
+      "officialTitle": "濟州旅遊｜保證入住神話.牛島海洋公園.英式小火車.好玩賽車體驗.史努比庭園.HARIBO軟糖世界.鐵道自行車五日(彩妝)",
+      "agency": "lion",
+      "groupId": "26JK915TWW-T",
+      "days": 5,
+      "departDate": "2026/09/15",
+      "returnDate": "2026/09/19",
+      "priceFromTwd": 22900,
+      "flights": {
+        "outbound": {
+          "date": "2026/09/15",
+          "airline": "德威航空",
+          "departTime": "14:25",
+          "arriveTime": "17:30",
+          "from": "TPE",
+          "to": "CJU",
+          "duration": "2h5m"
+        },
+        "inbound": {
+          "date": "2026/09/19",
+          "airline": "德威航空",
+          "departTime": "12:20",
+          "arriveTime": "13:25",
+          "from": "CJU",
+          "to": "TPE",
+          "duration": "2h5m"
+        }
+      },
+      "hotels": [
+        {
+          "nights": 3,
+          "names": ["JEJU IN", "HAEMA", "BLACK SANDS", "PARKSIDE", "SIMS"],
+          "note": "或同級",
+          "guaranteed": false
+        },
+        {
+          "nights": 1,
+          "names": ["神話樂園酒店"],
+          "note": "升等一晚五星保證",
+          "guaranteed": true
+        }
+      ],
+      "highlights": [
+        "牛島",
+        "城山日出峰",
+        "Aqua Planet",
+        "EcoLand小火車",
+        "鐵道自行車",
+        "9.81重力賽車",
+        "史努比庭園",
+        "HARIBO"
+      ],
+      "dayPlans": [
+        { "day": 1, "highlights": ["抵濟州", "樹木園夜市"] },
+        { "day": 2, "highlights": ["牛島", "城山", "松堂童話村", "東門"] },
+        { "day": 3, "highlights": ["EcoLand", "鐵道自行車", "水族館", "史努比"] },
+        { "day": 4, "highlights": ["彩妝店", "9.81賽車", "HARIBO", "彩虹海岸", "蓮洞"] },
+        { "day": 5, "highlights": ["返台"] }
+      ],
+      "familyNotes": [
+        "小朋友友善度最高（史努比／HARIBO／賽車／小火車）",
+        "含一站彩妝購物",
+        "比保證五星自然款便宜約 9 千",
+        "自然深度（漢拏山專訪／柱狀節理）較少"
+      ],
+      "sourceUrl": "https://travel.liontravel.com/detail?NormGroupID=af291633-cee2-45ea-982e-bf54c8b052aa&GroupID=26JK915TWW-T"
+    },
+    {
+      "officialTitle": "濟州｜牛島海洋公園.Ecoland英式小火車.HARIBO小熊軟糖世界.史努比庭園.鐵道自行車.摩托車秀五日(彩妝)",
+      "agency": "lion",
+      "groupId": "26JK921TWU-T",
+      "days": 5,
+      "departDate": "2026/09/21",
+      "returnDate": "2026/09/25",
+      "priceFromTwd": 20900,
+      "flights": {
+        "outbound": {
+          "date": "2026/09/21",
+          "airline": "德威航空",
+          "departTime": "14:25",
+          "arriveTime": "17:30",
+          "from": "TPE",
+          "to": "CJU",
+          "duration": "2h5m"
+        },
+        "inbound": {
+          "date": "2026/09/25",
+          "airline": "德威航空",
+          "departTime": "12:20",
+          "arriveTime": "13:25",
+          "from": "CJU",
+          "to": "TPE",
+          "duration": "2h5m"
+        }
+      },
+      "hotels": [
+        {
+          "nights": 4,
+          "names": ["商務飯店或同級"],
+          "note": "商務級；未含五星升等",
+          "guaranteed": false
+        }
+      ],
+      "highlights": [
+        "牛島",
+        "城山日出峰",
+        "EcoLand小火車",
+        "史努比庭園",
+        "鐵道自行車",
+        "摩托車表演秀",
+        "HARIBO",
+        "龍頭岩"
+      ],
+      "dayPlans": [
+        { "day": 1, "highlights": ["抵濟州", "樹木園夜市"] },
+        { "day": 2, "highlights": ["牛島", "城山", "松堂", "東門"] },
+        { "day": 3, "highlights": ["EcoLand", "史努比", "鐵道自行車", "摩托車秀"] },
+        { "day": 4, "highlights": ["彩妝店", "龍頭岩", "HARIBO", "彩虹海岸", "蓮洞"] },
+        { "day": 5, "highlights": ["返台"] }
+      ],
+      "familyNotes": [
+        "同系列最便宜入口",
+        "有親子主題但無神話五星／無賽車／無水族館",
+        "含彩妝店",
+        "適合先體驗濟州、不糾結住宿"
+      ],
+      "sourceUrl": "https://travel.liontravel.com/detail?NormGroupID=0266b77c-6d03-45e0-b60d-a2a3bc969035&GroupID=26JK921TWU-T"
+    },
+    {
+      "officialTitle": "濟州無購物｜絕美海景涉地岬．火山丘城山日出峰．朝聖非常律師拍攝地觀音寺．品嚐鮑魚海鮮鍋、黑豬肉吃到飽．樹木園夜市五日|高雄",
+      "agency": "lion",
+      "groupId": "26JK830TW7-K",
+      "days": 5,
+      "departDate": "2026/08/30",
+      "returnDate": "2026/09/03",
+      "priceFromTwd": 23500,
+      "flights": {
+        "outbound": {
+          "date": "2026/08/30",
+          "airline": "德威航空",
+          "departTime": "13:45",
+          "arriveTime": "17:00",
+          "from": "KHH",
+          "to": "CJU",
+          "duration": null
+        },
+        "inbound": {
+          "date": "2026/09/03",
+          "airline": "德威航空",
+          "departTime": "11:15",
+          "arriveTime": "12:45",
+          "from": "CJU",
+          "to": "KHH",
+          "duration": null
+        }
+      },
+      "hotels": [
+        {
+          "nights": 4,
+          "names": ["Park Side", "Jeju In", "Aurora"],
+          "note": "或同級；無五星保證",
+          "guaranteed": false
+        }
+      ],
+      "highlights": [
+        "月汀里海岸",
+        "城山日出峰",
+        "涉地岬",
+        "觀音寺（非常律師）",
+        "漢潭步道",
+        "韓服體驗",
+        "EMART／東門／蓮洞",
+        "鮑魚鍋／黑豬吃到飽"
+      ],
+      "dayPlans": [
+        { "day": 1, "highlights": ["高雄出發", "抵濟州"] },
+        { "day": 2, "highlights": ["月汀里", "城山", "涉地岬", "觀音寺"] },
+        { "day": 3, "highlights": ["雪綠", "漢潭", "涯月咖啡", "韓服", "樹木園夜市"] },
+        { "day": 4, "highlights": ["梨湖燈塔", "彩虹海岸", "龍頭岩", "超市", "東門", "蓮洞"] },
+        { "day": 5, "highlights": ["返高雄"] }
+      ],
+      "familyNotes": [
+        "高雄出發（南部家庭免北上）",
+        "無購物但節奏偏「海岸＋市集＋劇拍點」",
+        "沒有牛島／漢拏山專訪／小火車等經典硬景",
+        "吃是賣點，親子主題設施少"
+      ],
+      "sourceUrl": "https://travel.liontravel.com/detail?NormGroupID=5dc6358b-92e3-4e87-b988-1a08654a5aca&GroupID=26JK830TW7-K"
+    }
+  ]
+}
