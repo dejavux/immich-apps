@@ -16,6 +16,8 @@ export const env = {
   nodeEnv: optional("NODE_ENV", "development"),
   serviceName: "family-memories-planner",
   databaseUrl: optional("DATABASE_URL", ""),
+  /** true when DATABASE_URL is non-empty (Postgres store) */
+  postgresEnabled: Boolean(optional("DATABASE_URL", "")),
   redisUrl: optional("REDIS_URL", ""),
   wizardSessionTtlHours: optionalInt("WIZARD_SESSION_TTL_HOURS", 24),
   quotaSearchPerDay: optionalInt("QUOTA_SEARCH_PER_DAY", 30),

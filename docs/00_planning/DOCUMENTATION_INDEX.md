@@ -28,8 +28,10 @@
 | ------ | ------ |
 | [FAMILY_MEMORIES_ARCHITECTURE.md](./FAMILY_MEMORIES_ARCHITECTURE.md) | 平台架構 SSOT |
 | [planner/10_PHASE_A_IMPLEMENTATION_PLAN.md](./planner/10_PHASE_A_IMPLEMENTATION_PLAN.md) | Phase A 實作計畫（**A4 進行中**） |
+| [apps/planner/README.md](../../apps/planner/README.md) | Planner 服務總覽 · Postgres · deploy |
 | [apps/planner/src/wizard/README.md](../../apps/planner/src/wizard/README.md) | Wizard / auth curl 範例 |
 | [apps/planner/src/api/README.md](../../apps/planner/src/api/README.md) | Tours / shortlist REST |
+| [20_guides/planner/MCP_SETUP.md](../20_guides/planner/MCP_SETUP.md) | Cursor MCP 設定 · invite · 8月濟州範例 |
 | [IMMICH_v3.0_SPIKE.md](../20_guides/infra/upgrades/IMMICH_v3.0_SPIKE.md) | v3 升級 spike · 維護窗口 §10 |
 
 ### [Photo Sync Phase 3.5](./photo-sync/tier-policy/README.md)
@@ -69,6 +71,7 @@ AI 修圖與 Immich 整合（Sidecar BFF · ComfyUI）。
 
 | 目錄 | 內容 |
 | ------ | ------ |
+| [planner/](../20_guides/planner/) | Cursor MCP 設定（`MCP_SETUP.md`） |
 | [infra/](../20_guides/infra/) | K8s、Tekton、GPU、升級 checklist |
 | [photo-sync/](../20_guides/photo-sync/) | 儲存 / cleanup runbooks |
 | [COMMAND_REFERENCE.md](../20_guides/COMMAND_REFERENCE.md) | make / CLI 指令 |

@@ -1,6 +1,7 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 
 import { env } from "../config/env.js";
+import { generateApiKey, hashApiKey } from "./crypto.js";
 import type {
   ApiKeyRecord,
   FamilyAuthContext,
@@ -9,14 +10,6 @@ import type {
   ShortlistRecord,
   UsageDailyRecord,
 } from "./types.js";
-
-function hashApiKey(plaintext: string): string {
-  return createHash("sha256").update(plaintext).digest("hex");
-}
-
-function generateApiKey(): string {
-  return `fmp_${randomBytes(24).toString("base64url")}`;
-}
 
 export class MemoryPlannerStore implements PlannerStore {
   private families = new Map<string, FamilyRecord>();

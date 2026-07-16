@@ -1,6 +1,7 @@
 import express from "express";
 
 import { env } from "./config/env.js";
+import { initPlannerStore } from "./db/client.js";
 import { requireFamilyApiKey } from "./auth/middleware.js";
 import { registerMcpRoutes } from "./mcp/routes.js";
 import { listMcpTools } from "./mcp/tools.js";
@@ -24,7 +25,8 @@ export function createPlannerApp(): express.Express {
     res.json({
       service: env.serviceName,
       apiPrefix: API_PREFIX,
-      phase: "A3-mcp-deploy",
+      phase: env.databaseUrl ? "A4-postgres" : "A3-mcp-deploy",
+      postgres: Boolean(env.databaseUrl),
       mcpEndpoint: "/mcp",
       mcpTools: listMcpTools().map((t) => t.name),
     });
@@ -51,8 +53,11 @@ export function createPlannerApp(): express.Express {
 const app = createPlannerApp();
 
 if (!process.env.JEST_WORKER_ID && process.env.PLANNER_AUTOSTART !== "0") {
-  app.listen(env.port, () => {
-    console.log(`[planner] listening on :${env.port} (${env.nodeEnv})`);
+  void initPlannerStore().then(() => {
+    app.listen(env.port, () => {
+      const backend = env.databaseUrl ? "postgres" : "memory";
+      console.log(`[planner] listening on :${env.port} (${env.nodeEnv}, store=${backend})`);
+    });
   });
 }
 

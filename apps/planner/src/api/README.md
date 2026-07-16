@@ -59,13 +59,22 @@ Body（二擇一或混用）：
 
 ## DB migration
 
-- `001_a1_auth.sql` — families / api_keys / usage_daily
-- `002_a2_shortlist_extract.sql` — shortlist + extract_cache（Postgres；未設 `DATABASE_URL` 時用 memory store）
+- `001_a1_auth.sql` — `planner.families` / `api_keys` / `usage_daily`
+- `002_a2_shortlist_extract.sql` — `planner.shortlist` / `extract_cache`
+- 啟動時自動套用（`DATABASE_URL` 已設）；追蹤表 `planner.schema_migrations`
+- 未設 `DATABASE_URL` 時使用 in-memory store（開發／Secret 未就緒）
+
+### Postgres bootstrap
+
+1. 建立 DB 與 role；connection string 寫入 1Password **`Family-Planner-DB`**（`database-url`）
+2. Cluster：`deploy/helm/family-planner` 注入 `DATABASE_URL`（Secret `family-planner-db`）
+3. 首次啟動跑 migration；空庫自動種子 `PLANNER_SEED_INVITE_CODE`（預設 `FAMILY-DEMO-2026`）
 
 ## 環境變數（A2 新增）
 
 | 變數 | 預設 | 說明 |
 | ---- | ---- | ---- |
+| `DATABASE_URL` | — | Postgres；有值時持久化 families / shortlist / usage |
 | `EXTRACT_CACHE_TTL_HOURS` | `12` | extract 快取 TTL |
 | `QUOTA_EXTRACT_PER_DAY` | `20` | 每家庭每日 extract 上限 |
 | `GENERIC_EXTRACT_ENABLED` | `false` | 啟用 generic-llm fallback |
