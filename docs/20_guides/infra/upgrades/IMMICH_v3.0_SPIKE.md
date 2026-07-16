@@ -14,8 +14,9 @@
 | Cluster API 版本 | **2.7.5**（`GET /api/server/version`） |
 | Postgres | PG14 · VectorChord（`vchord.so`；v2.7.5 升級時已移除 `vectors.so`） |
 | LINE Bot 映像 | `registry-internal.3q.fi/immich-line-bot:631e855` |
-| OpenAPI pin（repo） | `IMMICH_OPENAPI_VERSION=2.7.5` · spec **647,998 bytes** |
-| immich-apps 測試 | `npm test` **137/137** pass（2026-07-05） |
+| OpenAPI pin（repo） | **`3.0.0`** · spec **777,446 bytes**（已 commit；`deviceId` 上傳欄位已移除） |
+| immich-apps 測試 | `npm test` **170/170** · `type-check` 無錯（2026-07-16） |
+| 維護 runbook | [IMMICH_v3_CUTOVER_RUNBOOK.md](./IMMICH_v3_CUTOVER_RUNBOOK.md) · `scripts/infra/v3-cutover-precheck.sh` |
 
 **v3 前置條件（已滿足）**：VectorChord 遷移完成；v3 **不再支援 pgvecto.rs**。
 
@@ -197,13 +198,14 @@ npm test
 
 ## 7. Spike 完成定義（DoD）
 
-- [ ] Staging `GET /api/server/version` = 3.0.0
-- [ ] `IMMICH_OPENAPI_VERSION=3.0.0 npm run openapi:sync` committed
-- [ ] `npm test` 全綠 · `type-check` 無錯
-- [ ] `smoke-photo-search-e2e.sh` 全綠（對 v3 staging）
-- [ ] LINE 手動：上傳照片/原檔/影片 + 搜尋 + carousel
-- [ ] photo-sync dry-run 0 unexpected errors
-- [ ] Rollback 演練文件更新
+- [ ] Staging `GET /api/server/version` = 3.0.0（**阻擋**：無 staging 叢集，見 §10.6）
+- [x] `IMMICH_OPENAPI_VERSION=3.0.0 npm run openapi:sync` committed（spec 777,446 bytes · 2026-07-16 驗證）
+- [x] `npm test` 全綠 · `type-check` 無錯（**170/170** · 2026-07-16）
+- [ ] `smoke-photo-search-e2e.sh` 全綠（對 **v3** server）
+- [x] `smoke-photo-search-e2e.sh` 全綠（對 **v2.7.5** baseline · 2026-07-16 Track C）
+- [ ] LINE 手動：上傳照片/原檔/影片 + 搜尋 + carousel（需 v3 server）
+- [ ] photo-sync dry-run 0 unexpected errors（需 v3 server）
+- [x] Rollback 演練文件更新 → [IMMICH_v3_CUTOVER_RUNBOOK.md](./IMMICH_v3_CUTOVER_RUNBOOK.md) + `scripts/infra/pg-dump-precheck.sh`
 
 ---
 
@@ -329,20 +331,24 @@ npm test
 | photo-sync | `./scripts/photo-sync/immich-sync.sh --dry-run` 各 library | **0 unexpected errors** |
 | 文件 | 更新 §7 DoD 全勾；§8 改記 v3 pin 日期 | committed |
 
-### 10.6 目前阻擋項（2026-07-16）
+### 10.6 目前阻擋項（2026-07-16 · Track C 更新）
 
 | 阻擋 | 現況 | 解除條件 |
 | ------ | ------ | ------ |
-| **無 staging 叢集** | 僅 production `immich.3q.fi`；無法依 §5 Phase B 隔離驗證 | 建立 staging **或** 接受維護窗口內首次 pin v3 的風險並縮短觀察清單（**不建議**，見 §6） |
-| **immich-apps 未 deploy v3** | 程式／OpenAPI **已對齊 v3**（spec `3.0.0` · 777 KB；`deviceId` 上傳欄位已移除），但 production 仍跑 **v2.7.5 server** + 舊 LINE Bot 映像；§7 smoke／E2E **未對 v3** 驗證 | `make release` push + 對 v3 server 跑 smoke／手動 E2E PASS 後方可窗口 deploy |
-| **Spike DoD 未完成** | §7 全為 `[ ]` | 完成 §5 Phase A–D 驗證後方可排 §10.1 首選日 |
-| **Production 已 anti-drift** | §8 已 pin v2.7.5（2026-07-16） | 維持至窗口日；勿提前改 `:release` |
+| **無 staging 叢集** | 僅 production `immich.3q.fi`；無法依 §5 Phase B 隔離驗證 | 建立 staging **或** 接受維護窗口內首次 pin v3 的風險（**不建議**，見 §6） |
+| **v3 server smoke 未跑** | v2.7.5 baseline smoke **PASS**（2026-07-16）；§7 對 v3 的 smoke／手動 E2E **未驗證** | 窗口內 pin v3 後跑 `smoke-photo-search-e2e.sh` + LINE 手動；或先建 staging |
+| **LINE Bot 映像未對齊 v3 commit** | production Bot `cafde37`（pre-v3-openapi commit）；OpenAPI／code 已在 main | `make release` push + 窗口 deploy 對齊 commit |
+| **photo-sync v3 dry-run** | `immich_api_upload.py` 已移除 device 欄位；未對 v3 API 實測 | 窗口內或 staging `--dry-run` 0 errors |
+| **Spike DoD 部分完成** | §7 四項已勾（openapi · tests · v2.7.5 smoke · rollback doc）；四項待 v3 server | 見 [IMMICH_v3_CUTOVER_RUNBOOK.md](./IMMICH_v3_CUTOVER_RUNBOOK.md) |
+| **Production anti-drift** | §8 pin v2.7.5 已驗證（2026-07-16 `kubectl` + API） | 維持至窗口日；`bash scripts/infra/v3-cutover-precheck.sh` 可重驗 |
 
-**結論**：§10.1 首選日 **2026-08-09** 為目標占位；實際執行日須待 §10.6 阻擋項解除後 **至少 T+7d** 重新公告。
+**結論**：§10.1 首選日 **2026-08-09** 為目標占位；日曆提醒見 [IMMICH_v3_CUTOVER_RUNBOOK.md](./IMMICH_v3_CUTOVER_RUNBOOK.md)。實際執行須於 **T−7d** 重跑 `v3-cutover-precheck.sh` 並確認 v3 smoke 策略（staging vs 窗口內首次）。
 
 ## 參考
 
 - 本 repo v2.7.5 升級紀錄：[IMMICH_v2.7.5.md](./IMMICH_v2.7.5.md)
+- **維護窗口 runbook**：[IMMICH_v3_CUTOVER_RUNBOOK.md](./IMMICH_v3_CUTOVER_RUNBOOK.md)
+- 窗口前檢查：`scripts/infra/v3-cutover-precheck.sh` · `scripts/infra/pg-dump-precheck.sh`
 - OpenAPI 腳本：`scripts/openapi/fetch-spec.sh`
 - LINE smoke：`scripts/line-bot/smoke-photo-search-e2e.sh`
-- 叢集 manifest：`infra-bootstrap/60_apps/immich/immich-deployment.yaml`
+- 叢集 manifest：`deploy/manifests/immich-deployment.yaml`（immich-apps）· `infra-bootstrap/60_apps/immich/`
