@@ -5,9 +5,9 @@
 > 🏗️ **Repo**: <https://github.com/dejavux/immich-apps>（整合 server + LINE Bot + photo sync）  
 > 📋 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)
 
-**最後更新**: 2026-07-15（影片 E2E · REDIS_URL · Qwen model 對齊 Instruct）  
-**專案狀態**: ✅ **增強專案結案** · Phase 5a **PASS** · Phase 5b **~95%** · Phase 4 ✅ **COMPLETE**  
-**Ops 更新**: 2026-07-15 — 影片 E2E ✅ · `REDIS_URL` ✅ · `QWEN_MODEL` 對齊 `Qwen/Qwen2.5-7B-Instruct`（叢集 vLLM 已載入 Instruct，非 Coder）  
+**最後更新**: 2026-07-16（Family Memories Phase A0–A3 · LINE 搜尋逾時修復 · Immich v2.7.5 pin）  
+**專案狀態**: ✅ **增強專案結案** · **Family Memories Phase A** 進行中（A4 部署收尾）  
+**Ops 更新**: 2026-07-16 — `immich-line-bot:cafde37` · `family-planner:cafde37` · Immich **v2.7.5 pin**（anti-drift）· v3 spike 程式對齊（未 cutover）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)  
 **負責人**: Infrastructure Team + App Dev Team
 
@@ -17,11 +17,11 @@
 
 | 指標 | 數值 | 說明 |
 | ------ | ------ | ------ |
-| 🔴 高優先級任務 | 0 | — |
-| 🟡 中優先級任務 | 1 | Ops W2 rsync 收尾 |
+| 🔴 高優先級任務 | 1 | Family Memories A4（Postgres · MCP onboarding · `planner.3q.fi` DNS） |
+| 🟡 中優先級任務 | 2 | Ops W2 rsync 收尾 · Immich v3 維護窗口（2026-08-09 提案） |
 | 🟢 低優先級任務 | 5 | Similar images · album reconcile · LINE V1.1 vision · Photo Edit |
-| ✅ 本週完成 | 9 | 影片 E2E · REDIS_URL · Qwen Instruct · LIFF Passkey hub · webhook 簽章 · Rich Menu 帳戶設定 |
-| 📈 整體進度 | **99%** | 增強專案主體 **結案** · L3 維運 backlog 獨立追蹤 |
+| ✅ 本週完成 | 12 | Planner A0–A3 · LINE 搜尋無回覆修復 · v2.7.5 pin · Tekton planner CI |
+| 📈 整體進度 | **增強 99%** · **Family Memories A ~75%** | 增強結案；Planner 主軌 A4 收尾 |
 
 ---
 
@@ -36,6 +36,32 @@
 | **Phase 3.5** | iCloud 分層 | ✅ 結案 | 豁免 purge | ██████████ 100% | 2026-06-22 |
 | **Phase 4** | Storage 優化 | ✅ 完成 | postgres NVMe | ██████████ 100% | 2026-06-24 |
 | **Phase 5** | Backup 監控 | 🟡 P2 | 5a **PASS** · 5b ~95% | █████████░ ~90% | Wave W1–W3 |
+| **FM-A** | Family Memories Planner | 🔴 P1 | A0–A3 ✅ · A4 進行中 | ███████░░░ ~75% | 見 §Family Memories |
+
+---
+
+## 🧳 Family Memories — Phase A（Planner）
+
+**架構 SSOT**: [FAMILY_MEMORIES_ARCHITECTURE.md](./FAMILY_MEMORIES_ARCHITECTURE.md)  
+**實作計畫**: [planner/10_PHASE_A_IMPLEMENTATION_PLAN.md](./planner/10_PHASE_A_IMPLEMENTATION_PLAN.md)
+
+| 里程碑 | 狀態 | 備註 |
+| ------ | ------ | ------ |
+| **A0** Scaffold | ✅ | `packages/planner-schema`、`apps/planner`、雄獅 adapter 遷移 |
+| **A1** Wizard + Auth | ✅ | 六步 wizard、invite→api_key；session **in-memory / Redis**（Postgres 未接） |
+| **A2** Extract + Shortlist | ✅ | `extract_tour`、`compare_tours`、shortlist CRUD；32 tests |
+| **A3** MCP + Deploy | ✅ | `/mcp` Streamable HTTP · Helm `family-planner` · Tekton `make release-planner` |
+| **A4** 白名單收尾 | 🟡 | Postgres 持久化 · `MCP_SETUP.md` · `planner.3q.fi` 對外 DNS · 家人 onboarding |
+
+**Cluster（2026-07-16）**
+
+| 服務 | 映像 | 狀態 |
+| ------ | ------ | ------ |
+| `family-planner` | `registry-internal.3q.fi/family-planner:cafde37` | ✅ 1/1 Running |
+| `immich-line-bot` | `registry-internal.3q.fi/immich-line-bot:cafde37` | ✅ 1/1 Running |
+| `immich-server` | `ghcr.io/immich-app/immich-server:v2.7.5` | ✅ pin（anti-drift） |
+
+**本地驗收（2026-07-16）**: wizard E2E（`FAMILY-DEMO-2026`）· A2 extract/shortlist/compare smoke ✅
 
 ---
 
@@ -822,6 +848,10 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | **LINE video clip 上傳** | ✅ `631e855` deploy · **E2E 驗收通過**（使用者驗證 2026-07-15） |
 | photo-sync allowlist orphan trash（PR #41） | ✅ 8 張 PNG |
 | Qwen `QWEN_MODEL` 對齊 Instruct | ✅ `Qwen/Qwen2.5-7B-Instruct`（使用者驗證 2026-07-15） |
+| LINE 搜尋 webhook 逾時無回覆 | ✅ `cafde37` — 規則解析優先 · Qwen 10s · push 備援 |
+| **Family Memories Planner A0–A3** | ✅ `98b8ea7`–`c2efa8f` · cluster `cafde37` |
+| Immich v2.7.5 production pin | ✅ 2026-07-16（`:release` → `v2.7.5`） |
+| Immich v3 spike（程式對齊） | ✅ OpenAPI 3.0 · device 欄位移除 · **未** production cutover |
 
 ---
 
@@ -837,6 +867,7 @@ launchctl print gui/$(id -u)/com.immich.photo-sync.watch
 | #12 | LINE video clip 靜默忽略 | ✅ `631e855`（2026-07-05） |
 | #13 | webhook 全域 JSON 破壞簽章 | ✅ `cde1b58` |
 | #14 | Qwen model 與叢集不一致（Coder vs Instruct） | ✅ `QWEN_MODEL` 改 Instruct（2026-07-15） |
+| #15 | LINE 搜尋「已讀無回覆」（Qwen 30s 逾時） | ✅ `cafde37` 規則解析優先 + push 備援（2026-07-16） |
 
 ---
 

@@ -1,9 +1,9 @@
 # Family Memories — Planner Phase A 實作計畫
 
-**狀態**: 📋 規劃中  
+**狀態**: 🟡 進行中（A0–A3 ✅ · A4 收尾）  
 **優先級**: P1（Family Memories 主軌）  
 **前置**: [FAMILY_MEMORIES_ARCHITECTURE.md](../FAMILY_MEMORIES_ARCHITECTURE.md)（架構 SSOT）· [scripts/trip/README.md](../../../scripts/trip/README.md)（雄獅探針）  
-**最後更新**: 2026-07-15
+**最後更新**: 2026-07-16
 
 ---
 
@@ -380,49 +380,52 @@ serviceMonitor:
 
 ## 里程碑（週級）
 
-### A0 — Scaffold（第 1 週）
+### A0 — Scaffold（第 1 週）✅
 
-- [ ] 建立 `packages/planner-schema`：`TourSummary`、`WizardSession`、`DateWindow`、`DurationRange`
-- [ ] 建立 `apps/planner`：Express 入口、`/health`、`/metrics`、env config
-- [ ] 遷移 `scripts/trip/lion-search-api.ts` → `adapters/lion/search.ts`（保留 CLI  re-export）
-- [ ] 遷移 `lion-tour-types.ts` / `lion-tour-normalize.ts` → schema + lion adapter
-- [ ] Jest：`buildSearchBody`、fixture `jeju-compare.json` 單元測試
-- [ ] `tsconfig` paths / workspace 設定可 `npm test` 涵蓋 planner 包
+- [x] 建立 `packages/planner-schema`：`TourSummary`、`WizardSession`、`DateWindow`、`DurationRange`
+- [x] 建立 `apps/planner`：Express 入口、`/health`、`/metrics`、env config
+- [x] 遷移 `scripts/trip/lion-search-api.ts` → `adapters/lion/search.ts`（保留 CLI re-export）
+- [x] 遷移 `lion-tour-types.ts` / `lion-tour-normalize.ts` → schema + lion adapter
+- [x] Jest：`buildSearchBody`、fixture `jeju-compare.json` 單元測試
+- [x] `tsconfig` paths / workspace 設定可 `npm test` 涵蓋 planner 包
 
-### A1 — Wizard + Auth（第 2 週）
+### A1 — Wizard + Auth（第 2 週）✅（Postgres 待 A4）
 
-- [ ] Postgres migration：`families`、`api_keys`、`usage_daily`
-- [ ] `POST /auth/redeem-invite`、Bearer middleware（hash 比對）
-- [ ] Redis wizard session store
-- [ ] `wizard-engine`：六步狀態機、`wizard_back`
-- [ ] `wizard-parser`：模糊日期（暑假→DateWindow）、天數、預算 enum
-- [ ] REST wizard 五端點 + 結構化 `need_clarification`
-- [ ] 手動種子：1–2 組 family invite（migration seed 或 admin script）
+- [x] Postgres migration 檔：`001_a1_auth.sql`（**執行與 store 接線待 A4**）
+- [x] `POST /auth/redeem-invite`、Bearer middleware（hash 比對）
+- [x] Redis wizard session store（無 Redis 時 in-memory fallback）
+- [x] `wizard-engine`：六步狀態機、`wizard_back`
+- [x] `wizard-parser`：模糊日期（暑假→DateWindow）、天數、預算 enum
+- [x] REST wizard 端點 + review 確認流程
+- [x] 手動種子：`FAMILY-DEMO-2026`
 
-### A2 — Search + Extract（第 3 週）
+### A2 — Search + Extract（第 3 週）✅
 
-- [ ] `wizard_search`：串雄獅 search + must／budget 後篩
-- [ ] `extract_cache` 表 + Redis L1
-- [ ] Lion extract adapter（詳情；列表不足欄位補齊）
-- [ ] Cola / Phoenix extract adapter（URL 規則 + HTML 解析 PoC）
-- [ ] `extract_tour`、`compare_tours` REST
-- [ ] Quota middleware（`usage_daily`）
-- [ ] `generic-llm` adapter（flag off 預設）
+- [x] `wizard_search`：串雄獅 search + must／budget 後篩
+- [x] `extract_cache` Redis L1 + memory
+- [x] Lion extract adapter（`travelinfojson` / `daytripinfojson`）
+- [x] Cola / Phoenix extract adapter（URL stub）
+- [x] `extract_tour`、`compare_tours` REST + shortlist CRUD
+- [x] Quota middleware（`usage_daily` in-memory）
+- [x] `generic-llm` adapter（flag off 預設）
 
-### A3 — MCP + Shortlist（第 4 週）
+### A3 — MCP + Deploy（第 4 週）✅（部分 A4 重疊）
 
-- [ ] MCP streamable HTTP server；tool 對應共用 service
-- [ ] `shortlist_*` CRUD + Postgres
+- [x] MCP streamable HTTP `/mcp`；tool 對應共用 service（10 tools）
+- [x] `shortlist_*` CRUD（in-memory；Postgres 待 A4）
 - [ ] Cursor / ChatGPT 連線說明（`docs/20_guides/planner/MCP_SETUP.md`）
-- [ ] E2E smoke：`scripts/planner-smoke/`（invite → wizard → search → extract → shortlist）
+- [x] 本機 smoke：wizard + extract + shortlist（`apps/planner/src/wizard/README.md`）
+- [x] `deploy/helm/family-planner` + Tekton `make release-planner`
 
-### A4 — Deploy + 白名單（第 5 週）
+### A4 — 白名單收尾（第 5 週）🟡 進行中
 
-- [ ] `deploy/helm/family-planner` Chart + values-prod
-- [ ] Staging deploy；Ingress TLS
-- [ ] Grafana dashboard 或至少 Prometheus query 文件
+- [x] `deploy/helm/family-planner` Chart + values-prod
+- [x] Production deploy（`family-planner:cafde37` · `immich` ns）
+- [ ] `planner.3q.fi` 對外 DNS + 外部 `/health`
+- [ ] Postgres 持久化（families · shortlist · usage_daily）
+- [ ] Grafana / metrics 文件
 - [ ] 家人 onboarding：invite 發放、API key 寫入 Cursor MCP config
-- [ ] Deprecate `scripts/trip` README 指向 planner；保留 thin CLI wrapper 一版
+- [x] `scripts/trip` README 指向 planner；thin CLI wrapper 保留
 
 ---
 
@@ -548,4 +551,4 @@ PLANNER_URL=https://planner.3q.fi API_KEY=... \
 
 ---
 
-**下一步**：執行 **A0 Scaffold**——建立 `packages/planner-schema` 與 `apps/planner` 空殼，遷移雄獅 search 模組並接上 fixture 測試。
+**下一步**：執行 **A4 收尾**——Postgres 持久化、`MCP_SETUP.md`、家人 invite onboarding、`planner.3q.fi` 對外驗證；並用 Cursor MCP 走完 8 月濟州行程實戰。

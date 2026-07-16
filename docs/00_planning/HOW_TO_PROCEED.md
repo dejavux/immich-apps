@@ -1,9 +1,9 @@
 # 如何進行 — Immich Apps 執行指南
 
-**日期**: 2026-07-05  
+**日期**: 2026-07-16  
 **Repo**: <https://github.com/dejavux/immich-apps>  
 **進度 SSOT**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
-**路線圖**: [BACKLOG.md §下一階段路線圖](./BACKLOG.md#下一階段路線圖2026-07-05)  
+**Family Memories**: [FAMILY_MEMORIES_ARCHITECTURE.md](./FAMILY_MEMORIES_ARCHITECTURE.md) · [planner/10_PHASE_A_IMPLEMENTATION_PLAN.md](./planner/10_PHASE_A_IMPLEMENTATION_PLAN.md)  
 **Gate 狀態**: [agent-prompts/GATE_STATUS.md](./agent-prompts/GATE_STATUS.md)
 
 ---
@@ -13,54 +13,73 @@
 | 項目 | 狀態 |
 | ------ | ------ |
 | **Immich Enhancement** | ✅ **結案** |
-| LINE Bot git / cluster | **`631e855`**（`make verify-deploy`） |
-| **LIFF hub + Passkey** | ✅ PR #42 · [LIFF_PASSKEY_SETUP.md](../20_guides/LIFF_PASSKEY_SETUP.md) |
-| **LINE video clip 上傳** | ✅ deploy · **E2E 驗收通過**（使用者驗證 2026-07-15） |
-| **使用者驗收** | 🟡 LIFF 帳戶設定 · 搜尋（Qwen 已對齊 Instruct） |
-| **Immich Ops** | 5a **PASS** · 5b **~95%** · Phase 4 ✅ **COMPLETE** |
+| **Family Memories Phase A** | 🟡 **A4 收尾**（A0–A3 已 deploy） |
+| LINE Bot cluster | **`cafde37`**（規則解析優先 · Qwen 10s · push 備援） |
+| family-planner cluster | **`cafde37`**（`immich` ns · Ingress `planner.3q.fi`） |
+| Immich server | **v2.7.5 pin**（anti-drift；v3 cutover 排 **2026-08-09** 提案） |
+| **LINE 自然語言搜尋** | ✅ 確認後可搜到；確認 quick reply 仍可能偏慢（Immich CLIP） |
+| **使用者驗收** | 🟡 LIFF Passkey · Cursor MCP 連 planner |
 
 ```bash
-make verify-deploy   # 比對 git SHA vs cluster image tag
+make verify-deploy
+kubectl get deploy -n immich immich-line-bot family-planner -o wide
+curl -sk https://immich.3q.fi/api/server/version
 ```
 
 ---
 
 ## 🔴 本週優先（P0）
 
-1. ~~**影片 E2E**~~ — ✅ 使用者驗證 2026-07-15（`line-{messageId}.mp4` · logs `source: line-video`）
-2. **LIFF Passkey** — Rich Menu「帳戶設定」→ Safari Face ID → 返回 LINE 設定頁已解鎖
-3. ~~**Qwen 404**~~ — ✅ `QWEN_MODEL` 改為 `Qwen/Qwen2.5-7B-Instruct`（對齊叢集 vLLM；使用者驗證 2026-07-15）
-4. **Ops W2** — rsync：`ssh delta.3q.fi 'du -sh .../mac-studio/*'`（**63G/146G** local · **17G/18G** icloud）
-5. **Phase 5b** — 確認 Telegram smoke 3 條告警
+### Family Memories A4
 
-### Rich Menu 更新（維運）
+1. **Postgres 持久化** — 接 `001_a1_auth.sql`、`002_a2_shortlist_extract.sql`；shortlist / api_key 跨 restart
+2. **MCP onboarding** — 撰寫 `docs/20_guides/planner/MCP_SETUP.md`；家人 invite + `~/.cursor/mcp.json`
+3. **`planner.3q.fi`** — 對外 DNS → Ingress；`curl https://planner.3q.fi/health`
+4. **實戰試跑** — Cursor 走 wizard → search 濟州 → extract → shortlist → compare
 
-```bash
-python3 scripts/line-bot/generate-rich-menu.py
-eval "$(./scripts/dev/load-env-from-op.sh)"
-bash scripts/line-bot/setup-rich-menu.sh
-```
+### LINE / Memory 維運
+
+5. **LIFF Passkey** — Rich Menu「帳戶設定」實機驗收
+6. **搜尋 UX** — 若確認步驟仍 >5s，查 log `durationMs`；必要時預先回「解析中…」
+
+### Ops（並行、非阻塞）
+
+7. **Ops W2** — rsync：`ssh delta.3q.fi 'du -sh .../mac-studio/*'`（**63G/146G** local）
+8. **Phase 5b** — Telegram smoke 3 條告警確認
 
 ---
 
-## ✅ Wave W1 — Phase 5a（PASS）
+## ✅ 已完成（2026-07-15 ~ 07-16）
+
+| 項目 | 備註 |
+| ------ | ------ |
+| 影片 E2E | 使用者驗證 2026-07-15 |
+| `REDIS_URL` | Passkey grant 跨 pod |
+| Qwen Instruct | `QWEN_MODEL` + helm |
+| LINE 搜尋無回覆 | `cafde37` — 規則解析優先 |
+| Planner A0–A3 | wizard · extract · shortlist · MCP · Helm |
+| Tekton `release-planner` | 避開本機 registry TLS |
+| Immich v2.7.5 pin | production anti-drift |
+| v3 spike 程式 | OpenAPI 3.0；**未**升級 prod |
+
+---
+
+## Wave W1 — Phase 5a（PASS）
 
 → [BACKUP_RESTORE.md](../20_guides/infra/runbooks/BACKUP_RESTORE.md)
 
 | 項目 | 狀態 |
 | ------ | ------ |
 | pg 還原演練 | ✅ 13759 = prod |
-| pg 排程 2/2 | ✅ `29702580`（06-23 03:00）· `29704020`（06-24 03:00） |
-| NFS data 備份 | ✅ **Complete**（`immich-data-backup-nfs-test-1782176320` · **157.8G**） |
-| B2 | ⏭️ 已廢止並刪除 OP item |
+| pg 排程 2/2 | ✅ |
+| NFS data 備份 | ✅ **157.8G** |
+| B2 | ⏭️ 已廢止 |
 
 ---
 
 ## Wave W4 — Phase 4 SSD ✅ COMPLETE（2026-06-24）
 
-Postgres 已遷至 lama NVMe `/nvme/immich-postgres`；upload 仍 HDD。詳見 [STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md)。
-
-**驗收**：`asset` **13763** · ping **pong** · 停機 ~5 分鐘。
+Postgres 已遷至 lama NVMe；詳見 [STORAGE_MIGRATION.md](../20_guides/infra/runbooks/STORAGE_MIGRATION.md)。
 
 ---
 
@@ -68,78 +87,52 @@ Postgres 已遷至 lama NVMe `/nvme/immich-postgres`；upload 仍 HDD。詳見 [
 
 → [MAC_LIBRARY_BACKUP.md](../20_guides/infra/runbooks/MAC_LIBRARY_BACKUP.md)
 
-**前置**：Phase 4 ✅ · 5a PASS ✅
-
-**SSOT**：`delta.3q.fi:/mnt/volume1/nfs-models/photos-backup/mac-studio/`（13T HDD · **非** NVMe `/home/nfs-storage`）
-
 | 項目 | 狀態 |
 | ------ | ------ |
-| 路徑決策 NVMe→HDD | ✅ 2026-06-25（PR #31） |
-| delta HDD 目錄 + chown | ✅ |
-| dry-run | ✅ ~146G + ~18G |
-| 首輪 rsync | 🟡 **63G/146G** local · **17G/18G** icloud（2026-06-28） |
-| NVMe 舊 partial 清理 | ✅ ~48G 釋放 |
-| LaunchAgent | ✅ 已 `launchctl load`（週六 02:00） |
-| checksum 抽樣 | 📋 rsync Complete 後 |
-
-**追蹤首輪 rsync**：
-
-```bash
-tail -f ~/Library/Logs/immich-mac-backup/rsync-*.log
-screen -r immich-mac-backup   # Ctrl+A D detach
-ssh delta.3q.fi 'du -sh /mnt/volume1/nfs-models/photos-backup/mac-studio/*'
-```
+| 首輪 rsync | 🟡 **63G/146G** local · **17G/18G** icloud |
+| LaunchAgent | ✅ 週六 02:00 |
 
 ---
 
-## 驗證 K8s 是否跑最新 image
+## Immich v3 維護窗口（提案）
 
-```bash
-make verify-deploy
-# 或手動：
-git rev-parse --short HEAD
-kubectl get deploy immich-line-bot -n immich -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
-```
+→ [IMMICH_v3.0_SPIKE.md](../20_guides/infra/upgrades/IMMICH_v3.0_SPIKE.md) §9–§10
 
----
-
-## Wave 5b — Grafana + 告警（~95%）
-
-| 項目 | 狀態 |
+| 項目 | 建議 |
 | ------ | ------ |
-| PrometheusRule `immich.rules` | ✅ |
-| Grafana `immich-ops` ConfigMap | ✅ monitoring namespace |
-| Caddy `grafana.3q.fi` | ✅ 改回 monitoring LoadBalancer `192.168.50.154` |
-| Prometheus RBAC（kube-state-metrics scrape） | ✅ `prometheus-monitoring` ClusterRoleBinding |
-| Deep link `/d/immich-ops` | ✅ kube + HTTP panels 有資料（2026-06-24） |
-| Telegram 告警 smoke | 🟡 已重送 3 條（待使用者確認） |
-| LINE Bot 專用 panel | 📋 P2 backlog |
-
-```bash
-open https://grafana.3q.fi/d/immich-ops
-```
-
----
-
-## 下一階段（摘要）
-
-完整路線圖見 [BACKLOG.md §下一階段路線圖](./BACKLOG.md#下一階段路線圖2026-07-05)。
-
-| 優先 | 方向 | 代表項 |
-| ------ | ------ | ------ |
-| **P0** | 驗收 | LIFF Passkey |
-| **P1** | 產品體驗 | 上傳管道 onboarding · Web+LINE P0 驗收 |
-| **P2** | 平台 | Similar images · album reconcile · LINE Grafana panel |
-| **P3** | AI / 新場景 | Qwen vision · Photo Edit BFF · LIFF 搜尋瀏覽 UI |
+| **首選窗口** | 2026-08-09（六）02:00–05:00 HKT |
+| **前置** | spike DoD 全勾 · `pg_dump` · LINE smoke |
+| **阻擋** | 無 staging 叢集；v3 E2E 尚未對 prod 驗證 |
 
 ---
 
 ## 驗證指令
 
 ```bash
-kubectl get cronjob,jobs -n immich -l component=backup --sort-by=.metadata.creationTimestamp
-kubectl get pvc immich-backup-nfs-pvc -n immich
-kubectl get deploy -n immich immich-redis immich-server
-kubectl get configmap grafana-dashboards -n monitoring -o jsonpath='{.data}' | jq 'keys'
-npm test
+# LINE Bot
+kubectl logs -n immich deploy/immich-line-bot --tail=30 | rg "Photo search|durationMs"
+
+# Planner（叢集內）
+kubectl exec -n immich deploy/family-planner -- wget -qO- http://127.0.0.1:3001/health
+
+# Planner（本機 dev）
+npm run planner:dev
+curl -s http://localhost:3001/health
+
+# 全 repo 測試
+npm run test:planner && npm test
 ```
+
+---
+
+## 下一階段（摘要）
+
+| 優先 | 方向 | 代表項 |
+| ------ | ------ | ------ |
+| **P0** | Family Memories A4 | Postgres · MCP 指南 · planner DNS |
+| **P1** | 產品體驗 | 8 月行程 wizard 實戰 · Web+LINE 驗收 |
+| **P1** | Immich v3 | 維護窗口 cutover（8/9 提案） |
+| **P2** | 平台 | registry-internal 本機 DNS · Similar images |
+| **P3** | AI | Qwen vision · Photo Edit BFF |
+
+完整 backlog → [BACKLOG.md](./BACKLOG.md)

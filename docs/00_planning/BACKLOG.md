@@ -2,7 +2,7 @@
 
 **SSOT 進度**: [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md)  
 **執行指南**: [HOW_TO_PROCEED.md](./HOW_TO_PROCEED.md)  
-**最後更新**: 2026-07-15（影片 E2E · REDIS_URL · Qwen model 對齊 Instruct）  
+**最後更新**: 2026-07-16（Family Memories A0–A3 deploy · LINE cafde37 · v3 pin）  
 **UX 檢視**: [UX_PRODUCT_REVIEW.md](./UX_PRODUCT_REVIEW.md)
 
 ---
@@ -20,7 +20,23 @@
 
 ---
 
-## 當前 Sprint（2026-07-05 · LIFF hub + 影片上傳 + 維運收尾）
+## 當前 Sprint（2026-07-16 · Family Memories A4 + 維運）
+
+| 軌道 | 任務 | 狀態 | 備註 |
+| ------ | ------ | ------ | ------ |
+| **FM** | Planner A0–A3 | ✅ | wizard · extract · shortlist · MCP · Helm `cafde37` |
+| **FM** | Planner A4 收尾 | 🔴 | Postgres · MCP_SETUP · `planner.3q.fi` DNS · 家人 onboarding |
+| **LINE** | 搜尋 webhook 逾時 | ✅ | `cafde37` 規則解析優先 |
+| **LINE** | LIFF Passkey 實機 | 🟡 | Rich Menu 帳戶設定 |
+| **Infra** | Immich v2.7.5 pin | ✅ | anti-drift 2026-07-16 |
+| **Infra** | Immich v3 cutover | 📋 | 窗口提案 2026-08-09 · spike 程式已對齊 |
+| **Infra** | Tekton `release-planner` | ✅ | `077805f` |
+| **Ops W2** | Mac → delta HDD | 🟡 **~50%** | 63G/146G local |
+| **Ops W3** | Phase 5b monitoring | 🟡 **~95%** | Telegram smoke 待確認 |
+
+---
+
+## 當前 Sprint（2026-07-05 · 已結案）
 
 | 軌道 | 任務 | 狀態 | 備註 |
 | ------ | ------ | ------ | ------ |
@@ -41,14 +57,16 @@
 ## 優先順序總覽
 
 ```text
-🔴  立即     LIFF Passkey 實機
-✅  結案     Immich Enhancement（Phase 0–3.6 + 3.5 豁免）
-LINE         LIFF hub ✅ · video upload ✅ E2E · Qwen Instruct ✅ · REDIS_URL ✅
-Ops W2       Mac → delta HDD rsync ~50%（63G/146G local · 17G/18G icloud）
+🔴  立即     Family Memories A4（Postgres · MCP · planner DNS）
+🟡  本週     LIFF Passkey 實機 · LINE 搜尋 UX 微調
+✅  結案     Immich Enhancement · Planner A0–A3 · LINE cafde37
+LINE         自然語言搜尋可用（確認後 carousel）· Qwen Instruct ✅
+FM           wizard + extract + shortlist deploy ✅ · Cursor MCP 待接
+Infra        v2.7.5 pin ✅ · v3 窗口 2026-08-09 提案
+Ops W2       Mac → delta HDD rsync ~50%
 Ops W3       Phase 5b 告警 + immich-ops Grafana（~95%）
-P1  產品     上傳管道 UX · Web+LINE P0 驗收
-P2  平台     LINE Grafana panel · Similar images
-P3  AI       Qwen vision · Photo Edit BFF · LIFF 搜尋瀏覽 UI
+P2  平台     registry-internal 本機 DNS · Similar images
+P3  AI       Qwen vision · Photo Edit BFF
 ```
 
 ---
@@ -232,7 +250,58 @@ P3  AI       Qwen vision · Photo Edit BFF · LIFF 搜尋瀏覽 UI
 
 ---
 
-## 下一階段路線圖（2026-07-05）
+## 下一階段路線圖（2026-07-16）
+
+### P0 — Family Memories A4（1–2 週）
+
+| # | 項目 | 類型 | 說明 |
+| --- | ------ | ------ | ------ |
+| 1 | Postgres 持久化 | FM | families · api_keys · shortlist · usage_daily |
+| 2 | MCP_SETUP 指南 | FM | Cursor `family-memories-planner` + invite 發放 |
+| 3 | `planner.3q.fi` DNS | Infra | Ingress 已建；對外解析 + TLS smoke |
+| 4 | 8 月行程實戰 | FM | wizard → 濟州 shortlist → compare（MCP 或 REST） |
+
+### P0 — 維運驗收
+
+| # | 項目 | 類型 | 說明 |
+| --- | ------ | ------ | ------ |
+| 5 | LIFF Passkey 實機 | LINE | Rich Menu 帳戶設定 |
+| 6 | LINE 搜尋確認延遲 | LINE | log `durationMs`；可選「解析中」即時回覆 |
+| 7 | Ops W2 rsync 收尾 | Ops | 63G→146G · checksum |
+| 8 | Phase 5b Telegram smoke | Ops | 3 條告警 |
+
+### P1 — Immich v3（維護窗口）
+
+| # | 項目 | 類型 | 說明 |
+| --- | ------ | ------ | ------ |
+| 9 | v3 production cutover | Infra | 提案 **2026-08-09** · 見 [IMMICH_v3.0_SPIKE.md](../20_guides/infra/upgrades/IMMICH_v3.0_SPIKE.md) |
+| 10 | registry-internal DNS | Infra | 本機 push TLS 修 CoreDNS / Pi-hole（長期） |
+
+### P1 — 產品體驗（2–4 週）
+
+| # | 項目 | 類型 | 狀態 | 說明 |
+| --- | ------ | ------ | ------ | ------ |
+| 11 | 上傳管道 onboarding | UX | 📋 | welcome / Rich Menu |
+| 12 | Web + LINE E2E 驗收 | UX | 📋 | 時間軸 · alias · Smart Search |
+
+### P2 — 平台（Q3）
+
+| # | 項目 | 類型 | 狀態 | 說明 |
+| --- | ------ | ------ | ------ | ------ |
+| 13 | Similar images eval | Feature | 📋 Defer | |
+| 14 | album reconcile | Data | 📋 Defer | stale 27 / missing 123 |
+| 15 | LINE Bot Grafana panel | Observability | 📋 Defer | |
+
+### P3 — AI（評估）
+
+| # | 項目 | 類型 | 狀態 | 說明 |
+| --- | ------ | ------ | ------ | ------ |
+| 16 | Qwen vision 繁中描述 | AI | 📋 Defer | |
+| 17 | Photo Edit BFF | Feature | 📋 Defer | |
+
+---
+
+## 下一階段路線圖（2026-07-05 · 封存）
 
 ### P0 — 本週（驗收 + 維運）
 

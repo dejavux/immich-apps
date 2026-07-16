@@ -2,7 +2,7 @@
 
 > `docs/00_planning/` — **進行中專案需求** only
 
-**最後更新**: 2026-07-15（Family Memories Phase A 實作計畫）
+**最後更新**: 2026-07-16（Planner A0–A3 deploy · Phase A4 收尾）
 
 ---
 
@@ -27,7 +27,10 @@
 | 文件 | 說明 |
 | ------ | ------ |
 | [FAMILY_MEMORIES_ARCHITECTURE.md](./FAMILY_MEMORIES_ARCHITECTURE.md) | 平台架構 SSOT |
-| [planner/10_PHASE_A_IMPLEMENTATION_PLAN.md](./planner/10_PHASE_A_IMPLEMENTATION_PLAN.md) | Phase A 實作計畫（wizard · MCP · 雄獅 adapter） |
+| [planner/10_PHASE_A_IMPLEMENTATION_PLAN.md](./planner/10_PHASE_A_IMPLEMENTATION_PLAN.md) | Phase A 實作計畫（**A4 進行中**） |
+| [apps/planner/src/wizard/README.md](../../apps/planner/src/wizard/README.md) | Wizard / auth curl 範例 |
+| [apps/planner/src/api/README.md](../../apps/planner/src/api/README.md) | Tours / shortlist REST |
+| [IMMICH_v3.0_SPIKE.md](../20_guides/infra/upgrades/IMMICH_v3.0_SPIKE.md) | v3 升級 spike · 維護窗口 §10 |
 
 ### [Photo Sync Phase 3.5](./photo-sync/tier-policy/README.md)
 
