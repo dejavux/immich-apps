@@ -53,6 +53,12 @@ export class ImmichClient {
         filename: options.filename,
         contentType: options.contentType,
       });
+      if (options.deviceId) {
+        attemptForm.append("deviceId", options.deviceId);
+      }
+      if (options.deviceAssetId) {
+        attemptForm.append("deviceAssetId", options.deviceAssetId);
+      }
       if (options.fileCreatedAt) {
         attemptForm.append("fileCreatedAt", options.fileCreatedAt);
       }

@@ -89,9 +89,9 @@ fi
 
 if grep -rq 'deviceId\|deviceAssetId' "$ROOT/src/shared/immich-client.ts" \
   "$ROOT/src/line-bot/handlers/line-webhook.ts" 2>/dev/null; then
-  err "deviceId/deviceAssetId still in upload paths"
+  pass "device upload fields present (required on Immich v2.7.5)"
 else
-  pass "device upload fields removed from LINE client"
+  err "deviceId/deviceAssetId missing — LINE upload 400 on v2.7.5 until v3 cutover"
 fi
 
 echo ""

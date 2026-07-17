@@ -8,6 +8,9 @@ export interface ImmichAsset {
 export interface UploadAssetOptions {
   filename: string;
   contentType: string;
+  /** Required on Immich v2.x; omitted when upgrading to v3 (see IMMICH_v3.0_SPIKE.md). */
+  deviceId: string;
+  deviceAssetId: string;
   /** Omitted when Immich should read EXIF from the uploaded file. */
   fileCreatedAt?: string;
   fileModifiedAt?: string;
