@@ -21,9 +21,25 @@ describe("wizard-engine FSM", () => {
   async function fillThroughBudget(sessionId: string) {
     await wizardAnswer({ sessionId, familyId, step: "when", value: "暑假" });
     await wizardAnswer({ sessionId, familyId, step: "duration", value: "5天" });
-    await wizardAnswer({ sessionId, familyId, step: "depart_from", value: "台北" });
+    await wizardAnswer({
+      sessionId,
+      familyId,
+      step: "destination",
+      value: "濟州",
+    });
+    await wizardAnswer({
+      sessionId,
+      familyId,
+      step: "depart_from",
+      value: "台北",
+    });
     await wizardAnswer({ sessionId, familyId, step: "must", value: "無購物" });
-    return wizardAnswer({ sessionId, familyId, step: "budget", value: "2-3萬" });
+    return wizardAnswer({
+      sessionId,
+      familyId,
+      step: "budget",
+      value: "2-3萬",
+    });
   }
 
   it("advances steps in order", async () => {
@@ -38,6 +54,24 @@ describe("wizard-engine FSM", () => {
     });
     expect(r1.ok).toBe(true);
     if (r1.ok) expect(r1.session.step).toBe("duration");
+  });
+
+  it("asks destination after duration", async () => {
+    const { session } = await wizardStart(familyId);
+    await wizardAnswer({
+      sessionId: session.sessionId,
+      familyId,
+      step: "when",
+      value: "暑假",
+    });
+    const r2 = await wizardAnswer({
+      sessionId: session.sessionId,
+      familyId,
+      step: "duration",
+      value: "5天",
+    });
+    expect(r2.ok).toBe(true);
+    if (r2.ok) expect(r2.session.step).toBe("destination");
   });
 
   it("blocks search before review confirm", async () => {
@@ -70,7 +104,12 @@ describe("wizard-engine FSM", () => {
 
   it("wizard_back goes to previous step", async () => {
     const { session } = await wizardStart(familyId);
-    await wizardAnswer({ sessionId: session.sessionId, familyId, step: "when", value: "暑假" });
+    await wizardAnswer({
+      sessionId: session.sessionId,
+      familyId,
+      step: "when",
+      value: "暑假",
+    });
     const back = await wizardBack({ sessionId: session.sessionId, familyId });
     expect(back.ok).toBe(true);
     if (back.ok) expect(back.session.step).toBe("when");

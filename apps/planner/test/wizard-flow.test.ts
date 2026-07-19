@@ -53,14 +53,18 @@ describe("wizard REST happy path", () => {
     resetWizardSessionStoreForTests();
     app = createPlannerApp();
 
-    const redeemed = await jsonFetch(app, "/api/planner/v1/auth/redeem-invite", {
-      method: "POST",
-      body: JSON.stringify({ inviteCode: invite }),
-    });
+    const redeemed = await jsonFetch(
+      app,
+      "/api/planner/v1/auth/redeem-invite",
+      {
+        method: "POST",
+        body: JSON.stringify({ inviteCode: invite }),
+      },
+    );
     apiKey = String(redeemed.body.apiKey);
   });
 
-  it("completes six wizard steps", async () => {
+  it("completes seven wizard steps", async () => {
     const start = await jsonFetch(app, "/api/planner/v1/wizard/sessions", {
       method: "POST",
       auth: apiKey,
@@ -71,6 +75,7 @@ describe("wizard REST happy path", () => {
     const steps: Array<{ step: string; value: string }> = [
       { step: "when", value: "暑假" },
       { step: "duration", value: "5天" },
+      { step: "destination", value: "濟州" },
       { step: "depart_from", value: "台北" },
       { step: "must", value: "無購物" },
       { step: "budget", value: "2-3萬" },
@@ -90,9 +95,13 @@ describe("wizard REST happy path", () => {
       expect(answered.status).toBe(200);
     }
 
-    const status = await jsonFetch(app, `/api/planner/v1/wizard/sessions/${sessionId}`, {
-      auth: apiKey,
-    });
+    const status = await jsonFetch(
+      app,
+      `/api/planner/v1/wizard/sessions/${sessionId}`,
+      {
+        auth: apiKey,
+      },
+    );
     expect(status.body.readyForSearch).toBe(true);
     expect(status.body.step).toBe("review");
   });

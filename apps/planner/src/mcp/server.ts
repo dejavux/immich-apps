@@ -14,13 +14,16 @@ import {
   handleShortlistRemove,
   handleWizardAnswer,
   handleWizardBack,
+  handleWizardRefine,
   handleWizardSearch,
   handleWizardStart,
   handleWizardStatus,
   jsonToolText,
 } from "./handlers.js";
 
-const wizardStepSchema = z.enum(WIZARD_STEP_ORDER as [WizardStep, ...WizardStep[]]);
+const wizardStepSchema = z.enum(
+  WIZARD_STEP_ORDER as [WizardStep, ...WizardStep[]],
+);
 
 function toolText(payload: unknown) {
   return { content: [jsonToolText(payload)] };
@@ -35,15 +38,18 @@ export function createPlannerMcpServer(familyId: string): McpServer {
     { capabilities: { logging: {} } },
   );
 
-  server.tool("wizard_start", "建立 wizard session 並回傳第一步 prompt", async () =>
-    toolText(await handleWizardStart(familyId)),
+  server.tool(
+    "wizard_start",
+    "建立 wizard session 並回傳第一步 prompt",
+    async () => toolText(await handleWizardStart(familyId)),
   );
 
   server.tool(
     "wizard_status",
     "查詢 session 目前步驟與已填答案",
     { sessionId: z.string().describe("Wizard session ID") },
-    async ({ sessionId }) => toolText(await handleWizardStatus(familyId, sessionId)),
+    async ({ sessionId }) =>
+      toolText(await handleWizardStatus(familyId, sessionId)),
   );
 
   server.tool(
@@ -62,14 +68,37 @@ export function createPlannerMcpServer(familyId: string): McpServer {
     "wizard_back",
     "回上一步",
     { sessionId: z.string().describe("Wizard session ID") },
-    async ({ sessionId }) => toolText(await handleWizardBack(familyId, sessionId)),
+    async ({ sessionId }) =>
+      toolText(await handleWizardBack(familyId, sessionId)),
   );
 
   server.tool(
     "wizard_search",
     "review 確認後搜尋雄獅跟團",
     { sessionId: z.string().describe("Wizard session ID") },
-    async ({ sessionId }) => toolText(await handleWizardSearch(familyId, sessionId)),
+    async ({ sessionId }) =>
+      toolText(await handleWizardSearch(familyId, sessionId)),
+  );
+
+  const refineFieldSchema = z.enum([
+    "destination",
+    "when",
+    "duration",
+    "depart_from",
+    "must",
+    "budget",
+  ]);
+
+  server.tool(
+    "wizard_refine",
+    "搜尋後只改單一欄位並重新搜尋（保留其他條件）",
+    {
+      sessionId: z.string().describe("Wizard session ID"),
+      field: refineFieldSchema.describe("要修改的欄位"),
+      value: z.string().describe("新值（自然語言，與 wizard_answer 相同解析）"),
+    },
+    async ({ sessionId, field, value }) =>
+      toolText(await handleWizardRefine(familyId, { sessionId, field, value })),
   );
 
   server.tool(
@@ -79,14 +108,18 @@ export function createPlannerMcpServer(familyId: string): McpServer {
       url: z.string().describe("旅行社行程 URL"),
       skipCache: z.boolean().optional().describe("略過快取"),
     },
-    async ({ url, skipCache }) => toolText(await handleExtractTour(familyId, { url, skipCache })),
+    async ({ url, skipCache }) =>
+      toolText(await handleExtractTour(familyId, { url, skipCache })),
   );
 
   server.tool(
     "compare_tours",
     "2–N 筆行程對照（shortlist id 或 inline summaries）",
     {
-      tourIds: z.array(z.string()).optional().describe("shortlist 或搜尋結果 tour id"),
+      tourIds: z
+        .array(z.string())
+        .optional()
+        .describe("shortlist 或搜尋結果 tour id"),
       tours: z.array(z.unknown()).optional().describe("inline TourSummary[]"),
     },
     async ({ tourIds, tours }) =>
@@ -124,7 +157,8 @@ export function createPlannerMcpServer(familyId: string): McpServer {
     "shortlist_remove",
     "從 shortlist 移除指定 tourId",
     { tourId: z.string().describe("要移除的 tour id") },
-    async ({ tourId }) => toolText(await handleShortlistRemove(familyId, tourId)),
+    async ({ tourId }) =>
+      toolText(await handleShortlistRemove(familyId, tourId)),
   );
 
   return server;

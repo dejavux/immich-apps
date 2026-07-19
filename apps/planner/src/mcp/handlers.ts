@@ -15,8 +15,11 @@ import {
   shortlistList,
   shortlistRemove,
 } from "../services/shortlist.js";
+import { wizardRefine } from "../services/wizard-refine.js";
 
-function sessionPayload(session: NonNullable<Awaited<ReturnType<typeof wizardStatus>>>) {
+function sessionPayload(
+  session: NonNullable<Awaited<ReturnType<typeof wizardStatus>>>,
+) {
   const prompt = promptForStep(session.step, session.answers);
   return {
     ok: true,
@@ -98,6 +101,29 @@ export async function handleWizardSearch(familyId: string, sessionId: string) {
     ok: true,
     sessionId: result.sessionId,
     count: result.tours.length,
+    tours: result.tours,
+  };
+}
+
+export async function handleWizardRefine(
+  familyId: string,
+  input: { sessionId: string; field: string; value: string },
+) {
+  const result = await wizardRefine({
+    sessionId: input.sessionId,
+    familyId,
+    field: input.field as Parameters<typeof wizardRefine>[0]["field"],
+    value: input.value,
+  });
+  if (!result.ok) {
+    return { ok: false, error: result.error, message: result.message };
+  }
+  return {
+    ok: true,
+    sessionId: result.sessionId,
+    field: result.field,
+    answers: result.answers,
+    count: result.count,
     tours: result.tours,
   };
 }

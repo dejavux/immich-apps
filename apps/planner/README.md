@@ -21,10 +21,11 @@ npm run test:planner
 
 ## Cursor MCP 設定
 
-→ **[docs/20_guides/planner/MCP_SETUP.md](../../docs/20_guides/planner/MCP_SETUP.md)**
+→ **[docs/20_guides/planner/MCP_SETUP.md](../../docs/20_guides/planner/MCP_SETUP.md)**（Cursor）
 
-1. `POST /auth/redeem-invite` 兌換 `FAMILY-DEMO-2026`（或家庭專用碼）
-2. 將 `apiKey` 寫入 `~/.cursor/mcp.json` 的 `family-memories-planner`
+## ChatGPT MCP 設定
+
+→ **[docs/20_guides/planner/CHATGPT_MCP_SETUP.md](../../docs/20_guides/planner/CHATGPT_MCP_SETUP.md)**（ChatGPT Custom Connector · 推薦主對話面）
 
 ## 資料持久化（Postgres）
 

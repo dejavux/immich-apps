@@ -7,6 +7,7 @@ export type {
   TourTag,
 } from "./tour-summary.js";
 export type { DateWindow } from "./date-window.js";
+export type { DestinationIntent } from "./destination-intent.js";
 export type { DurationRange } from "./duration-range.js";
 export type {
   BudgetRange,
