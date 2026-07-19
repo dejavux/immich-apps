@@ -2,6 +2,7 @@ import type {
   BudgetRange,
   DateWindow,
   DepartFrom,
+  DestinationIntent,
   DurationRange,
 } from "@family-memories/planner-schema";
 
@@ -21,7 +22,12 @@ function lastDayOfMonth(y: number, m: number): number {
   return new Date(Date.UTC(y, m, 0)).getUTCDate();
 }
 
-function monthRange(y: number, startMonth: number, endMonth: number, label: string): DateWindow {
+function monthRange(
+  y: number,
+  startMonth: number,
+  endMonth: number,
+  label: string,
+): DateWindow {
   const toMonth = endMonth;
   const toDay = lastDayOfMonth(y, toMonth);
   return {
@@ -32,10 +38,17 @@ function monthRange(y: number, startMonth: number, endMonth: number, label: stri
 }
 
 /** 解析 wizard `when` 步驟口語輸入 */
-export function parseWhenInput(raw: string, now = new Date()): ParseResult<DateWindow> {
+export function parseWhenInput(
+  raw: string,
+  now = new Date(),
+): ParseResult<DateWindow> {
   const text = raw.trim();
   if (!text) {
-    return { ok: false, clarification: "請告訴我大概什麼時候出發，例如：暑假、7–8 月、明年 1 月底。" };
+    return {
+      ok: false,
+      clarification:
+        "請告訴我大概什麼時候出發，例如：暑假、7–8 月、明年 1 月底。",
+    };
   }
 
   const year = now.getFullYear();
@@ -55,7 +68,13 @@ export function parseWhenInput(raw: string, now = new Date()): ParseResult<DateW
   if (monthSpan) {
     const startM = Number(monthSpan[1]);
     const endM = Number(monthSpan[2]);
-    if (startM >= 1 && startM <= 12 && endM >= 1 && endM <= 12 && startM <= endM) {
+    if (
+      startM >= 1 &&
+      startM <= 12 &&
+      endM >= 1 &&
+      endM <= 12 &&
+      startM <= endM
+    ) {
       let y = year;
       if (startM < month) y += 1;
       return { ok: true, value: monthRange(y, startM, endM, text) };
@@ -89,8 +108,16 @@ export function parseWhenInput(raw: string, now = new Date()): ParseResult<DateW
     return {
       ok: true,
       value: {
-        from: formatDate(Number(isoRange[1]), Number(isoRange[2]), Number(isoRange[3])),
-        to: formatDate(Number(isoRange[4]), Number(isoRange[5]), Number(isoRange[6])),
+        from: formatDate(
+          Number(isoRange[1]),
+          Number(isoRange[2]),
+          Number(isoRange[3]),
+        ),
+        to: formatDate(
+          Number(isoRange[4]),
+          Number(isoRange[5]),
+          Number(isoRange[6]),
+        ),
         label: text,
       },
     };
@@ -107,7 +134,10 @@ export function parseWhenInput(raw: string, now = new Date()): ParseResult<DateW
 export function parseDurationInput(raw: string): ParseResult<DurationRange> {
   const text = raw.trim();
   if (!text) {
-    return { ok: false, clarification: "請告訴我大概幾天，例如：4–5 天、一週左右、5 天。" };
+    return {
+      ok: false,
+      clarification: "請告訴我大概幾天，例如：4–5 天、一週左右、5 天。",
+    };
   }
 
   const range = text.match(/(\d+)\s*[-–—~～至到]\s*(\d+)\s*天/);
@@ -119,7 +149,7 @@ export function parseDurationInput(raw: string): ParseResult<DurationRange> {
     }
   }
 
-    const exact = text.match(/(\d+)\s*天/);
+  const exact = text.match(/(\d+)\s*天/);
   if (exact) {
     const days = Number(exact[1]);
     if (days > 0) {
@@ -136,15 +166,60 @@ export function parseDurationInput(raw: string): ParseResult<DurationRange> {
 
   return {
     ok: false,
-    clarification: "無法判斷天數。請用「4–5 天」「5 天」或「一週左右」再試一次。",
+    clarification:
+      "無法判斷天數。請用「4–5 天」「5 天」或「一週左右」再試一次。",
   };
+}
+
+/** 解析 wizard `destination` */
+export function parseDestinationInput(
+  raw: string,
+): ParseResult<DestinationIntent> {
+  const text = raw.trim();
+  if (!text) {
+    return {
+      ok: false,
+      clarification:
+        "請告訴我想去哪裡，例如：濟州、日本、東南亞；或「還沒想好」「給我建議」。",
+    };
+  }
+
+  if (/還沒想好|沒想好|都可以|不限|隨便|哪裡都行|open/i.test(text)) {
+    return { ok: true, value: { mode: "open" } };
+  }
+
+  if (/給.*建議|推薦|建議一下|幫我選|suggest/i.test(text)) {
+    const hint = text
+      .replace(/^(請)?(給我|幫我)?(一點)?(建議|推薦)/, "")
+      .replace(/[吧呢嗎？?。．.!！]/g, "")
+      .trim();
+    return { ok: true, value: { mode: "suggest", hint: hint || undefined } };
+  }
+
+  const parts = text
+    .split(/[,，、;；\n\/]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (parts.length === 0) {
+    return {
+      ok: false,
+      clarification:
+        "無法辨識目的地。請回答地名（濟州、日本），或「還沒想好」。",
+    };
+  }
+
+  return { ok: true, value: { mode: "specific", keywords: parts } };
 }
 
 /** 解析 wizard `depart_from` */
 export function parseDepartFromInput(raw: string): ParseResult<DepartFrom> {
   const text = raw.trim();
   if (!text) {
-    return { ok: false, clarification: "請告訴我從哪裡出發，例如：台北、高雄、台中、不限。" };
+    return {
+      ok: false,
+      clarification: "請告訴我從哪裡出發，例如：台北、高雄、台中、不限。",
+    };
   }
   if (/不限|都可以|隨便/.test(text)) {
     return { ok: true, value: "ANY" };
@@ -192,7 +267,10 @@ export function parseMustInput(raw: string): ParseResult<string[]> {
 export function parseBudgetInput(raw: string): ParseResult<BudgetRange> {
   const text = raw.trim();
   if (!text) {
-    return { ok: false, clarification: "請選擇預算區間：<2萬、2–3萬、3–4萬、不限。" };
+    return {
+      ok: false,
+      clarification: "請選擇預算區間：<2萬、2–3萬、3–4萬、不限。",
+    };
   }
   if (/不限|沒限制|都可以/.test(text)) {
     return { ok: true, value: "不限" };
@@ -214,21 +292,47 @@ export function parseBudgetInput(raw: string): ParseResult<BudgetRange> {
 
 export type ReviewAction =
   | { type: "confirm" }
-  | { type: "edit"; step: "when" | "duration" | "depart_from" | "must" | "budget" };
+  | {
+      type: "edit";
+      step:
+        | "when"
+        | "duration"
+        | "destination"
+        | "depart_from"
+        | "must"
+        | "budget";
+    };
 
 /** 解析 review 步驟回覆 */
 export function parseReviewInput(raw: string): ParseResult<ReviewAction> {
   const text = raw.trim();
   if (!text) {
-    return { ok: false, clarification: "請回覆「確認」開始搜尋，或說「修改預算」等指定要改的步驟。" };
+    return {
+      ok: false,
+      clarification:
+        "請回覆「確認」開始搜尋，或說「修改預算」等指定要改的步驟。",
+    };
   }
   if (/^(是|確認|ok|好|可以|開始搜尋)$/i.test(text)) {
     return { ok: true, value: { type: "confirm" } };
   }
 
-  const editMatchers: Array<{ re: RegExp; step: "when" | "duration" | "depart_from" | "must" | "budget" }> = [
+  const editMatchers: Array<{
+    re: RegExp;
+    step:
+      | "when"
+      | "duration"
+      | "destination"
+      | "depart_from"
+      | "must"
+      | "budget";
+  }> = [
     { re: /修改.*(時間|日期|when|出發區間)|改.*(時間|日期)/i, step: "when" },
     { re: /修改.*(天數|duration|幾天)|改.*天數/i, step: "duration" },
+    {
+      re: /修改.*(目的地|地點|destination|去哪)|改.*(目的地|地點)/i,
+      step: "destination",
+    },
     { re: /修改.*(出發地|depart)|改.*出發/i, step: "depart_from" },
     { re: /修改.*(條件|must|需求)|改.*條件/i, step: "must" },
     { re: /修改.*(預算|budget)|改.*預算/i, step: "budget" },
@@ -241,6 +345,7 @@ export function parseReviewInput(raw: string): ParseResult<ReviewAction> {
 
   return {
     ok: false,
-    clarification: "請回覆「確認」開始搜尋，或「修改預算／修改天數」等指定要調整的項目。",
+    clarification:
+      "請回覆「確認」開始搜尋，或「修改預算／修改天數」等指定要調整的項目。",
   };
 }

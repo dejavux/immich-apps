@@ -11,6 +11,7 @@ import { getWizardSessionStore } from "../cache/wizard-session-store.js";
 import {
   parseBudgetInput,
   parseDepartFromInput,
+  parseDestinationInput,
   parseDurationInput,
   parseMustInput,
   parseReviewInput,
@@ -24,17 +25,33 @@ export type WizardPrompt = {
 
 export type WizardAnswerResult =
   | { ok: true; session: WizardSession; prompt?: WizardPrompt }
-  | { ok: false; error: "need_clarification"; message: string; session: WizardSession }
+  | {
+      ok: false;
+      error: "need_clarification";
+      message: string;
+      session: WizardSession;
+    }
   | { ok: false; error: "invalid_step" | "session_not_found"; message: string };
 
 const STEP_PROMPTS: Record<WizardStep, string> = {
   when: "大概什麼時候出發？（例：暑假、7–8 月、明年 1 月底）",
   duration: "希望玩幾天？（例：4–5 天、一週左右）",
+  destination:
+    "想去哪裡？（例：濟州、日本、東南亞；或「還沒想好」「給我建議」）",
   depart_from: "從哪裡出發？（台北／高雄／台中／不限）",
   must: "有沒有硬條件？最多 3 條，用逗號分隔（例：無購物、親子；可回「無」）",
   budget: "每人預算大概多少？（<2萬／2–3萬／3–4萬／不限）",
   review: "請確認以下條件。回覆「確認」開始搜尋，或「修改預算」等調整某一步。",
 };
+
+function formatDestination(answers: WizardAnswers): string {
+  const dest = answers.destination;
+  if (!dest) return "—";
+  if (dest.mode === "open") return "還沒想好";
+  if (dest.mode === "suggest")
+    return dest.hint ? `給建議（${dest.hint}）` : "給建議";
+  return dest.keywords.join("、");
+}
 
 function stepIndex(step: WizardStep): number {
   return WIZARD_STEP_ORDER.indexOf(step);
@@ -56,6 +73,7 @@ export function buildReviewSummary(answers: WizardAnswers): string {
   const lines = [
     `出發區間：${answers.when?.label ?? `${answers.when?.from} ~ ${answers.when?.to}`}`,
     `天數：${answers.duration ? `${answers.duration.minDays}–${answers.duration.maxDays} 天` : "—"}`,
+    `目的地：${formatDestination(answers)}`,
     `出發地：${answers.depart_from ?? "—"}`,
     `硬條件：${answers.must?.length ? answers.must.join("、") : "無"}`,
     `預算：${answers.budget ?? "—"}`,
@@ -66,7 +84,10 @@ export function buildReviewSummary(answers: WizardAnswers): string {
 
 function promptForStep(step: WizardStep, answers: WizardAnswers): WizardPrompt {
   if (step === "review") {
-    return { step, prompt: `${STEP_PROMPTS.review}\n\n${buildReviewSummary(answers)}` };
+    return {
+      step,
+      prompt: `${STEP_PROMPTS.review}\n\n${buildReviewSummary(answers)}`,
+    };
   }
   return { step, prompt: STEP_PROMPTS[step] };
 }
@@ -74,7 +95,9 @@ function promptForStep(step: WizardStep, answers: WizardAnswers): WizardPrompt {
 function parseStepValue(
   step: WizardStep,
   value: string,
-): { ok: true; patch: Partial<WizardAnswers> } | { ok: false; clarification: string } {
+):
+  | { ok: true; patch: Partial<WizardAnswers> }
+  | { ok: false; clarification: string } {
   switch (step) {
     case "when": {
       const parsed = parseWhenInput(value);
@@ -85,6 +108,11 @@ function parseStepValue(
       const parsed = parseDurationInput(value);
       if (!parsed.ok) return { ok: false, clarification: parsed.clarification };
       return { ok: true, patch: { duration: parsed.value } };
+    }
+    case "destination": {
+      const parsed = parseDestinationInput(value);
+      if (!parsed.ok) return { ok: false, clarification: parsed.clarification };
+      return { ok: true, patch: { destination: parsed.value } };
     }
     case "depart_from": {
       const parsed = parseDepartFromInput(value);
@@ -122,7 +150,9 @@ export async function wizardStart(familyId: string): Promise<{
   return { session, prompt: promptForStep("when", {}) };
 }
 
-export async function wizardStatus(sessionId: string): Promise<WizardSession | null> {
+export async function wizardStatus(
+  sessionId: string,
+): Promise<WizardSession | null> {
   return getWizardSessionStore().get(sessionId);
 }
 
@@ -135,7 +165,11 @@ export async function wizardAnswer(input: {
   const store = getWizardSessionStore();
   const session = await store.get(input.sessionId);
   if (!session || session.familyId !== input.familyId) {
-    return { ok: false, error: "session_not_found", message: "找不到 wizard session" };
+    return {
+      ok: false,
+      error: "session_not_found",
+      message: "找不到 wizard session",
+    };
   }
   if (session.step !== input.step) {
     return {
@@ -165,7 +199,11 @@ export async function wizardAnswer(input: {
         clarification: undefined,
       };
       await store.set(next);
-      return { ok: true, session: next, prompt: promptForStep(next.step, next.answers) };
+      return {
+        ok: true,
+        session: next,
+        prompt: promptForStep(next.step, next.answers),
+      };
     }
 
     const next: WizardSession = {
@@ -177,7 +215,10 @@ export async function wizardAnswer(input: {
     return {
       ok: true,
       session: next,
-      prompt: { step: "review", prompt: "已確認條件，可呼叫 wizard_search 開始搜尋。" },
+      prompt: {
+        step: "review",
+        prompt: "已確認條件，可呼叫 wizard_search 開始搜尋。",
+      },
     };
   }
 
@@ -217,12 +258,20 @@ export async function wizardBack(input: {
   const store = getWizardSessionStore();
   const session = await store.get(input.sessionId);
   if (!session || session.familyId !== input.familyId) {
-    return { ok: false, error: "session_not_found", message: "找不到 wizard session" };
+    return {
+      ok: false,
+      error: "session_not_found",
+      message: "找不到 wizard session",
+    };
   }
 
   const previous = prevStep(session.step);
   if (!previous) {
-    return { ok: false, error: "invalid_step", message: "已在第一步，無法再往回" };
+    return {
+      ok: false,
+      error: "invalid_step",
+      message: "已在第一步，無法再往回",
+    };
   }
 
   const next: WizardSession = {
@@ -232,7 +281,11 @@ export async function wizardBack(input: {
     clarification: undefined,
   };
   await store.set(next);
-  return { ok: true, session: next, prompt: promptForStep(previous, next.answers) };
+  return {
+    ok: true,
+    session: next,
+    prompt: promptForStep(previous, next.answers),
+  };
 }
 
 export function isSessionReadyForSearch(session: WizardSession): boolean {

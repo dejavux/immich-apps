@@ -1,6 +1,7 @@
 import {
   parseBudgetInput,
   parseDepartFromInput,
+  parseDestinationInput,
   parseDurationInput,
   parseMustInput,
   parseReviewInput,
@@ -57,6 +58,40 @@ describe("wizard-parser duration", () => {
   });
 });
 
+describe("wizard-parser destination", () => {
+  it("parses specific place", () => {
+    expect(parseDestinationInput("濟州")).toEqual({
+      ok: true,
+      value: { mode: "specific", keywords: ["濟州"] },
+    });
+  });
+
+  it("parses multiple places", () => {
+    expect(parseDestinationInput("日本、九州")).toEqual({
+      ok: true,
+      value: { mode: "specific", keywords: ["日本", "九州"] },
+    });
+  });
+
+  it("parses open", () => {
+    expect(parseDestinationInput("還沒想好")).toEqual({
+      ok: true,
+      value: { mode: "open" },
+    });
+  });
+
+  it("parses suggest with hint", () => {
+    const r = parseDestinationInput("推薦親子海島");
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.value.mode).toBe("suggest");
+      if (r.value.mode === "suggest") {
+        expect(r.value.hint).toMatch(/親子/);
+      }
+    }
+  });
+});
+
 describe("wizard-parser other steps", () => {
   it("parses depart_from 台北", () => {
     expect(parseDepartFromInput("台北")).toEqual({ ok: true, value: "TPE" });
@@ -72,6 +107,9 @@ describe("wizard-parser other steps", () => {
   });
 
   it("parses review confirm", () => {
-    expect(parseReviewInput("確認")).toEqual({ ok: true, value: { type: "confirm" } });
+    expect(parseReviewInput("確認")).toEqual({
+      ok: true,
+      value: { type: "confirm" },
+    });
   });
 });

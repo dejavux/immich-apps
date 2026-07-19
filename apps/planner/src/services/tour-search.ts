@@ -1,4 +1,8 @@
-import type { BudgetRange, SearchParams, TourSummary } from "@family-memories/planner-schema";
+import type {
+  BudgetRange,
+  SearchParams,
+  TourSummary,
+} from "@family-memories/planner-schema";
 
 import {
   addTourDays,
@@ -18,7 +22,9 @@ const DEPARTURE_ID: Record<string, string | null> = {
 function hitToSummary(hit: LionNormGroupHit): TourSummary {
   const group = hit.groups[0];
   const departDate = group?.goDate?.replace(/\//g, "-") ?? null;
-  const returnRaw = departDate ? addTourDays(group?.goDate ?? "", hit.tourDays) : null;
+  const returnRaw = departDate
+    ? addTourDays(group?.goDate ?? "", hit.tourDays)
+    : null;
   const returnDate = returnRaw?.replace(/\//g, "-") ?? null;
   const groupId = group?.groupId ?? hit.normGroupId;
 
@@ -84,45 +90,77 @@ function matchesBudget(tour: TourSummary, budget?: BudgetRange): boolean {
   return true;
 }
 
-function buildKeywords(params: SearchParams): string {
-  const fromMust = params.mustTags?.find((t) => /島|本|州|國|灣|京|阪|繩|韓|泰|新|馬/.test(t));
-  if (fromMust) return fromMust;
-  if (params.mustTags?.length) return params.mustTags[0] ?? "跟團";
-  return "跟團旅遊";
+/** 依 destination 產生雄獅搜尋關鍵字（可多筆合併搜尋） */
+export function destinationKeywordList(params: SearchParams): string[] {
+  const dest = params.destination;
+  if (!dest || dest.mode === "open") return ["跟團旅遊"];
+  if (dest.mode === "suggest") {
+    const hint = dest.hint?.trim();
+    return [hint || "跟團旅遊"];
+  }
+  if (dest.keywords.length) return dest.keywords;
+  return ["跟團旅遊"];
 }
 
-export async function searchToursFromWizard(params: SearchParams): Promise<TourSummary[]> {
-  if (params.tourType === "fit") {
-    throw new Error("not_supported");
-  }
+function tourStableId(tour: TourSummary): string {
+  return tour.id ?? `lion:${tour.groupId}`;
+}
 
-  const keywords = buildKeywords(params);
-  const result = await searchLionGroupList({
-    keywords,
-    goDateStart: params.dateWindow.from,
-    goDateEnd: params.dateWindow.to,
-    travelType: 1,
-    departureId: DEPARTURE_ID[params.departFrom ?? "ANY"] ?? null,
-    page: params.page ?? 1,
-    pageSize: params.pageSize ?? 20,
-  });
-
-  let tours = result.hits.map(hitToSummary);
+function filterTours(
+  params: SearchParams,
+  tours: TourSummary[],
+): TourSummary[] {
+  let filtered = tours;
 
   if (params.duration) {
-    tours = tours.filter(
+    filtered = filtered.filter(
       (t) =>
-        t.days >= params.duration!.minDays && t.days <= params.duration!.maxDays,
+        t.days >= params.duration!.minDays &&
+        t.days <= params.duration!.maxDays,
     );
   }
 
   if (params.mustTags?.length) {
-    tours = tours.filter((t) => matchesMust(t, params.mustTags!));
+    filtered = filtered.filter((t) => matchesMust(t, params.mustTags!));
   }
 
   if (params.budget) {
-    tours = tours.filter((t) => matchesBudget(t, params.budget));
+    filtered = filtered.filter((t) => matchesBudget(t, params.budget));
   }
 
-  return tours;
+  return filtered;
+}
+
+export async function searchToursFromWizard(
+  params: SearchParams,
+): Promise<TourSummary[]> {
+  if (params.tourType === "fit") {
+    throw new Error("not_supported");
+  }
+
+  const keywordList = destinationKeywordList(params);
+  const seen = new Set<string>();
+  const merged: TourSummary[] = [];
+
+  for (const keywords of keywordList) {
+    const result = await searchLionGroupList({
+      keywords,
+      goDateStart: params.dateWindow.from,
+      goDateEnd: params.dateWindow.to,
+      travelType: 1,
+      departureId: DEPARTURE_ID[params.departFrom ?? "ANY"] ?? null,
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? 20,
+    });
+
+    for (const hit of result.hits) {
+      const tour = hitToSummary(hit);
+      const id = tourStableId(tour);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      merged.push(tour);
+    }
+  }
+
+  return filterTours(params, merged);
 }

@@ -11,9 +11,10 @@ import {
   promptForStep,
 } from "../services/wizard-engine.js";
 import { wizardSearch } from "../services/wizard-search.js";
+import { wizardRefine } from "../services/wizard-refine.js";
 
 function paramId(raw: string | string[]): string {
-  return Array.isArray(raw) ? raw[0] ?? "" : raw;
+  return Array.isArray(raw) ? (raw[0] ?? "") : raw;
 }
 
 function sessionResponse(session: Awaited<ReturnType<typeof wizardStatus>>) {
@@ -51,105 +52,190 @@ export function registerWizardRoutes(app: Express, apiPrefix: string): void {
     });
   });
 
-  app.get(`${base}/:id`, async (req: AuthenticatedPlannerRequest, res: Response) => {
-    const familyId = req.familyAuth?.family.id;
-    const session = await wizardStatus(paramId(req.params.id));
-    if (!session || session.familyId !== familyId) {
-      res.status(404).json({ ok: false, error: "session_not_found", message: "找不到 session" });
-      return;
-    }
-    res.json(sessionResponse(session));
-  });
+  app.get(
+    `${base}/:id`,
+    async (req: AuthenticatedPlannerRequest, res: Response) => {
+      const familyId = req.familyAuth?.family.id;
+      const session = await wizardStatus(paramId(req.params.id));
+      if (!session || session.familyId !== familyId) {
+        res.status(404).json({
+          ok: false,
+          error: "session_not_found",
+          message: "找不到 session",
+        });
+        return;
+      }
+      res.json(sessionResponse(session));
+    },
+  );
 
-  app.post(`${base}/:id/answer`, async (req: AuthenticatedPlannerRequest, res: Response) => {
-    const familyId = req.familyAuth?.family.id;
-    if (!familyId) {
-      res.status(401).json({ ok: false, error: "missing_api_key" });
-      return;
-    }
-    const body = req.body as { step?: WizardStep; value?: string };
-    if (!body.step || body.value === undefined) {
-      res.status(400).json({ ok: false, error: "invalid_request", message: "需要 step 與 value" });
-      return;
-    }
+  app.post(
+    `${base}/:id/answer`,
+    async (req: AuthenticatedPlannerRequest, res: Response) => {
+      const familyId = req.familyAuth?.family.id;
+      if (!familyId) {
+        res.status(401).json({ ok: false, error: "missing_api_key" });
+        return;
+      }
+      const body = req.body as { step?: WizardStep; value?: string };
+      if (!body.step || body.value === undefined) {
+        res.status(400).json({
+          ok: false,
+          error: "invalid_request",
+          message: "需要 step 與 value",
+        });
+        return;
+      }
 
-    const result = await wizardAnswer({
-      sessionId: paramId(req.params.id),
-      familyId,
-      step: body.step,
-      value: String(body.value),
-    });
-
-    if (!result.ok) {
-      const status =
-        result.error === "session_not_found"
-          ? 404
-          : result.error === "invalid_step"
-            ? 409
-            : 422;
-      res.status(status).json({
-        ok: false,
-        error: result.error,
-        message: result.message,
-        session: "session" in result ? sessionResponse(result.session) : undefined,
+      const result = await wizardAnswer({
+        sessionId: paramId(req.params.id),
+        familyId,
+        step: body.step,
+        value: String(body.value),
       });
-      return;
-    }
 
-    res.json({
-      ok: true,
-      session: sessionResponse(result.session),
-      prompt: result.prompt?.prompt,
-    });
-  });
-
-  app.post(`${base}/:id/back`, async (req: AuthenticatedPlannerRequest, res: Response) => {
-    const familyId = req.familyAuth?.family.id;
-    if (!familyId) {
-      res.status(401).json({ ok: false, error: "missing_api_key" });
-      return;
-    }
-
-    const result = await wizardBack({ sessionId: paramId(req.params.id), familyId });
-    if (!result.ok) {
-      const status = result.error === "session_not_found" ? 404 : 409;
-      res.status(status).json({ ok: false, error: result.error, message: result.message });
-      return;
-    }
-
-    res.json({
-      ok: true,
-      session: sessionResponse(result.session),
-      prompt: result.prompt?.prompt,
-    });
-  });
-
-  app.post(`${base}/:id/search`, async (req: AuthenticatedPlannerRequest, res: Response) => {
-    const familyId = req.familyAuth?.family.id;
-    if (!familyId) {
-      res.status(401).json({ ok: false, error: "missing_api_key" });
-      return;
-    }
-
-    const result = await wizardSearch({ sessionId: paramId(req.params.id), familyId });
-    if (!result.ok) {
-      const status =
-        result.error === "session_not_found"
-          ? 404
-          : result.error === "quota_exceeded"
-            ? 429
-            : result.error === "not_ready"
+      if (!result.ok) {
+        const status =
+          result.error === "session_not_found"
+            ? 404
+            : result.error === "invalid_step"
               ? 409
-              : 502;
-      res.status(status).json({ ok: false, error: result.error, message: result.message });
-      return;
-    }
+              : 422;
+        res.status(status).json({
+          ok: false,
+          error: result.error,
+          message: result.message,
+          session:
+            "session" in result ? sessionResponse(result.session) : undefined,
+        });
+        return;
+      }
 
-    res.json({
-      ok: true,
-      sessionId: result.sessionId,
-      count: result.tours.length,
-      tours: result.tours,
-    });
-  });
+      res.json({
+        ok: true,
+        session: sessionResponse(result.session),
+        prompt: result.prompt?.prompt,
+      });
+    },
+  );
+
+  app.post(
+    `${base}/:id/back`,
+    async (req: AuthenticatedPlannerRequest, res: Response) => {
+      const familyId = req.familyAuth?.family.id;
+      if (!familyId) {
+        res.status(401).json({ ok: false, error: "missing_api_key" });
+        return;
+      }
+
+      const result = await wizardBack({
+        sessionId: paramId(req.params.id),
+        familyId,
+      });
+      if (!result.ok) {
+        const status = result.error === "session_not_found" ? 404 : 409;
+        res
+          .status(status)
+          .json({ ok: false, error: result.error, message: result.message });
+        return;
+      }
+
+      res.json({
+        ok: true,
+        session: sessionResponse(result.session),
+        prompt: result.prompt?.prompt,
+      });
+    },
+  );
+
+  app.post(
+    `${base}/:id/search`,
+    async (req: AuthenticatedPlannerRequest, res: Response) => {
+      const familyId = req.familyAuth?.family.id;
+      if (!familyId) {
+        res.status(401).json({ ok: false, error: "missing_api_key" });
+        return;
+      }
+
+      const result = await wizardSearch({
+        sessionId: paramId(req.params.id),
+        familyId,
+      });
+      if (!result.ok) {
+        const status =
+          result.error === "session_not_found"
+            ? 404
+            : result.error === "quota_exceeded"
+              ? 429
+              : result.error === "not_ready"
+                ? 409
+                : 502;
+        res
+          .status(status)
+          .json({ ok: false, error: result.error, message: result.message });
+        return;
+      }
+
+      res.json({
+        ok: true,
+        sessionId: result.sessionId,
+        count: result.tours.length,
+        tours: result.tours,
+      });
+    },
+  );
+
+  app.post(
+    `${base}/:id/refine`,
+    async (req: AuthenticatedPlannerRequest, res: Response) => {
+      const familyId = req.familyAuth?.family.id;
+      if (!familyId) {
+        res.status(401).json({ ok: false, error: "missing_api_key" });
+        return;
+      }
+
+      const body = req.body as { field?: string; value?: string };
+      if (!body.field || body.value === undefined) {
+        res.status(400).json({
+          ok: false,
+          error: "invalid_request",
+          message: "需要 field 與 value",
+        });
+        return;
+      }
+
+      const result = await wizardRefine({
+        sessionId: paramId(req.params.id),
+        familyId,
+        field: body.field as Parameters<typeof wizardRefine>[0]["field"],
+        value: String(body.value),
+      });
+
+      if (!result.ok) {
+        const status =
+          result.error === "session_not_found"
+            ? 404
+            : result.error === "quota_exceeded"
+              ? 429
+              : result.error === "need_clarification"
+                ? 422
+                : result.error === "wizard_not_complete"
+                  ? 409
+                  : 502;
+        res
+          .status(status)
+          .json({ ok: false, error: result.error, message: result.message });
+        return;
+      }
+
+      res.json({
+        ok: true,
+        sessionId: result.sessionId,
+        field: result.field,
+        answers: result.answers,
+        count: result.count,
+        tours: result.tours,
+      });
+    },
+  );
 }

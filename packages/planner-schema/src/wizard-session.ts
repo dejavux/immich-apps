@@ -1,9 +1,11 @@
 import type { DateWindow } from "./date-window.js";
+import type { DestinationIntent } from "./destination-intent.js";
 import type { DurationRange } from "./duration-range.js";
 
 export type WizardStep =
   | "when"
   | "duration"
+  | "destination"
   | "depart_from"
   | "must"
   | "budget"
@@ -18,6 +20,7 @@ export type TourType = "group" | "fit";
 export type WizardAnswers = {
   when?: DateWindow;
   duration?: DurationRange;
+  destination?: DestinationIntent;
   depart_from?: DepartFrom;
   must?: string[];
   budget?: BudgetRange;
@@ -40,8 +43,11 @@ export type WizardSession = {
 export const WIZARD_STEP_ORDER: readonly WizardStep[] = [
   "when",
   "duration",
+  "destination",
   "depart_from",
   "must",
   "budget",
   "review",
 ] as const;
+
+export type { DestinationIntent } from "./destination-intent.js";

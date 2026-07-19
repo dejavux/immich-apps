@@ -121,6 +121,12 @@
     "Kaohsiung",
     "Taichung",
     "Aurlandsvangen",
-    "CLDR"
+    "CLDR",
+    "dscacheutil",
+    "flushcache",
+    "homelab",
+    "modelcontextprotocol",
+    "NXDOMAIN",
+    "streamable"
   ]
 }
