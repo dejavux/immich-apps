@@ -86,6 +86,8 @@ export const env = {
   ),
   webauthnRpId: optional("WEBAUTHN_RP_ID", ""),
   webauthnRpName: optional("WEBAUTHN_RP_NAME", "Immich LINE"),
+  /** LIFF Passkey gate (default off until Safari/WebAuthn UX is simplified). */
+  passkeyEnabled: optional("PASSKEY_ENABLED", "false") === "true",
   /** Optional Redis for passkey credential persistence */
   redisUrl: optional("REDIS_URL", ""),
 };

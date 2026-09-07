@@ -1,8 +1,10 @@
 import { env } from "../line-bot/config/env";
+import { isPasskeyEnabled } from "../auth/passkey-enabled";
 import { liffHubStyles, renderLiffClientScript } from "./liff-shared";
 
 export function renderLiffSettingsPage(): string {
   const liffId = env.liffId;
+  const passkeyEnabled = isPasskeyEnabled();
 
   return `<!DOCTYPE html>
 <html lang="zh-Hant">
@@ -15,9 +17,11 @@ export function renderLiffSettingsPage(): string {
 </head>
 <body>
   <p class="sub"><a href="/liff/hub">← 返回相簿中心</a></p>
-  <h1>帳戶與 Passkey</h1>
+  <h1>${passkeyEnabled ? "帳戶與 Passkey" : "帳戶設定"}</h1>
 
-  <div id="unlock-panel" class="card hidden">
+  ${
+    passkeyEnabled
+      ? `<div id="unlock-panel" class="card hidden">
     <h3>🔐 需要解鎖</h3>
     <p>變更 Passkey 前請先驗證 Face ID。</p>
     <button type="button" id="unlock-btn">使用 Face ID 解鎖</button>
@@ -33,12 +37,25 @@ export function renderLiffSettingsPage(): string {
       <button type="button" id="register-btn">註冊 Passkey</button>
       <button type="button" id="revoke-btn" class="secondary hidden">移除 Passkey</button>
     </div>
-  </div>
+  </div>`
+      : `<div id="settings-panel">
+    <div class="card">
+      <h3>Immich 相簿</h3>
+      <p>在瀏覽器開啟完整相簿與上傳功能。</p>
+      <a class="btn" href="${env.immichWebUrl}" target="_blank" rel="noopener">前往 Immich</a>
+    </div>
+    <p class="sub">Passkey 保護已暫時關閉；僅需 LINE 登入即可使用。</p>
+  </div>`
+  }
 
   <p id="status"></p>
   <script>
+    const passkeyEnabled = ${passkeyEnabled ? "true" : "false"};
     ${renderLiffClientScript(liffId)}
 
+    if (!passkeyEnabled) {
+      initLiff().then(() => refreshAuthSession()).catch(() => {});
+    } else {
     const unlockPanel = document.getElementById("unlock-panel");
     const settingsPanel = document.getElementById("settings-panel");
     const revokeBtn = document.getElementById("revoke-btn");
@@ -170,6 +187,7 @@ export function renderLiffSettingsPage(): string {
     });
 
     bootstrap().catch((err) => setStatus("錯誤：" + err.message));
+    }
   </script>
 </body>
 </html>`;

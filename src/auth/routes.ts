@@ -20,6 +20,7 @@ import {
 } from "./middleware";
 import { getPasskeyStore } from "./passkey-store";
 import { resolveAuthLevelForLineUser } from "./auth-level";
+import { isPasskeyEnabled } from "./passkey-enabled";
 import {
   clearPasskeyUnlockGrant,
   setPasskeyUnlockGrant,
@@ -39,6 +40,17 @@ import {
 } from "./webauthn-config";
 
 export const authRoutes = Router();
+
+function passkeyGateActive(
+  passkeyCount: number,
+  authLevel: string,
+): boolean {
+  return (
+    isPasskeyEnabled() &&
+    passkeyCount > 0 &&
+    authLevel !== "passkey"
+  );
+}
 
 authRoutes.post("/session", async (req, res) => {
   if (!isAuthSessionConfigured()) {
@@ -120,7 +132,7 @@ authRoutes.post("/session/refresh", requireAuthSession, async (req: Authenticate
   res.json({
     ok: true,
     authLevel: "liff",
-    requiresUnlock: passkeys.length > 0,
+    requiresUnlock: passkeyGateActive(passkeys.length, "liff"),
     passkeyCount: passkeys.length,
   });
 });
@@ -135,7 +147,8 @@ authRoutes.get("/me", requireAuthSession, async (req: AuthenticatedRequest, res)
     role: session.role,
     authLevel: session.authLevel,
     passkeyCount: passkeys.length,
-    requiresUnlock: passkeys.length > 0 && session.authLevel !== "passkey",
+    requiresUnlock: passkeyGateActive(passkeys.length, session.authLevel),
+    passkeyEnabled: isPasskeyEnabled(),
     immichWebUrl: env.immichWebUrl,
   });
 });
@@ -144,17 +157,20 @@ authRoutes.get("/settings", requireAuthSession, async (req: AuthenticatedRequest
   const session = req.authSession!;
   const passkeyStore = await getPasskeyStore();
   const passkeys = await passkeyStore.listByLineUser(session.sub);
-  if (passkeys.length > 0 && session.authLevel !== "passkey") {
+  if (passkeyGateActive(passkeys.length, session.authLevel)) {
     res.status(403).json({ ok: false, error: "passkey_gate_required" });
     return;
   }
   res.json({
     ok: true,
     immichWebUrl: env.immichWebUrl,
-    passkeys: passkeys.map((cred) => ({
-      id: cred.id,
-      transports: cred.transports ?? [],
-    })),
+    passkeyEnabled: isPasskeyEnabled(),
+    passkeys: isPasskeyEnabled()
+      ? passkeys.map((cred) => ({
+          id: cred.id,
+          transports: cred.transports ?? [],
+        }))
+      : [],
   });
 });
 
@@ -169,7 +185,7 @@ authRoutes.get(
     }
     const passkeyStore = await getPasskeyStore();
     const passkeys = await passkeyStore.listByLineUser(session.sub);
-    if (passkeys.length > 0 && session.authLevel !== "passkey") {
+    if (passkeyGateActive(passkeys.length, session.authLevel)) {
       res.status(403).json({ ok: false, error: "passkey_gate_required" });
       return;
     }
@@ -188,6 +204,14 @@ authRoutes.get(
 );
 
 const webauthnRoutes = Router();
+
+webauthnRoutes.use((req, res, next) => {
+  if (!isPasskeyEnabled()) {
+    res.status(404).json({ ok: false, error: "passkey_disabled" });
+    return;
+  }
+  next();
+});
 
 webauthnRoutes.get(
   "/credentials",

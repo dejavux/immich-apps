@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 
 import type { AuthSessionPayload } from "./session";
 import { verifyAuthSession } from "./session";
+import { isPasskeyEnabled } from "./passkey-enabled";
 
 export type AuthenticatedRequest = Request & {
   authSession?: AuthSessionPayload;
@@ -40,6 +41,10 @@ export function requirePasskeySession(
   next: NextFunction,
 ): void {
   requireAuthSession(req, res, () => {
+    if (!isPasskeyEnabled()) {
+      next();
+      return;
+    }
     if (req.authSession?.authLevel !== "passkey") {
       res.status(403).json({ ok: false, error: "passkey_session_required" });
       return;

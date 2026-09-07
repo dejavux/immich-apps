@@ -1,8 +1,10 @@
 import { env } from "../line-bot/config/env";
+import { isPasskeyEnabled } from "../auth/passkey-enabled";
 import { liffHubStyles, liffHubPageUrl, renderLiffClientScript } from "./liff-shared";
 
 export function renderLiffHubPage(): string {
   const liffId = env.liffId;
+  const passkeyEnabled = isPasskeyEnabled();
   const endpoint = liffHubPageUrl();
   const immichWebUrl = env.immichWebUrl;
 
@@ -24,13 +26,17 @@ export function renderLiffHubPage(): string {
       : `<div class="setup">尚未設定 <code>LIFF_ID</code>。Endpoint 建議設為 <code>${endpoint}</code></div>`
   }
 
-  <div id="unlock-panel" class="card hidden">
+  ${
+    passkeyEnabled
+      ? `<div id="unlock-panel" class="card hidden">
     <h3>🔐 解鎖設定</h3>
     <p>已啟用 Face ID / Passkey 保護。請驗證後管理帳戶。</p>
     <button type="button" id="unlock-btn">使用 Face ID 解鎖</button>
-  </div>
+  </div>`
+      : ""
+  }
 
-  <div id="hub-panel" class="hidden">
+  <div id="hub-panel" class="${passkeyEnabled ? "hidden" : ""}">
     <p class="sub" id="welcome-line">載入中…</p>
     <div class="card">
       <h3>開啟 Immich</h3>
@@ -41,12 +47,13 @@ export function renderLiffHubPage(): string {
       <h3>LINE Bot</h3>
       <p>在聊天室傳照片或輸入搜尋關鍵字（例：去年聖誕）。</p>
     </div>
-    <a class="btn secondary" href="/liff/hub/settings">帳戶與 Passkey</a>
+    <a class="btn secondary" href="/liff/hub/settings">${passkeyEnabled ? "帳戶與 Passkey" : "帳戶設定"}</a>
     <a class="btn secondary hidden" id="admin-link" href="/liff/hub/admin">管理員設定</a>
   </div>
 
   <p id="status">初始化中…</p>
   <script>
+    const passkeyEnabled = ${passkeyEnabled ? "true" : "false"};
     ${renderLiffClientScript(liffId)}
 
     const unlockPanel = document.getElementById("unlock-panel");
@@ -54,7 +61,7 @@ export function renderLiffHubPage(): string {
     const adminLink = document.getElementById("admin-link");
 
     function showHub(me) {
-      unlockPanel.classList.add("hidden");
+      if (unlockPanel) unlockPanel.classList.add("hidden");
       hubPanel.classList.remove("hidden");
       document.getElementById("welcome-line").textContent =
         "已登入 · 角色：" + (me.role === "admin" ? "管理員" : "一般使用者");
@@ -84,7 +91,7 @@ export function renderLiffHubPage(): string {
         setStatus("載入失敗：" + err.message);
         return;
       }
-      if (me.requiresUnlock) {
+      if (me.requiresUnlock && passkeyEnabled) {
         unlockPanel.classList.remove("hidden");
         setStatus("請使用 Face ID / Passkey 解鎖");
         return;
@@ -92,6 +99,7 @@ export function renderLiffHubPage(): string {
       showHub(me);
     }
 
+    if (passkeyEnabled) {
     document.getElementById("unlock-btn").addEventListener("click", async () => {
       setStatus("驗證中…");
       try {
@@ -107,6 +115,7 @@ export function renderLiffHubPage(): string {
         setStatus("解鎖失敗：" + err.message);
       }
     });
+    }
 
     bootstrap().catch((err) => setStatus("錯誤：" + err.message));
   </script>

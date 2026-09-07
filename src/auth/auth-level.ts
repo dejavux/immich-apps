@@ -1,4 +1,5 @@
 import type { AuthLevel } from "./session";
+import { isPasskeyEnabled } from "./passkey-enabled";
 import { hasPasskeyUnlockGrant } from "./passkey-unlock-grant";
 import { getPasskeyStore } from "./passkey-store";
 
@@ -6,6 +7,9 @@ import { getPasskeyStore } from "./passkey-store";
 export async function resolveAuthLevelForLineUser(
   lineUserId: string,
 ): Promise<AuthLevel> {
+  if (!isPasskeyEnabled()) {
+    return "liff";
+  }
   const passkeyStore = await getPasskeyStore();
   const passkeys = await passkeyStore.listByLineUser(lineUserId);
   if (passkeys.length === 0) {
