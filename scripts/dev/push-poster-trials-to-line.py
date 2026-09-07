@@ -18,21 +18,17 @@ CONTENT_STUDIO = Path("/Users/light0/DEV/content-studio/samples/labs/pipeline-sh
 
 BATCHES = [
     {
-        "title": "🏝 濟州島海報試做 v2（xxd / zine / relic）",
+        "title": "🏝 濟州島海報 · case 491（禁止過修／不加人）",
         "album": "Poster Trials · 濟州島",
         "files": [
-            CONTENT_STUDIO / "jeju-panel-pilot/out/jeju-people-xxd-panel-057-v2.jpg",
-            CONTENT_STUDIO / "jeju-panel-pilot/out/jeju-people-gc-minimal-zine-v2.jpg",
-            CONTENT_STUDIO / "jeju-panel-pilot/out/jeju-people-photo-relic-v2.jpg",
+            CONTENT_STUDIO / "jeju-panel-pilot/out/jeju-people-gc-minimal-zine-gpt2-case491.jpg",
         ],
     },
     {
-        "title": "🗾 日本旅海報試做 v2（xxd / zine / relic）",
+        "title": "🗾 日本旅海報 · case 463（多放家庭照片）",
         "album": "Poster Trials · 日本",
         "files": [
-            CONTENT_STUDIO / "japan-panel-pilot/out/japan-people-xxd-panel-057-v2.jpg",
-            CONTENT_STUDIO / "japan-panel-pilot/out/japan-people-gc-minimal-zine-v2.jpg",
-            CONTENT_STUDIO / "japan-panel-pilot/out/japan-people-photo-relic-v2.jpg",
+            CONTENT_STUDIO / "japan-panel-pilot/out/japan-people-gc-minimal-zine-gpt2-case463.jpg",
         ],
     },
 ]

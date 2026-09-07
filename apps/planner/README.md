@@ -72,9 +72,11 @@ DNS：對外需 **A 記錄** 指向 homelab 入口 IP（與 `immich.3q.fi` 相�
 | ------ | ------------------ |
 | Ingress `family-planner`（`immich` ns） | ✅ 已建，`planner.3q.fi` |
 | Pod `/health`（cluster 內） | ✅ `{"ok":true}` |
-| Route53 `planner.3q.fi` | ❌ 尚無解析（`immich.3q.fi` → `220.132.188.225`） |
-| 1Password `Family-Planner-DB` | ❌ `OnePasswordItem/family-planner-db` Ready=False |
-| TLS cert-manager | ⏳ 待 DNS 後完成 ACME |
+| Route53 `planner.3q.fi` | ✅ `220.132.188.225` |
+| Caddy 反向代理 | ✅ `planner.3q.fi`（2026-09-06） |
+| 1Password `Family-Planner-DB` | 🟡 臨時 K8s Secret；請 `op signin` 後跑 bootstrap |
+| Postgres `family_planner` | ✅ cluster `immich-postgres` |
+| `store=postgres` | ✅ pod log 確認 |
 
 建立 DNS（infra-bootstrap 慣例）：
 
