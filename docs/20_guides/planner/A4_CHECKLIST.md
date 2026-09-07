@@ -10,10 +10,20 @@
 | 項目 | 狀態 | 說明 |
 | ------ | ------ | ------ |
 | Route53 `planner.3q.fi` A | ✅ | `220.132.188.225`（與 `immich.3q.fi` 同 IP） |
-| Caddy 反向代理 | ❌ **阻塞** | `infra-bootstrap/60_apps/caddy/Caddyfile` **無** `planner.3q.fi` → 外部 TLS handshake 失敗 |
-| K8s Ingress + cert | ✅ | `planner-3q-fi-tls` Ready；cluster 內 `/health` `{"ok":true}` |
-| 1Password `Family-Planner-DB` | ❌ **阻塞** | vault `Infra-Platform` **無此 item** → `OnePasswordItem/family-planner-db` Ready=False |
-| `DATABASE_URL` 注入 | ❌ | Deployment 未設；目前 **MemoryPlannerStore**（restart 丟資料） |
+| Caddy 反向代理 | ✅ | `planner.3q.fi` → ingress-nginx（2026-09-06 deploy） |
+| K8s Ingress + cert | ✅ | `planner-3q-fi-tls` Ready；`https://planner.3q.fi/health` → `{"ok":true}` |
+| 1Password `Family-Planner-DB` | ✅ | Connect API（`fuqi-asset-manager`）建立；Operator `Ready=True` |
+| `DATABASE_URL` 注入 | ✅ | `store=postgres`；restart 後資料保留 |
+
+**Connect 路徑（免 `op signin`）**：
+
+```bash
+PLANNER_USE_CONNECT=1 bash scripts/planner/bootstrap-family-planner-db.sh --skip-db
+# 或
+bash scripts/planner/bootstrap-family-planner-db.sh --via-connect --skip-db
+```
+
+Operator 使用 `immich` namespace 的 `op-connect-token` → `fuqi-asset-manager/onepassword-connect`。
 
 ---
 

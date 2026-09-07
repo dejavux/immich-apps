@@ -125,6 +125,23 @@ P3  AI       Qwen vision · Photo Edit BFF
 
 ---
 
+## iCloud 修圖 → Immich 增量更新（Phase C · 小專案）
+
+**問題**：`icloud-primary` rsync 後 checksum 變更時，Immich **不會自動覆蓋**原 asset（可能 duplicate skip 或變新 asset）。
+
+**建議實作**：
+
+1. **對應表**：`osxphotos` UUID → Immich `deviceAssetId`（格式 `icloud-primary:{uuid}`）
+2. **偵測**：比對 local original mtime / checksum vs Immich asset metadata
+3. **更新**：checksum 變更 → Immich API **replace asset** 或 delete + reupload
+4. **增量範圍**（可選）：只掃「最近 N 天 mtime 變化」的 originals
+
+**驗收**：在 Photos 修圖一張已同步照片 → 跑增量 job → Immich 同一 asset 更新（非 duplicate）。
+
+**依賴**：Ops W2 icloud-primary rsync 收尾、Immich external library / upload API 穩定。
+
+---
+
 ## Immich Ops（Phase 1 / 4 / 5 — 獨立 backlog）
 
 > **釐清**：2026-06-22 agent-prompts 派工；cluster deploy 完成（probes、NetworkPolicy、CronJob、PrometheusRule）。Phase 5a **PASS**（2026-06-24）。
