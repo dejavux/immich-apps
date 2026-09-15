@@ -480,6 +480,19 @@ describe("parseSearchPlanFallback", () => {
     expect(plan.dateFrom).toBe("2024-01-01");
   });
 
+  it("parses Christmas dinner as event scene, not person 聖", () => {
+    const plan = parseSearchPlanFallback("找聖誕節聚餐的照片");
+    expect(plan.personNames).toEqual([]);
+    expect(plan.sceneQuery).toBe("聖誕節聚餐");
+    expect(plan.sceneQueryEn).toContain("Christmas");
+  });
+
+  it("parses birthday cake as event scene", () => {
+    const plan = parseSearchPlanFallback("找生日蛋糕吹蠟燭的照片");
+    expect(plan.personNames).toEqual([]);
+    expect(plan.sceneQuery).toMatch(/生日/);
+  });
+
   it("parses Disney as venue scene with multiple people", () => {
     const plan = parseSearchPlanFallback("找 Steffi. 小蕊 在Disney的照片");
     expect(plan.personNames).toEqual(["Steffi", "小蕊"]);
