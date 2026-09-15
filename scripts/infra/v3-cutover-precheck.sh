@@ -87,11 +87,10 @@ else
   err "missing open-api/immich-openapi-specs.json"
 fi
 
-if grep -rq 'deviceId\|deviceAssetId' "$ROOT/src/shared/immich-client.ts" \
-  "$ROOT/src/line-bot/handlers/line-webhook.ts" 2>/dev/null; then
-  pass "device upload fields present (required on Immich v2.7.5)"
+if grep -q 'deviceId: `LINE-' "$ROOT/src/line-bot/handlers/line-webhook.ts" 2>/dev/null; then
+  err "line-webhook still sends deviceId — remove before v3 cutover"
 else
-  err "deviceId/deviceAssetId missing — LINE upload 400 on v2.7.5 until v3 cutover"
+  pass "LINE upload omits deviceId (v3 compatible)"
 fi
 
 echo ""
