@@ -879,7 +879,7 @@ const SCENE_TRANSLATIONS: Array<[RegExp, string]> = [
   [/哭|哭泣|難過|傷心/, "crying tears sad emotional"],
   [/笑|開心|微笑|大笑/, "smiling happy laughing joyful"],
   [/生氣|生气/, "angry upset mad expression"],
-  [/迪士尼|Disney/i, "Disney theme park amusement"],
+  [/迪士尼|Disney/i, "Disney Mickey Mouse Cinderella castle theme park"],
   [/畫畫|寫字/, "drawing writing art"],
   [/穿裙子|裙子|洋裝|連身裙/, "wearing dress skirt girl"],
   [/穿.*褲/, "wearing pants trousers"],
@@ -1213,8 +1213,16 @@ function tryParseEmotionFollowUp(
   return { sceneQuery: match[1] };
 }
 
-/** Venue/theme-park queries should use CLIP smart search, not EXIF city filter. */
+/** Venue/theme-park queries use CLIP smart search + EXIF post-filter (not city metadata alone). */
 export function isVenueSceneQuery(plan: Partial<PhotoSearchPlan>): boolean {
   const scene = `${plan.sceneQuery ?? ""} ${plan.sceneQueryEn ?? ""}`;
   return /迪士尼|Disney/i.test(scene);
 }
+
+/** EXIF cities that indicate non-Disney theme parks (e.g. USJ geocodes as Amagasaki). */
+export const DISNEY_VENUE_EXCLUDED_CITY_RE =
+  /amagasaki|sakurajima|konohana|universal|環球|usj/i;
+
+/** EXIF cities commonly returned for Disney resort visits. */
+export const DISNEY_VENUE_PREFERRED_CITY_RE =
+  /urayasu|maihama|chiba|anaheim|orlando|marne-la-coquette|chessy|pudong|lantau/i;

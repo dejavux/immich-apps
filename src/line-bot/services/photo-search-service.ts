@@ -15,6 +15,8 @@ import type {
 import {
   buildSearchUserPrompt,
   buildPhotoSearchSystemPrompt,
+  DISNEY_VENUE_EXCLUDED_CITY_RE,
+  DISNEY_VENUE_PREFERRED_CITY_RE,
   ensureActivityFromText,
   ensureAgeFromText,
   ensureRelativeDatesFromText,
@@ -1020,8 +1022,9 @@ function formatSceneSegment(scene: string): string {
 }
 
 /**
- * Drop smart-search hits whose EXIF location contradicts a venue scene
- * (e.g. Taipei photo when searching Disney). Assets without EXIF city are kept.
+ * Drop smart-search hits whose EXIF location contradicts a venue scene.
+ * Disney: CLIP alone matches USJ/Nintendo; use reverse-geocoded city to exclude
+ * Universal Studios (Amagasaki) and prefer known Disney resort cities.
  */
 export function filterVenueSceneResults(
   items: PhotoSearchAssetHit[],
@@ -1031,15 +1034,27 @@ export function filterVenueSceneResults(
     return items;
   }
 
-  return items.filter((item) => {
+  const withoutContradictions = items.filter((item) => {
     const city = item.city?.toLowerCase() ?? "";
     const country = item.country?.toLowerCase() ?? "";
+    const location = `${city} ${country}`;
     if (!city && !country) {
       return true;
     }
-    if (/taipei|taichung|kaohsiung|taiwan/.test(`${city} ${country}`)) {
+    if (/taipei|taichung|kaohsiung|taiwan/.test(location)) {
+      return false;
+    }
+    if (DISNEY_VENUE_EXCLUDED_CITY_RE.test(location)) {
       return false;
     }
     return true;
   });
+
+  const preferred = withoutContradictions.filter((item) => {
+    const city = item.city?.toLowerCase() ?? "";
+    const country = item.country?.toLowerCase() ?? "";
+    return DISNEY_VENUE_PREFERRED_CITY_RE.test(`${city} ${country}`);
+  });
+
+  return preferred.length > 0 ? preferred : withoutContradictions;
 }
