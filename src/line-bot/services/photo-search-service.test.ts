@@ -514,10 +514,41 @@ describe("filterVenueSceneResults", () => {
       ],
       {
         sceneQuery: "Disney",
-        sceneQueryEn: "Disney theme park amusement",
+        sceneQueryEn: "Disney Mickey Mouse Cinderella castle theme park",
       },
     );
-    expect(filtered.map((item) => item.id)).toEqual(["a2", "a3"]);
+    expect(filtered.map((item) => item.id)).toEqual(["a2"]);
+  });
+
+  it("keeps no-EXIF hits when no preferred Disney city is present", () => {
+    const filtered = filterVenueSceneResults(
+      [{ id: "a3" }, { id: "usj", city: "Amagasaki", country: "Japan" }],
+      { sceneQuery: "迪士尼" },
+    );
+    expect(filtered.map((item) => item.id)).toEqual(["a3"]);
+  });
+
+  it("drops USJ (Amagasaki) EXIF hits for Disney venue search", () => {
+    const filtered = filterVenueSceneResults(
+      [
+        {
+          id: "usj",
+          city: "Amagasaki",
+          country: "Japan",
+        },
+        {
+          id: "tdr",
+          city: "Urayasu",
+          country: "Japan",
+        },
+        { id: "no-exif" },
+      ],
+      {
+        sceneQuery: "迪士尼",
+        sceneQueryEn: "Disney Mickey Mouse Cinderella castle theme park",
+      },
+    );
+    expect(filtered.map((item) => item.id)).toEqual(["tdr"]);
   });
 });
 
