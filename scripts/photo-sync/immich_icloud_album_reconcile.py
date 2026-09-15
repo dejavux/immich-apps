@@ -168,13 +168,11 @@ def align_mac_only_immich(
     uploaded_ids: list[str] = []
     for path, checksum, capture_dt in upload_rows:
         created = capture_dt or datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
-        device_asset_id = f"{lib_id}:{path.stem}:{checksum[:12]}"
         asset = upload_asset_file(
             base=base,
             api_key=api_key,
             path=path,
             file_created_at=created,
-            device_asset_id=device_asset_id,
         )
         asset_id = str(asset.get("id", "")) if isinstance(asset, dict) else ""
         if asset_id:
