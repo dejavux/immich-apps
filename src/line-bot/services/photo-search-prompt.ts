@@ -268,6 +268,26 @@ function isPersonStopword(name: string): boolean {
   return PERSON_STOPWORDS.has(name.trim());
 }
 
+/** 節日 / 事件片語（不可拆成人物名 + 場景，例如 聖誕節聚餐） */
+export const EVENT_PHRASE_RE =
+  /聖誕|平安夜|跨年|除夕|中秋|端午|元宵|婚禮|婚紗|生日|滿月|畢業|聚餐|野餐|露營|煙火|派對|萬聖/i;
+
+export function isEventPhrase(text: string): boolean {
+  return EVENT_PHRASE_RE.test(text.trim());
+}
+
+/** 是否像 Immich 人物名（排除單字、節日、地點、關係詞） */
+export function looksLikePersonName(name: string): boolean {
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.length < 2) {
+    return false;
+  }
+  if (isEventPhrase(trimmed) || isKnownLocation(trimmed) || isRelationshipWord(trimmed)) {
+    return false;
+  }
+  return true;
+}
+
 const PERSON_NAME_SPLIT = /(?:和|跟|與|以及|、|,|&)+/;
 
 /** 關係稱謂（非 Immich 人物名）；搜尋時略過，僅保留具名人物。 */
@@ -463,13 +483,38 @@ function resolveRegionScene(
   return undefined;
 }
 
+export function tryParseEventScenePhoto(
+  text: string,
+): { sceneQuery: string } | undefined {
+  const trimmed = text.trim();
+  if (tryParsePersonAge(trimmed)) {
+    return undefined;
+  }
+  const match = trimmed.match(
+    new RegExp(`^${SEARCH_PREFIX}(.+?)${PHOTO_SUFFIX}$`),
+  );
+  if (!match) {
+    return undefined;
+  }
+  const scene = cleanScenePhrase(match[1]);
+  if (scene && !isAgePhrase(scene) && isEventPhrase(scene)) {
+    return { sceneQuery: scene };
+  }
+  return undefined;
+}
+
 export function tryParseSceneOnlyPhoto(
   text: string,
 ): { sceneQuery: string } | undefined {
   const trimmed = text.trim();
 
-  if (tryParsePersonAge(trimmed) || tryParsePersonScenePhoto(trimmed)) {
+  if (tryParsePersonAge(trimmed)) {
     return undefined;
+  }
+
+  const eventScene = tryParseEventScenePhoto(trimmed);
+  if (eventScene) {
+    return eventScene;
   }
 
   const atScene = trimmed.match(
@@ -592,7 +637,7 @@ export function ensureAgeFromText(
 }
 
 const ACTIVITY_WORDS =
-  "吃飯|用餐|進食|睡覺|午睡|玩耍|遊玩|游泳|跑步|讀書|看書|唱歌|跳舞|刷牙|洗澡|畫畫|寫字|騎車|開車|坐車|搭車|看電視";
+  "吃飯|用餐|進食|聚餐|睡覺|午睡|玩耍|遊玩|游泳|跑步|讀書|看書|唱歌|跳舞|刷牙|洗澡|畫畫|寫字|騎車|開車|坐車|搭車|看電視";
 
 export const EMOTION_WORDS =
   "哭|笑|開心|難過|傷心|生氣|生气|微笑|大笑|哭泣|生氣的";
@@ -649,12 +694,20 @@ export function tryParsePersonBareScenePhoto(
     if (!match) {
       continue;
     }
-    const personNames = splitPersonNames(match[1]);
+    const personNames = filterSearchPersonNames(splitPersonNames(match[1]));
     if (personNames.length === 0) {
       continue;
     }
     const scene = match[2].trim();
-    if (!scene || isRelativeDateFragment(scene)) {
+    if (
+      !scene ||
+      isRelativeDateFragment(scene) ||
+      isEventPhrase(scene) ||
+      isEventPhrase(`${personNames.join("")}${scene}`)
+    ) {
+      continue;
+    }
+    if (!personNames.every((name) => looksLikePersonName(name))) {
       continue;
     }
     return { personNames, sceneQuery: scene };
@@ -708,9 +761,12 @@ export function tryParsePersonScenePhoto(
     if (
       !person ||
       isPersonStopword(person) ||
+      !looksLikePersonName(person) ||
       !scene ||
       isAgePhrase(scene) ||
       isRelativeDateFragment(scene) ||
+      isEventPhrase(scene) ||
+      isEventPhrase(`${person}${scene}`) ||
       /^\d+$/.test(person)
     ) {
       continue;
@@ -860,8 +916,9 @@ const SCENE_TRANSLATIONS: Array<[RegExp, string]> = [
   [/亞洲|亚洲/, "asia travel"],
   [/海邊|海灘|沙灘/, "beach ocean seaside"],
   [/山|登山|爬山/, "mountain hiking"],
+  [/聖誕|平安夜/, "Christmas holiday family dinner celebration"],
   [/生日|慶生|蛋糕/, "birthday party cake"],
-  [/吃飯|用餐|進食|美食/, "eating meal food dining"],
+  [/吃飯|用餐|進食|美食|聚餐/, "eating meal food dining gathering"],
   [/睡覺|午睡/, "sleeping nap bed"],
   [/玩耍|遊玩/, "playing fun children"],
   [/公園|遊樂/, "park playground"],
@@ -1050,6 +1107,21 @@ export function parseSearchPlanFallback(
       : plan;
   }
 
+  const eventScene = tryParseEventScenePhoto(working);
+  if (eventScene) {
+    const plan: PhotoSearchPlan = {
+      intent: "search_photos",
+      personNames: [],
+      sceneQuery: eventScene.sceneQuery,
+    };
+    if (rel) {
+      plan.dateFrom = rel.dateFrom;
+      plan.dateTo = rel.dateTo;
+      plan.dateRangeLabel = rel.label;
+    }
+    return ensureSceneQueryEn(plan);
+  }
+
   const sceneOnly = tryParseSceneOnlyPhoto(working);
   if (sceneOnly) {
     const plan: PhotoSearchPlan = {
@@ -1169,9 +1241,10 @@ export function parseSearchPlanFallback(
     const cleanedName = rawName ? cleanPersonName(rawName) : "";
     if (
       cleanedName &&
-      !isPersonStopword(cleanedName) &&
+      looksLikePersonName(cleanedName) &&
       !isKnownLocation(cleanedName) &&
       !isRelativeDateFragment(cleanedName) &&
+      !isEventPhrase(cleanedName) &&
       !/^\d+$/.test(cleanedName)
     ) {
       const plan: PhotoSearchPlan = {
