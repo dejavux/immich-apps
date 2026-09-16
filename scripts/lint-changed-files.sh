@@ -112,7 +112,7 @@ for f in "${FILES[@]}"; do
     *.ts|*.tsx|*.mts|*.cts) RUN_TYPECHECK=true ;;
     *.md) MD_FILES+=("$f") ;;
     *.sh) SH_FILES+=("$f") ;;
-    scripts/photo-sync/*.py) PY_FILES+=("$f") ;;
+    scripts/photo-sync/*.py|scripts/digital-frames/*.py) PY_FILES+=("$f") ;;
     Makefile|*.mk) NEED_MAKE_PARSE=true ;;
     deploy/helm/*/Chart.yaml)
       chart_dir="$(dirname "$f")"
