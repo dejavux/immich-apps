@@ -38,6 +38,25 @@ coverage/
 __pycache__/
 *.py[cod]
 
+# Digital frame export (local photos + secrets)
+scripts/digital-frames/.data/
+scripts/digital-frames/nixplay_config.json
+nixplay_photos/
+.cdp_expr_*.txt
+nixplay_expr_*.js
+/nixplay_*
+/pixstar_*
+/build_best2025*
+/fetch_immich_photos.py
+/dropbox_upload_photos.py
+/replace_manifest_photos.py
+/sync_best2025_all.py
+/upload_*.js
+/send_email*.py
+/test_email.py
+/nixplay_config.json
+/nixplay_dropbox_items.json
+
 # Kubernetes
 *.kubeconfig
 

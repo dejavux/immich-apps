@@ -127,6 +127,12 @@
     "homelab",
     "modelcontextprotocol",
     "NXDOMAIN",
-    "streamable"
+    "streamable",
+    "Nixplay",
+    "nixplay",
+    "Pixstar",
+    "pixstar",
+    "csrftoken",
+    "networkidle"
   ]
 }
