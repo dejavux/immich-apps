@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>峴港 5 日 · 雄獅基準團 Map</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3d8bfd;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+    header {
+      padding: 0.75rem 1rem;
+      background: var(--panel);
+      border-bottom: 1px solid #2a3548;
+    }
+    header h1 { font-size: 1.05rem; margin: 0 0 0.25rem; font-weight: 600; }
+    header p { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 320px) 1fr;
+      min-height: 0;
+    }
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    }
+    aside {
+      background: var(--panel);
+      border-right: 1px solid #2a3548;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+    .day-tabs { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.75rem; }
+    .day-tabs button {
+      border: 1px solid #3a4a63;
+      background: transparent;
+      color: var(--text);
+      padding: 0.35rem 0.55rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.78rem;
+    }
+    .day-tabs button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .day-tabs button.all-days { border-style: dashed; }
+    .day-card {
+      border: 1px solid #2a3548;
+      border-radius: 8px;
+      padding: 0.65rem 0.75rem;
+      margin-bottom: 0.5rem;
+      background: #121a26;
+    }
+    .day-card h2 { margin: 0 0 0.35rem; font-size: 0.9rem; }
+    .day-card .date { color: var(--accent); font-size: 0.78rem; margin-bottom: 0.5rem; }
+    .day-card ul { margin: 0; padding-left: 1.1rem; font-size: 0.82rem; color: var(--muted); }
+    .day-card li { margin-bottom: 0.25rem; }
+    #map { width: 100%; height: 100%; min-height: 280px; }
+    .leaflet-popup-content { font-size: 0.85rem; line-height: 1.35; margin: 0.5rem 0.65rem; }
+    .leaflet-popup-content strong { color: #1a1a1a; }
+    .legend {
+      font-size: 0.72rem;
+      color: var(--muted);
+      padding: 0.5rem 0.75rem 0.75rem;
+      border-top: 1px solid #2a3548;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>雄獅基準團 · 超值峴港 5 日（Map view）</h1>
+    <p>
+      2027/1/25–1/29 · TPE 星宇 · 跟團動線依領隊為準；地圖為景點代表座標。
+      <a href="https://travel.liontravel.com/detail?NormGroupID=5e6aa0bb-ef01-4b7b-88b9-945e81dd3a04&GroupID=27SV125JX1-T" style="color:#7eb6ff">官網商品</a>
+    </p>
+  </header>
+  <div class="layout">
+    <aside>
+      <div class="day-tabs" id="dayTabs"></div>
+      <div id="dayList"></div>
+      <p class="legend">工具：Leaflet + OpenStreetMap · 點選日期只看當日路線與地標</p>
+    </aside>
+    <div id="map"></div>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script>
+    const TRIP = {
+      title: "超值峴港・無購物五日",
+      depart: "2027-01-25",
+      return: "2027-01-29",
+      days: [
+        {
+          day: 1,
+          date: "2027-01-25",
+          label: "D1 抵達峴港",
+          color: "#e74c3c",
+          stops: [
+            { name: "峴港國際機場 (DAD)", note: "星宇 15:20 抵達 · 晚餐", lat: 16.0439, lng: 108.1993 },
+            { name: "峴港海濱／飯店區", note: "Paris Deli Beach 等或同級", lat: 16.0682, lng: 108.2455 },
+          ],
+        },
+        {
+          day: 2,
+          date: "2027-01-26",
+          label: "D2 迦南島・會安",
+          color: "#3498db",
+          stops: [
+            { name: "迦南島（竹桶船／椰子林）", note: "Cam Kim 一帶", lat: 15.8842, lng: 108.3385 },
+            { name: "會安古鎮", note: "燈籠古鎮 · 過夜", lat: 15.8801, lng: 108.3263 },
+          ],
+        },
+        {
+          day: 3,
+          date: "2027-01-27",
+          label: "D3 五行山・峴港市區",
+          color: "#2ecc71",
+          stops: [
+            { name: "五行山", note: "Marble Mountains", lat: 16.0038, lng: 108.2631 },
+            { name: "APEC 公園／海濱", note: "峴港灣區", lat: 16.061, lng: 108.2295 },
+            { name: "龍橋", note: "峴港地標 · 週末噴火", lat: 16.0614, lng: 108.2275 },
+            { name: "峴港市區飯店", note: "续住海濱", lat: 16.067, lng: 108.242 },
+          ],
+        },
+        {
+          day: 4,
+          date: "2027-01-28",
+          label: "D4 巴拿山・佛手橋",
+          color: "#9b59b6",
+          stops: [
+            { name: "巴拿山纜車站", note: "Ba Na Hills 入口", lat: 15.9945, lng: 107.9892 },
+            { name: "黃金佛手橋", note: "Golden Bridge", lat: 15.995, lng: 107.9965 },
+            { name: "靈應寺／法國村", note: "山頂園區", lat: 15.9985, lng: 108.0025 },
+          ],
+        },
+        {
+          day: 5,
+          date: "2027-01-29",
+          label: "D5 市區・返程",
+          color: "#f39c12",
+          stops: [
+            { name: "山茶半島・靈應寺", note: "Son Tra · 大觀音", lat: 16.1, lng: 108.2775 },
+            { name: "美溪沙灘", note: "My Khe Beach", lat: 16.0678, lng: 108.2453 },
+            { name: "峴港大教堂（粉紅教堂）", note: "Pink Church", lat: 16.068, lng: 108.2208 },
+            { name: "峴港國際機場 (DAD)", note: "星宇 18:25 起飛 · 22:10 抵 TPE", lat: 16.0439, lng: 108.1993 },
+          ],
+        },
+      ],
+    };
+
+    const map = L.map("map", { scrollWheelZoom: true }).setView([16.05, 108.22], 11);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+    }).addTo(map);
+
+    const layers = { markers: [], lines: [] };
+
+    function clearLayers() {
+      layers.markers.forEach((m) => map.removeLayer(m));
+      layers.lines.forEach((l) => map.removeLayer(l));
+      layers.markers = [];
+      layers.lines = [];
+    }
+
+    function showDay(dayNum) {
+      clearLayers();
+      const days =
+        dayNum === "all"
+          ? TRIP.days
+          : TRIP.days.filter((d) => d.day === dayNum);
+      const bounds = [];
+
+      days.forEach((d) => {
+        const latlngs = [];
+        d.stops.forEach((s, i) => {
+          const icon = L.divIcon({
+            className: "",
+            html: `<div style="background:${d.color};color:#fff;width:22px;height:22px;border-radius:50%;border:2px solid #fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.35)">${d.day}</div>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11],
+          });
+          const m = L.marker([s.lat, s.lng], { icon })
+            .bindPopup(
+              `<strong>${s.name}</strong><br/>${d.label}（${d.date}）<br/>${s.note || ""}`
+            )
+            .addTo(map);
+          layers.markers.push(m);
+          latlngs.push([s.lat, s.lng]);
+          bounds.push([s.lat, s.lng]);
+        });
+        if (latlngs.length > 1) {
+          const line = L.polyline(latlngs, {
+            color: d.color,
+            weight: 4,
+            opacity: 0.85,
+            dashArray: dayNum === "all" ? "6 8" : null,
+          }).addTo(map);
+          layers.lines.push(line);
+        }
+      });
+
+      if (bounds.length) {
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: dayNum === 4 ? 12 : 13 });
+      }
+    }
+
+    function renderSidebar(active) {
+      const tabs = document.getElementById("dayTabs");
+      tabs.innerHTML = "";
+      const allBtn = document.createElement("button");
+      allBtn.textContent = "全部";
+      allBtn.className = "all-days" + (active === "all" ? " active" : "");
+      allBtn.onclick = () => {
+        renderSidebar("all");
+        showDay("all");
+      };
+      tabs.appendChild(allBtn);
+      TRIP.days.forEach((d) => {
+        const b = document.createElement("button");
+        b.textContent = `D${d.day}`;
+        b.className = active === d.day ? "active" : "";
+        b.onclick = () => {
+          renderSidebar(d.day);
+          showDay(d.day);
+        };
+        tabs.appendChild(b);
+      });
+
+      const list = document.getElementById("dayList");
+      list.innerHTML = TRIP.days.map(
+        (d) => `
+        <article class="day-card">
+          <h2>${d.label}</h2>
+          <div class="date">${d.date}</div>
+          <ul>${d.stops.map((s) => `<li>${s.name}${s.note ? " — " + s.note : ""}</li>`).join("")}</ul>
+        </article>`
+      ).join("");
+    }
+
+    renderSidebar(1);
+    showDay(1);
+  </script>
+</body>
+</html>
