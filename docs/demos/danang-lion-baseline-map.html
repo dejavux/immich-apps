@@ -6,8 +6,7 @@
   <title>峴港 5 日 · 雄獅基準團 Map</title>
   <link
     rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
     crossorigin=""
   />
   <style>
@@ -24,9 +23,9 @@
       font-family: "Segoe UI", system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      height: 100vh;
-      display: grid;
-      grid-template-rows: auto 1fr;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
     }
     header {
       padding: 0.75rem 1rem;
@@ -36,12 +35,32 @@
     header h1 { font-size: 1.05rem; margin: 0 0 0.25rem; font-weight: 600; }
     header p { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
     .layout {
+      flex: 1;
       display: grid;
       grid-template-columns: minmax(260px, 320px) 1fr;
       min-height: 0;
     }
+    .map-wrap {
+      position: relative;
+      min-height: 360px;
+      height: 100%;
+    }
     @media (max-width: 720px) {
-      .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+      }
+      aside {
+        max-height: 42vh;
+        border-right: none;
+        border-bottom: 1px solid #2a3548;
+      }
+      #dayList { display: none; }
+      aside .legend { display: none; }
+      .map-wrap {
+        height: 52vh;
+        min-height: 320px;
+      }
     }
     aside {
       background: var(--panel);
@@ -76,7 +95,17 @@
     .day-card .date { color: var(--accent); font-size: 0.78rem; margin-bottom: 0.5rem; }
     .day-card ul { margin: 0; padding-left: 1.1rem; font-size: 0.82rem; color: var(--muted); }
     .day-card li { margin-bottom: 0.25rem; }
-    #map { width: 100%; height: 100%; min-height: 280px; }
+    #map { width: 100%; height: 100%; min-height: 320px; background: #1e2633; }
+    #mapError {
+      display: none;
+      padding: 1rem;
+      color: #ffb4b4;
+      font-size: 0.85rem;
+      background: #2a1212;
+      border: 1px solid #5c2020;
+      margin: 0.5rem;
+      border-radius: 8px;
+    }
     .leaflet-popup-content { font-size: 0.85rem; line-height: 1.35; margin: 0.5rem 0.65rem; }
     .leaflet-popup-content strong { color: #1a1a1a; }
     .legend {
@@ -101,15 +130,22 @@
       <div id="dayList"></div>
       <p class="legend">工具：Leaflet + OpenStreetMap · 點選日期只看當日路線與地標</p>
     </aside>
-    <div id="map"></div>
+    <div class="map-wrap">
+      <div id="mapError" role="alert"></div>
+      <div id="map"></div>
+    </div>
   </div>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script>
+    function showMapError(msg) {
+      const el = document.getElementById("mapError");
+      el.style.display = "block";
+      el.textContent = msg;
+    }
+    if (typeof L === "undefined") {
+      showMapError("地圖元件載入失敗，請改開 GitHub Pages 連結或檢查網路。");
+    } else {
     const TRIP = {
       title: "超值峴港・無購物五日",
       depart: "2027-01-25",
@@ -265,6 +301,17 @@
 
     renderSidebar(1);
     showDay(1);
+
+    function refreshMapSize() {
+      map.invalidateSize({ animate: false });
+    }
+    window.addEventListener("load", () => setTimeout(refreshMapSize, 150));
+    window.addEventListener("resize", refreshMapSize);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", refreshMapSize);
+    }
+    setTimeout(refreshMapSize, 400);
+    }
   </script>
 </body>
 </html>
