@@ -7,8 +7,9 @@
 
 ## 公開網址（`main`）
 
-- **jsDelivr（建議）** — 已報名團：  
-  `https://cdn.jsdelivr.net/gh/dejavux/immich-apps@main/docs/demos/danang-lion-27sv125br1-map.html`
+- **jsDelivr（建議，請直接開啟）** — 已報名團：  
+  `https://cdn.jsdelivr.net/gh/dejavux/immich-apps@main/docs/demos/danang-lion-27sv125br1-map.html`  
+  （勿用 `htmlpreview.github.io` 包一層，會阻擋 Leaflet）
 - **GitHub Pages**（Settings → Pages → **GitHub Actions** 啟用一次後）：  
   `https://dejavux.github.io/immich-apps/danang-lion-27sv125br1-map.html`
 - 比價示意：  
