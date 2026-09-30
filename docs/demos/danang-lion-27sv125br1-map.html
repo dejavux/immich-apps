@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="雄獅 27SV125BR1-T · 2027/1/25–1/29 峴港五日 · Map view + 分日行程" />
+  <title>27SV125BR1-T · 峴港 5 日 Map + Date</title>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+  />
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3d8bfd;
+      --ok: #3dd68c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 0.75rem 1rem;
+      background: var(--panel);
+      border-bottom: 1px solid #2a3548;
+    }
+    header h1 { font-size: 1.05rem; margin: 0 0 0.35rem; font-weight: 600; line-height: 1.35; }
+    header p { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.45; }
+    .badges { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; }
+    .badge {
+      font-size: 0.72rem;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      border: 1px solid #3a4a63;
+      color: var(--muted);
+    }
+    .badge.confirm { border-color: #2d6a4a; color: var(--ok); }
+    header a { color: #7eb6ff; }
+    .layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) 1fr;
+      min-height: 0;
+    }
+    .map-wrap {
+      position: relative;
+      min-height: 360px;
+      height: 100%;
+    }
+    @media (max-width: 720px) {
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+      }
+      aside {
+        max-height: 46vh;
+        border-right: none;
+        border-bottom: 1px solid #2a3548;
+      }
+      .map-wrap {
+        height: 52vh;
+        min-height: 320px;
+      }
+    }
+    aside {
+      background: var(--panel);
+      border-right: 1px solid #2a3548;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+    .day-tabs { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.75rem; }
+    .day-tabs button {
+      border: 1px solid #3a4a63;
+      background: transparent;
+      color: var(--text);
+      padding: 0.35rem 0.55rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.78rem;
+    }
+    .day-tabs button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .day-tabs button.all-days { border-style: dashed; }
+    .day-card {
+      border: 1px solid #2a3548;
+      border-radius: 8px;
+      padding: 0.65rem 0.75rem;
+      margin-bottom: 0.5rem;
+      background: #121a26;
+    }
+    .day-card.active-card { border-color: var(--accent); }
+    .day-card h2 { margin: 0 0 0.35rem; font-size: 0.9rem; }
+    .day-card .date { color: var(--accent); font-size: 0.78rem; margin-bottom: 0.35rem; }
+    .day-card .hotel {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.45rem;
+      padding-left: 0.5rem;
+      border-left: 2px solid #3a4a63;
+    }
+    .day-card ul { margin: 0; padding-left: 1.1rem; font-size: 0.82rem; color: var(--muted); }
+    .day-card li { margin-bottom: 0.25rem; }
+    #map { width: 100%; height: 100%; min-height: 320px; background: #1e2633; }
+    #mapError {
+      display: none;
+      padding: 1rem;
+      color: #ffb4b4;
+      font-size: 0.85rem;
+      background: #2a1212;
+      border: 1px solid #5c2020;
+      margin: 0.5rem;
+      border-radius: 8px;
+    }
+    .leaflet-popup-content { font-size: 0.85rem; line-height: 1.35; margin: 0.5rem 0.65rem; }
+    .leaflet-popup-content strong { color: #1a1a1a; }
+    .legend {
+      font-size: 0.72rem;
+      color: var(--muted);
+      padding: 0.5rem 0.75rem 0.75rem;
+      border-top: 1px solid #2a3548;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>已報名 · 雄獅超值峴港 5 日（Map + Date view）</h1>
+    <p>
+      <strong>27SV125BR1-T</strong> · 2027/1/25（日）– 1/29（四） · 長榮 BR391 09:45 TPE→11:40 峴港 · 回程 BR392 13:00→16:50 TPE ·
+      跟團實際順序以領隊為準；地圖為景點代表座標。
+      <a href="https://travel.liontravel.com/detail?NormGroupID=5e6aa0bb-ef01-4b7b-88b9-945e81dd3a04&GroupID=27SV125BR1-T">雄獅官網</a>
+    </p>
+    <div class="badges">
+      <span class="badge confirm">已確定參團</span>
+      <span class="badge">tripId: lion:27SV125BR1-T</span>
+      <span class="badge">extract 2026-09-30</span>
+      <span class="badge">無購物</span>
+    </div>
+  </header>
+  <div class="layout">
+    <aside>
+      <div class="day-tabs" id="dayTabs"></div>
+      <div id="dayList"></div>
+      <p class="legend">Leaflet + OSM · 左側為 Date view（分日卡片）· 右側為 Map view · 網址可加 <code>#d3</code> 分享當日</p>
+    </aside>
+    <div class="map-wrap">
+      <div id="mapError" role="alert"></div>
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    function showMapError(msg) {
+      const el = document.getElementById("mapError");
+      el.style.display = "block";
+      el.textContent = msg;
+    }
+    if (typeof L === "undefined") {
+      showMapError("地圖元件載入失敗，請檢查網路或使用 jsDelivr 公開連結。");
+    } else {
+    const WEEK = ["日", "一", "二", "三", "四", "五", "六"];
+    function formatDate(iso) {
+      const d = new Date(iso + "T12:00:00");
+      const w = WEEK[d.getDay()];
+      return `${iso.replace(/-/g, "/")}（${w}）`;
+    }
+
+    const TRIP = {
+      groupId: "27SV125BR1-T",
+      title: "超值峴港・無購物五日",
+      depart: "2027-01-25",
+      return: "2027-01-29",
+      days: [
+        {
+          day: 1,
+          date: "2027-01-25",
+          label: "D1 抵達・山茶半島・美溪",
+          hotel: "夜宿峴港海濱（Paris Deli Beach 等或同級）",
+          color: "#e74c3c",
+          stops: [
+            { name: "峴港國際機場 (DAD)", note: "長榮 BR391 · 11:40 抵達", lat: 16.0439, lng: 108.1993 },
+            { name: "山茶半島", note: "Son Tra Peninsula", lat: 16.102, lng: 108.279 },
+            { name: "靈應寺（山茶）", note: "Lin Ung Pagoda · 觀音像", lat: 16.0995, lng: 108.2778 },
+            { name: "美溪沙灘", note: "My Khe Beach", lat: 16.0678, lng: 108.2453 },
+            { name: "峴港海濱飯店區", note: "晚餐後入住", lat: 16.0682, lng: 108.2455 },
+          ],
+        },
+        {
+          day: 2,
+          date: "2027-01-26",
+          label: "D2 迦南島・會安古鎮",
+          hotel: "夜宿會安（Emm Hotel 等或同級）",
+          color: "#3498db",
+          stops: [
+            { name: "迦南島生態之旅", note: "竹桶船・椰子林", lat: 15.8842, lng: 108.3385 },
+            { name: "會安古鎮", note: "燈籠古鎮 · 夜遊", lat: 15.8801, lng: 108.3263 },
+          ],
+        },
+        {
+          day: 3,
+          date: "2027-01-27",
+          label: "D3 五行山・峴港市區",
+          hotel: "夜宿峴港海濱（續住 2 晚）",
+          color: "#2ecc71",
+          stops: [
+            { name: "五行山", note: "Marble Mountains", lat: 16.0038, lng: 108.2631 },
+            { name: "峴港大教堂", note: "粉紅教堂", lat: 16.068, lng: 108.2208 },
+            { name: "APEC 公園", note: "峴港灣海濱", lat: 16.061, lng: 108.2295 },
+            { name: "龍橋", note: "峴港地標", lat: 16.0614, lng: 108.2275 },
+          ],
+        },
+        {
+          day: 4,
+          date: "2027-01-28",
+          label: "D4 巴拿山・佛手橋",
+          hotel: "峴港海濱（第二晚）",
+          color: "#9b59b6",
+          stops: [
+            { name: "巴拿山纜車站", note: "Ba Na Hills 入口", lat: 15.9945, lng: 107.9892 },
+            { name: "黃金佛手橋", note: "Golden Bridge / 佛手天空步道", lat: 15.995, lng: 107.9965 },
+            { name: "法國村／山頂園區", note: "Ba Na 主題園區", lat: 15.9985, lng: 108.0025 },
+          ],
+        },
+        {
+          day: 5,
+          date: "2027-01-29",
+          label: "D5 韓市・返程",
+          hotel: "—",
+          color: "#f39c12",
+          stops: [
+            { name: "韓江市集 Han Market", note: "峴港市區", lat: 16.0685, lng: 108.2202 },
+            { name: "峴港國際機場 (DAD)", note: "長榮 BR392 · 13:00 起飛 · 16:50 抵 TPE", lat: 16.0439, lng: 108.1993 },
+          ],
+        },
+      ],
+    };
+
+    const map = L.map("map", { scrollWheelZoom: true }).setView([16.05, 108.22], 11);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+    }).addTo(map);
+
+    const layers = { markers: [], lines: [] };
+    let activeDay = 1;
+
+    function clearLayers() {
+      layers.markers.forEach((m) => map.removeLayer(m));
+      layers.lines.forEach((l) => map.removeLayer(l));
+      layers.markers = [];
+      layers.lines = [];
+    }
+
+    function showDay(dayNum) {
+      clearLayers();
+      const days =
+        dayNum === "all"
+          ? TRIP.days
+          : TRIP.days.filter((d) => d.day === dayNum);
+      const bounds = [];
+
+      days.forEach((d) => {
+        const latlngs = [];
+        d.stops.forEach((s) => {
+          const icon = L.divIcon({
+            className: "",
+            html: `<div style="background:${d.color};color:#fff;width:22px;height:22px;border-radius:50%;border:2px solid #fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.35)">${d.day}</div>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11],
+          });
+          const m = L.marker([s.lat, s.lng], { icon })
+            .bindPopup(
+              `<strong>${s.name}</strong><br/>${d.label}<br/>${formatDate(d.date)}<br/>${s.note || ""}`
+            )
+            .addTo(map);
+          layers.markers.push(m);
+          latlngs.push([s.lat, s.lng]);
+          bounds.push([s.lat, s.lng]);
+        });
+        if (latlngs.length > 1) {
+          const line = L.polyline(latlngs, {
+            color: d.color,
+            weight: 4,
+            opacity: 0.85,
+            dashArray: dayNum === "all" ? "6 8" : null,
+          }).addTo(map);
+          layers.lines.push(line);
+        }
+      });
+
+      if (bounds.length) {
+        const zoomCap = dayNum === 4 || dayNum === 2 ? 12 : 13;
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: zoomCap });
+      }
+    }
+
+    function setHash(dayNum) {
+      const tag = dayNum === "all" ? "all" : `d${dayNum}`;
+      if (location.hash.replace("#", "") !== tag) {
+        history.replaceState(null, "", `#${tag}`);
+      }
+    }
+
+    function parseHash() {
+      const h = (location.hash || "").replace("#", "").toLowerCase();
+      if (h === "all") return "all";
+      const m = h.match(/^d?(\d)$/);
+      if (m) {
+        const n = Number(m[1]);
+        if (n >= 1 && n <= TRIP.days.length) return n;
+      }
+      return 1;
+    }
+
+    function renderSidebar(active) {
+      activeDay = active;
+      const tabs = document.getElementById("dayTabs");
+      tabs.innerHTML = "";
+      const allBtn = document.createElement("button");
+      allBtn.textContent = "全部";
+      allBtn.className = "all-days" + (active === "all" ? " active" : "");
+      allBtn.onclick = () => {
+        renderSidebar("all");
+        showDay("all");
+        setHash("all");
+      };
+      tabs.appendChild(allBtn);
+      TRIP.days.forEach((d) => {
+        const b = document.createElement("button");
+        b.textContent = `D${d.day}`;
+        b.title = formatDate(d.date);
+        b.className = active === d.day ? "active" : "";
+        b.onclick = () => {
+          renderSidebar(d.day);
+          showDay(d.day);
+          setHash(d.day);
+        };
+        tabs.appendChild(b);
+      });
+
+      const list = document.getElementById("dayList");
+      list.innerHTML = TRIP.days.map(
+        (d) => `
+        <article class="day-card${active === d.day ? " active-card" : ""}" id="day-card-${d.day}">
+          <h2>${d.label}</h2>
+          <div class="date">${formatDate(d.date)}</div>
+          <div class="hotel">🏨 ${d.hotel}</div>
+          <ul>${d.stops.map((s) => `<li>${s.name}${s.note ? " — " + s.note : ""}</li>`).join("")}</ul>
+        </article>`
+      ).join("");
+    }
+
+    function activateFromHash() {
+      const day = parseHash();
+      renderSidebar(day);
+      showDay(day);
+    }
+
+    window.addEventListener("hashchange", activateFromHash);
+    activateFromHash();
+
+    function refreshMapSize() {
+      map.invalidateSize({ animate: false });
+    }
+    window.addEventListener("load", () => setTimeout(refreshMapSize, 150));
+    window.addEventListener("resize", refreshMapSize);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", refreshMapSize);
+    }
+    setTimeout(refreshMapSize, 400);
+    }
+  </script>
+</body>
+</html>
