@@ -2,7 +2,8 @@
 
 | 檔案 | 說明 |
 |------|------|
-| [danang-lion-baseline-map.html](./danang-lion-baseline-map.html) | 2027 雄獅峴港基準團 · Leaflet 分日路線 |
+| [danang-lion-baseline-map.html](./danang-lion-baseline-map.html) | 比價用示意（JX1／星宇） |
+| [danang-lion-27sv125br1-map.html](./danang-lion-27sv125br1-map.html) | **已確認參團** 27SV125BR1-T · 長榮 |
 
 ## 公開網址（merge 至 `main` 後）
 
