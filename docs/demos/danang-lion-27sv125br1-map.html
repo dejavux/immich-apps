@@ -4,11 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>峴港 5 日 · 已確認 27SV125BR1-T</title>
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
-    crossorigin=""
-  />
   <style>
     :root {
       --bg: #0f1419;
@@ -114,6 +109,18 @@
       padding: 0.5rem 0.75rem 0.75rem;
       border-top: 1px solid #2a3548;
     }
+    .preview-banner {
+      display: none;
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.65rem;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      background: #3d2a12;
+      border: 1px solid #8a6420;
+      border-radius: 6px;
+      color: #ffd89a;
+    }
+    .preview-banner a { color: #9fd4ff; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -123,6 +130,11 @@
       2027/1/25–1/29 · TPE 長榮 · 團號 27SV125BR1-T · 跟團動線依領隊為準。
       <a href="https://travel.liontravel.com/detail?NormGroupID=5e6aa0bb-ef01-4b7b-88b9-945e81dd3a04&GroupID=27SV125BR1-T" style="color:#7eb6ff">官網</a>
       · 分享 <code>#d1</code>～<code>#d5</code> 或 <code>#all</code>
+      · <a id="directMapLink" href="https://cdn.jsdelivr.net/gh/dejavux/immich-apps@main/docs/demos/danang-lion-27sv125br1-map.html" style="color:#7eb6ff">地圖直連（請用此連結，勿用 htmlpreview）</a>
+    </p>
+    <p class="preview-banner" id="previewBanner" role="status">
+      你正在透過 htmlpreview 預覽，此模式常無法載入 Leaflet。
+      請改用 <a id="previewBannerLink" href="#">地圖直連連結</a>（Safari／Chrome 直接開啟）。
     </p>
   </header>
   <div class="layout">
@@ -137,16 +149,80 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script>
-    function showMapError(msg) {
+    const DIRECT_MAP_URL =
+      "https://cdn.jsdelivr.net/gh/dejavux/immich-apps@main/docs/demos/danang-lion-27sv125br1-map.html";
+    const LEAFLET_VERSION = "1.9.4";
+    const LEAFLET_CDNS = [
+      {
+        css: `https://cdn.jsdelivr.net/npm/leaflet@${LEAFLET_VERSION}/dist/leaflet.css`,
+        js: `https://cdn.jsdelivr.net/npm/leaflet@${LEAFLET_VERSION}/dist/leaflet.js`,
+      },
+      {
+        css: `https://unpkg.com/leaflet@${LEAFLET_VERSION}/dist/leaflet.css`,
+        js: `https://unpkg.com/leaflet@${LEAFLET_VERSION}/dist/leaflet.js`,
+      },
+      {
+        css: `https://cdnjs.cloudflare.com/ajax/libs/leaflet/${LEAFLET_VERSION}/leaflet.css`,
+        js: `https://cdnjs.cloudflare.com/ajax/libs/leaflet/${LEAFLET_VERSION}/leaflet.js`,
+      },
+    ];
+
+    function showMapError(html) {
       const el = document.getElementById("mapError");
       el.style.display = "block";
-      el.textContent = msg;
+      el.innerHTML = html;
     }
-    if (typeof L === "undefined") {
-      showMapError("地圖元件載入失敗，請改開 GitHub Pages 連結或檢查網路。");
-    } else {
+
+    function loadStylesheet(href) {
+      return new Promise((resolve, reject) => {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = href;
+        link.onload = () => resolve();
+        link.onerror = () => reject(new Error("css"));
+        document.head.appendChild(link);
+      });
+    }
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = false;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error("js"));
+        document.head.appendChild(script);
+      });
+    }
+
+    async function loadLeaflet() {
+      for (const cdn of LEAFLET_CDNS) {
+        try {
+          await loadStylesheet(cdn.css);
+          await loadScript(cdn.js);
+          if (typeof L !== "undefined") return;
+        } catch {
+          /* try next CDN */
+        }
+      }
+      throw new Error("leaflet");
+    }
+
+    function setupPreviewBanner() {
+      const hash = location.hash || "";
+      const direct = DIRECT_MAP_URL + hash;
+      const link = document.getElementById("directMapLink");
+      if (link) link.href = direct;
+      const bannerLink = document.getElementById("previewBannerLink");
+      if (bannerLink) bannerLink.href = direct;
+      if (/htmlpreview\.github\.io/i.test(location.hostname)) {
+        const banner = document.getElementById("previewBanner");
+        if (banner) banner.style.display = "block";
+      }
+    }
+
+    function initMapApp() {
     const TRIP = {
       title: "超值峴港・無購物五日",
       depart: "2027-01-25",
@@ -326,6 +402,20 @@
     }
     setTimeout(refreshMapSize, 400);
     }
+
+    setupPreviewBanner();
+
+    (async function boot() {
+      try {
+        await loadLeaflet();
+        initMapApp();
+      } catch {
+        const hash = location.hash || "";
+        showMapError(
+          `地圖元件載入失敗。請勿使用 htmlpreview，改開 <a href="${DIRECT_MAP_URL}${hash}" style="color:#9fd4ff">jsDelivr 直連</a>，或檢查網路／廣告阻擋。`
+        );
+      }
+    })();
   </script>
 </body>
 </html>
