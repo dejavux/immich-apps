@@ -12,7 +12,9 @@
 | 私密性 | 公開 repo／公開 URL（勿放個資） | 可限制在 `*.3q.fi`、OAuth、或內網 |
 | 與 Planner API | 分離；地圖不接雄獅 API | 可同源 `planner.3q.fi/tours/…`，日後接 API 較順 |
 
-**結論：** 迭代家庭 demo、快速給親友連結時，GitHub 最省事；若你希望**不公開**、固定網域、或與 Immich／Planner 同一叢集，**cluster 更合適**。
+**結論：** 迭代家庭 demo、快速給親友連結時，GitHub 最省事。目前家庭站**暫定只用 GitHub**；若日後要改 cluster，見下文「Cluster 建議做法」。
+
+Immich 相簿連結在 `family-tours-site.js` 的 `immich.url`（請改成實際 shared album）。
 
 ## 公開網址（目前）
 

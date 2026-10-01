@@ -365,6 +365,8 @@
     .poi-shop-grid span { display: block; padding: 0.35rem 0.4rem 0.45rem; }
   </style>
   <script src="danang-lion-27sv125br1-tour-data.js"></script>
+  <script src="family-tours-site.js"></script>
+  <script src="family-tours-ui.js"></script>
 </head>
 <body class="ft-page ft-page--tour">
   <header class="ft-site-header">
@@ -384,7 +386,7 @@
 
   <div class="ft-trip-hero">
     <div class="ft-trip-hero-inner">
-      <h1>已確認參團 · 超值峴港 5 日</h1>
+      <h1><span aria-hidden="true">✈️</span> 已確認參團 · 超值峴港 5 日</h1>
       <p class="ft-lead">
         Date + Map 動線備忘；車線為道路估算，實際跟領隊與行程表為準。
       </p>
@@ -392,6 +394,7 @@
         <span class="ft-chip ft-chip--warm">27SV125BR1-T</span>
         <span class="ft-chip">2027/1/25–1/29</span>
         <span class="ft-chip">長榮 BR391 / BR392</span>
+        <span class="ft-chip ft-chip--accent" id="ft-trip-countdown"></span>
         <span class="ft-chip">分享 <code style="font-size:0.85em">#d1</code>–<code style="font-size:0.85em">#d5</code> · <code style="font-size:0.85em">#all</code></span>
         <a class="ft-chip ft-chip--accent" href="https://travel.liontravel.com/detail?NormGroupID=5e6aa0bb-ef01-4b7b-88b9-945e81dd3a04&GroupID=27SV125BR1-T" target="_blank" rel="noopener">雄獅官網</a>
       </div>
@@ -421,24 +424,7 @@
     </div>
   </div>
 
-  <footer class="ft-site-footer">
-    <div class="ft-footer-inner">
-      <div>
-        <strong>本頁</strong>
-        <div class="ft-footer-links" style="margin-top:0.35rem;">
-          <a id="directMapLink" href="danang-lion-27sv125br1-map.html">複製用直連</a>
-          <a href="index.html">返回行程列表</a>
-          <a href="https://github.com/dejavux/immich-apps/blob/main/docs/demos/HOSTING.md" target="_blank" rel="noopener">部署說明</a>
-        </div>
-      </div>
-      <div>
-        <strong>提醒</strong>
-        <p class="ft-footer-note" style="margin:0.35rem 0 0;">
-          自費與 POI 為家庭整理，非雄獅官方文案。圖片來自 Wikimedia Commons；影片為 YouTube 第三方內容。
-        </p>
-      </div>
-    </div>
-  </footer>
+  <footer class="ft-site-footer" id="ft-shared-footer"></footer>
 
   <div class="lightbox" id="poiLightbox" role="dialog" aria-modal="true" aria-labelledby="poiLightboxTitle">
     <div class="lightbox-panel">
@@ -1262,6 +1248,19 @@
     }
 
     setupPreviewBanner();
+
+    (function mountTourChrome() {
+      const cd = FamilyToursUI.countdownLabel("2027-01-25", "2027-01-29");
+      const cdEl = document.getElementById("ft-trip-countdown");
+      if (cdEl && cd) cdEl.textContent = cd;
+      const hash = location.hash || "";
+      const direct = resolveDirectMapUrl() + hash;
+      FamilyToursUI.mountFooter({
+        extraHtml: `<div class="ft-tour-footer-extra"><a id="directMapLink" href="${direct}">🔗 複製用直連</a></div>`,
+      });
+      const link = document.getElementById("directMapLink");
+      if (link) link.href = direct;
+    })();
 
     (async function boot() {
       try {
