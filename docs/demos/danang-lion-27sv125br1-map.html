@@ -222,7 +222,7 @@
     }
     .lightbox.open { display: flex; }
     .lightbox-panel {
-      width: min(420px, 100%);
+      width: min(480px, 100%);
       max-height: 85vh;
       overflow-y: auto;
       background: var(--panel);
@@ -243,6 +243,79 @@
       font-size: 1.25rem;
       cursor: pointer;
       line-height: 1;
+    }
+    .poi-carousel {
+      margin: 0.5rem 0 0.75rem;
+      position: relative;
+      user-select: none;
+    }
+    .poi-carousel[hidden] { display: none !important; }
+    .poi-carousel-viewport {
+      overflow: hidden;
+      border-radius: 8px;
+      background: #0a0e14;
+      border: 1px solid #2a3548;
+    }
+    .poi-carousel-track {
+      display: flex;
+      transition: transform 0.28s ease;
+      will-change: transform;
+    }
+    .poi-carousel-slide {
+      min-width: 100%;
+      flex: 0 0 100%;
+    }
+    .poi-carousel-slide img {
+      width: 100%;
+      height: min(220px, 42vh);
+      object-fit: cover;
+      display: block;
+      background: #1e2633;
+    }
+    .poi-carousel-caption {
+      font-size: 0.72rem;
+      color: var(--muted);
+      padding: 0.4rem 0.5rem 0.5rem;
+      line-height: 1.35;
+    }
+    .poi-carousel-nav {
+      position: absolute;
+      top: 38%;
+      transform: translateY(-50%);
+      border: none;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background: rgba(15, 20, 28, 0.75);
+      color: #fff;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      border: 1px solid #3a4a63;
+    }
+    .poi-carousel-nav.prev { left: 0.35rem; }
+    .poi-carousel-nav.next { right: 0.35rem; }
+    .poi-carousel-dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.35rem;
+      margin-top: 0.45rem;
+    }
+    .poi-carousel-dots button {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      border: none;
+      padding: 0;
+      background: #3a4a63;
+      cursor: pointer;
+    }
+    .poi-carousel-dots button.active { background: var(--accent); }
+    .poi-carousel-counter {
+      text-align: center;
+      font-size: 0.68rem;
+      color: #6a7d96;
+      margin-top: 0.25rem;
     }
   </style>
   <script src="danang-lion-27sv125br1-tour-data.js"></script>
@@ -283,6 +356,7 @@
       <button type="button" class="lightbox-close" id="poiLightboxClose" aria-label="關閉">×</button>
       <h3 id="poiLightboxTitle"></h3>
       <div class="poi-type" id="poiLightboxType"></div>
+      <div id="poiLightboxCarousel" class="poi-carousel" hidden></div>
       <p id="poiLightboxIntro"></p>
       <div id="poiLightboxEvents"></div>
       <div id="poiLightboxShop"></div>
@@ -399,11 +473,81 @@
       return `${(m / 1000).toFixed(1)} km`;
     }
 
+    let poiCarouselIndex = 0;
+    let poiCarouselCount = 0;
+
+    function setPoiCarouselSlide(index) {
+      const track = document.querySelector("#poiLightboxCarousel .poi-carousel-track");
+      if (!track || !poiCarouselCount) return;
+      poiCarouselIndex = (index + poiCarouselCount) % poiCarouselCount;
+      track.style.transform = `translateX(-${poiCarouselIndex * 100}%)`;
+      document.querySelectorAll("#poiLightboxCarousel .poi-carousel-dots button").forEach((btn, i) => {
+        btn.classList.toggle("active", i === poiCarouselIndex);
+      });
+      const counter = document.getElementById("poiCarouselCounter");
+      if (counter) counter.textContent = `${poiCarouselIndex + 1} / ${poiCarouselCount}`;
+    }
+
+    function renderPoiCarousel(images) {
+      const host = document.getElementById("poiLightboxCarousel");
+      const list = (images || []).filter((img) => img?.src);
+      if (!list.length) {
+        host.hidden = true;
+        host.innerHTML = "";
+        poiCarouselCount = 0;
+        return;
+      }
+      host.hidden = false;
+      poiCarouselCount = list.length;
+      poiCarouselIndex = 0;
+      const slides = list
+        .map(
+          (img) => `
+        <div class="poi-carousel-slide">
+          <img src="${img.src}" alt="${img.caption || ""}" loading="lazy" decoding="async" onerror="this.style.opacity='0.35';this.alt='圖片暫時無法載入';" />
+          <div class="poi-carousel-caption">${img.caption || ""}</div>
+        </div>`
+        )
+        .join("");
+      const dots = list.map((_, i) => `<button type="button" aria-label="第 ${i + 1} 張" class="${i === 0 ? "active" : ""}"></button>`).join("");
+      host.innerHTML = `
+        <div class="poi-carousel-viewport">
+          <div class="poi-carousel-track">${slides}</div>
+          ${list.length > 1 ? `<button type="button" class="poi-carousel-nav prev" aria-label="上一張">‹</button><button type="button" class="poi-carousel-nav next" aria-label="下一張">›</button>` : ""}
+        </div>
+        ${list.length > 1 ? `<div class="poi-carousel-dots">${dots}</div><div class="poi-carousel-counter" id="poiCarouselCounter">1 / ${list.length}</div>` : ""}`;
+      if (list.length > 1) {
+        host.querySelector(".poi-carousel-nav.prev").onclick = () => setPoiCarouselSlide(poiCarouselIndex - 1);
+        host.querySelector(".poi-carousel-nav.next").onclick = () => setPoiCarouselSlide(poiCarouselIndex + 1);
+        host.querySelectorAll(".poi-carousel-dots button").forEach((btn, i) => {
+          btn.onclick = () => setPoiCarouselSlide(i);
+        });
+        let touchStartX = 0;
+        const viewport = host.querySelector(".poi-carousel-viewport");
+        viewport.addEventListener(
+          "touchstart",
+          (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+          },
+          { passive: true }
+        );
+        viewport.addEventListener(
+          "touchend",
+          (e) => {
+            const dx = e.changedTouches[0].screenX - touchStartX;
+            if (Math.abs(dx) > 40) setPoiCarouselSlide(poiCarouselIndex + (dx < 0 ? 1 : -1));
+          },
+          { passive: true }
+        );
+      }
+    }
+
     function openPoiLightbox(poiId) {
       const p = ENR.poi?.[poiId];
       if (!p) return;
       document.getElementById("poiLightboxTitle").textContent = p.title;
       document.getElementById("poiLightboxType").textContent = p.type || "";
+      renderPoiCarousel(p.images);
       document.getElementById("poiLightboxIntro").textContent = p.intro || "";
       const ev = document.getElementById("poiLightboxEvents");
       ev.innerHTML =
@@ -426,6 +570,13 @@
     document.getElementById("poiLightbox").onclick = (e) => {
       if (e.target.id === "poiLightbox") closePoiLightbox();
     };
+    document.addEventListener("keydown", (e) => {
+      const lb = document.getElementById("poiLightbox");
+      if (!lb.classList.contains("open")) return;
+      if (e.key === "Escape") closePoiLightbox();
+      if (poiCarouselCount > 1 && e.key === "ArrowLeft") setPoiCarouselSlide(poiCarouselIndex - 1);
+      if (poiCarouselCount > 1 && e.key === "ArrowRight") setPoiCarouselSlide(poiCarouselIndex + 1);
+    });
 
     function renderFlightPanel() {
       const el = document.getElementById("flightPanel");
