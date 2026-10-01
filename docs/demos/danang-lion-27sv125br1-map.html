@@ -63,7 +63,7 @@
         border-right: none;
         border-bottom: 1px solid #2a3548;
       }
-      #dayList { display: none; }
+      #dayList { max-height: 38vh; overflow-y: auto; }
       aside .legend { display: none; }
       .map-wrap {
         height: 52vh;
@@ -162,7 +162,90 @@
       color: #ffd89a;
     }
     .preview-banner a { color: #9fd4ff; font-weight: 600; }
+    .flight-panel, .optional-panel {
+      border: 1px solid #2a3548;
+      border-radius: 8px;
+      padding: 0.55rem 0.65rem;
+      margin-bottom: 0.5rem;
+      background: #121a26;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .flight-panel h3, .optional-panel summary {
+      margin: 0 0 0.35rem;
+      font-size: 0.82rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+    .flight-leg { margin-bottom: 0.45rem; padding-bottom: 0.45rem; border-bottom: 1px dashed #2a3548; }
+    .flight-leg:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .flight-leg strong { color: var(--accent); }
+    .flight-links a { color: #7eb6ff; margin-right: 0.35rem; display: inline-block; margin-top: 0.2rem; }
+    .flight-app-hint { font-size: 0.72rem; margin-top: 0.35rem; line-height: 1.35; }
+    .optional-panel summary { cursor: pointer; list-style: none; }
+    .optional-panel summary::-webkit-details-marker { display: none; }
+    .optional-item { margin: 0.4rem 0; padding-left: 0.5rem; border-left: 2px solid #3a4a63; }
+    .optional-item strong { color: #e8c468; font-size: 0.8rem; }
+    .day-route-meta {
+      font-size: 0.75rem;
+      color: #9fd4ff;
+      margin-bottom: 0.45rem;
+      line-height: 1.35;
+    }
+    .leg-time {
+      display: block;
+      font-size: 0.7rem;
+      color: #6a7d96;
+      margin: 0.1rem 0 0.25rem 1.75rem;
+    }
+    .info-btn {
+      flex: 0 0 auto;
+      border: 1px solid #3a4a63;
+      background: #1e2a3d;
+      color: #9fd4ff;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      padding: 0.1rem 0.35rem;
+      cursor: pointer;
+      margin-left: auto;
+    }
+    .stop-label { flex: 1; min-width: 0; }
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(8, 12, 18, 0.82);
+      padding: 1rem;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox-panel {
+      width: min(420px, 100%);
+      max-height: 85vh;
+      overflow-y: auto;
+      background: var(--panel);
+      border: 1px solid #3a4a63;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .lightbox-panel h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+    .lightbox-panel .poi-type { font-size: 0.75rem; color: var(--accent); margin-bottom: 0.5rem; }
+    .lightbox-panel p { font-size: 0.85rem; line-height: 1.45; color: var(--muted); }
+    .lightbox-panel h4 { font-size: 0.8rem; margin: 0.75rem 0 0.35rem; color: var(--text); }
+    .lightbox-panel ul { margin: 0; padding-left: 1.1rem; font-size: 0.82rem; color: var(--muted); }
+    .lightbox-close {
+      float: right;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 1.25rem;
+      cursor: pointer;
+      line-height: 1;
+    }
   </style>
+  <script src="danang-lion-27sv125br1-tour-data.js"></script>
 </head>
 <body>
   <header>
@@ -180,14 +263,29 @@
   </header>
   <div class="layout">
     <aside>
+      <section class="flight-panel" id="flightPanel" aria-label="航班資訊"></section>
+      <details class="optional-panel" open>
+        <summary>自費／可選行程</summary>
+        <div id="optionalPanel"></div>
+      </details>
       <div class="day-tabs" id="dayTabs"></div>
       <div id="dayList"></div>
-      <p class="legend">路線依序 1→2→3… · 車線：OSM 道路導航（遊覽車近似）· 實際以領隊為準</p>
+      <p class="legend">路線依序 1→2→3… · 車線：OSM 道路導航＋車程估算 · 點「詳情」看景點／購物</p>
     </aside>
     <div class="map-wrap">
       <div id="routeLoading" aria-live="polite">正在規劃道路路線…</div>
       <div id="mapError" role="alert"></div>
       <div id="map"></div>
+    </div>
+  </div>
+  <div class="lightbox" id="poiLightbox" role="dialog" aria-modal="true" aria-labelledby="poiLightboxTitle">
+    <div class="lightbox-panel">
+      <button type="button" class="lightbox-close" id="poiLightboxClose" aria-label="關閉">×</button>
+      <h3 id="poiLightboxTitle"></h3>
+      <div class="poi-type" id="poiLightboxType"></div>
+      <p id="poiLightboxIntro"></p>
+      <div id="poiLightboxEvents"></div>
+      <div id="poiLightboxShop"></div>
     </div>
   </div>
 
@@ -267,8 +365,12 @@
     const KIND_LABEL = { lodge: "Lodge", transport: "交通", spot: "景點" };
 
     function initMapApp() {
+    const ENR = window.TOUR_ENRICHMENT || { flights: {}, poi: {}, optionalTours: [], optionalDisclaimer: "" };
+    const dayDriveMeta = {};
+
     const LODGE_DN = {
       kind: "lodge",
+      poiId: "lodge-dn",
       name: "峴港海濱飯店",
       note: "Paris Deli Beach／Cicilia／Canvas 等或同級 · 美溪灣區",
       lat: 16.0682,
@@ -276,11 +378,93 @@
     };
     const LODGE_HOIAN = {
       kind: "lodge",
+      poiId: "lodge-hoian",
       name: "會安古鎮飯店",
       note: "Emm Hotel／Ally Beach 等或同級",
       lat: 15.8758,
       lng: 108.3312,
     };
+
+    function formatDuration(sec) {
+      if (!sec || !Number.isFinite(sec)) return "—";
+      const m = Math.round(sec / 60);
+      if (m < 60) return `約 ${m} 分`;
+      const h = Math.floor(m / 60);
+      const r = m % 60;
+      return r ? `約 ${h} 小時 ${r} 分` : `約 ${h} 小時`;
+    }
+
+    function formatKm(m) {
+      if (!m || !Number.isFinite(m)) return "";
+      return `${(m / 1000).toFixed(1)} km`;
+    }
+
+    function openPoiLightbox(poiId) {
+      const p = ENR.poi?.[poiId];
+      if (!p) return;
+      document.getElementById("poiLightboxTitle").textContent = p.title;
+      document.getElementById("poiLightboxType").textContent = p.type || "";
+      document.getElementById("poiLightboxIntro").textContent = p.intro || "";
+      const ev = document.getElementById("poiLightboxEvents");
+      ev.innerHTML =
+        p.events?.length
+          ? `<h4>活動／表演</h4><ul>${p.events.map((x) => `<li>${x}</li>`).join("")}</ul>`
+          : "";
+      const sh = document.getElementById("poiLightboxShop");
+      sh.innerHTML =
+        p.shop?.length
+          ? `<h4>值得買／伴手禮</h4><ul>${p.shop.map((x) => `<li>${x}</li>`).join("")}</ul>`
+          : "";
+      document.getElementById("poiLightbox").classList.add("open");
+    }
+
+    function closePoiLightbox() {
+      document.getElementById("poiLightbox").classList.remove("open");
+    }
+
+    document.getElementById("poiLightboxClose").onclick = closePoiLightbox;
+    document.getElementById("poiLightbox").onclick = (e) => {
+      if (e.target.id === "poiLightbox") closePoiLightbox();
+    };
+
+    function renderFlightPanel() {
+      const el = document.getElementById("flightPanel");
+      const legs = [ENR.flights?.outbound, ENR.flights?.inbound].filter(Boolean);
+      if (!legs.length) {
+        el.innerHTML = "<h3>航班</h3><p>尚無航班資料</p>";
+        return;
+      }
+      el.innerHTML =
+        "<h3>航班</h3>" +
+        legs
+          .map((f) => {
+            const links = (f.trackLinks || [])
+              .map((l) => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`)
+              .join("");
+            return `<div class="flight-leg">
+              <strong>${f.flightNo}</strong> · ${f.airline}<br/>
+              ${f.date} ${f.depart} ${f.from} → ${f.arrive} ${f.to}<br/>
+              <span class="flight-links">${links}</span>
+              <div class="flight-app-hint">${f.appHint || ""}</div>
+            </div>`;
+          })
+          .join("");
+    }
+
+    function renderOptionalPanel() {
+      const el = document.getElementById("optionalPanel");
+      const items = ENR.optionalTours || [];
+      el.innerHTML =
+        items
+          .map(
+            (o) =>
+              `<div class="optional-item"><strong>${o.title}</strong>（${o.days}）<br/>${o.priceHint}<br/>${o.note}</div>`
+          )
+          .join("") + `<p style="margin:0.5rem 0 0;font-size:0.72rem">${ENR.optionalDisclaimer || ""}</p>`;
+    }
+
+    renderFlightPanel();
+    renderOptionalPanel();
 
     const TRIP = {
       title: "超值峴港・無購物五日",
@@ -294,10 +478,10 @@
           label: "D1 抵達・山茶・美溪",
           color: "#e74c3c",
           stops: [
-            { kind: "transport", name: "峴港國際機場 (DAD)", note: "長榮 BR391 · 11:40 抵達", lat: 16.0439, lng: 108.1993 },
-            { kind: "spot", name: "山茶半島", note: "Son Tra", lat: 16.102, lng: 108.279 },
-            { kind: "spot", name: "靈應寺（山茶）", note: "Lin Ung · 觀音像", lat: 16.0995, lng: 108.2778 },
-            { kind: "spot", name: "美溪沙灘", note: "My Khe Beach", lat: 16.0678, lng: 108.2453 },
+            { kind: "transport", poiId: "dad", name: "峴港國際機場 (DAD)", note: "長榮 BR391 · 11:40 抵達", lat: 16.0439, lng: 108.1993 },
+            { kind: "spot", poiId: "sontra", name: "山茶半島", note: "Son Tra", lat: 16.102, lng: 108.279 },
+            { kind: "spot", poiId: "sontra-pagoda", name: "靈應寺（山茶）", note: "Lin Ung · 觀音像", lat: 16.0995, lng: 108.2778 },
+            { kind: "spot", poiId: "mykhe", name: "美溪沙灘", note: "My Khe Beach", lat: 16.0678, lng: 108.2453 },
             { ...LODGE_DN, note: "入住 · " + LODGE_DN.note },
           ],
         },
@@ -308,8 +492,8 @@
           color: "#3498db",
           stops: [
             { ...LODGE_DN, name: "峴港飯店（出發）", note: "早餐後出發" },
-            { kind: "spot", name: "迦南島生態之旅", note: "竹桶船・椰子林", lat: 15.8842, lng: 108.3385 },
-            { kind: "spot", name: "會安古鎮", note: "燈籠古鎮・自由活動", lat: 15.8801, lng: 108.3263 },
+            { kind: "spot", poiId: "camnam", name: "迦南島生態之旅", note: "竹桶船・椰子林", lat: 15.8842, lng: 108.3385 },
+            { kind: "spot", poiId: "hoian", name: "會安古鎮", note: "燈籠古鎮・自由活動", lat: 15.8801, lng: 108.3263 },
             { ...LODGE_HOIAN, note: "入住 · " + LODGE_HOIAN.note },
           ],
         },
@@ -320,10 +504,10 @@
           color: "#2ecc71",
           stops: [
             { ...LODGE_HOIAN, name: "會安飯店（出發）", note: "早餐後往峴港" },
-            { kind: "spot", name: "五行山", note: "Marble Mountains", lat: 16.0038, lng: 108.2631 },
-            { kind: "spot", name: "峴港大教堂", note: "粉紅教堂", lat: 16.068, lng: 108.2208 },
-            { kind: "spot", name: "APEC 公園", note: "海濱公園", lat: 16.061, lng: 108.2295 },
-            { kind: "spot", name: "龍橋", note: "峴港地標", lat: 16.0614, lng: 108.2275 },
+            { kind: "spot", poiId: "marble", name: "五行山", note: "Marble Mountains", lat: 16.0038, lng: 108.2631 },
+            { kind: "spot", poiId: "pinkchurch", name: "峴港大教堂", note: "粉紅教堂", lat: 16.068, lng: 108.2208 },
+            { kind: "spot", poiId: "apec", name: "APEC 公園", note: "海濱公園", lat: 16.061, lng: 108.2295 },
+            { kind: "spot", poiId: "dragon", name: "龍橋", note: "峴港地標", lat: 16.0614, lng: 108.2275 },
             { ...LODGE_DN, note: "入住 · 續住峴港 2 晚 · " + LODGE_DN.note },
           ],
         },
@@ -334,9 +518,9 @@
           color: "#9b59b6",
           stops: [
             { ...LODGE_DN, name: "峴港飯店（出發）", note: "全日巴拿山" },
-            { kind: "spot", name: "巴拿山纜車站", note: "Ba Na Hills 入口", lat: 15.9945, lng: 107.9892 },
-            { kind: "spot", name: "黃金佛手橋", note: "Golden Bridge", lat: 15.995, lng: 107.9965 },
-            { kind: "spot", name: "山頂園區", note: "靈應寺・法國村", lat: 15.9985, lng: 108.0025 },
+            { kind: "spot", poiId: "bana-gate", name: "巴拿山纜車站", note: "Ba Na Hills 入口", lat: 15.9945, lng: 107.9892 },
+            { kind: "spot", poiId: "golden-bridge", name: "黃金佛手橋", note: "Golden Bridge", lat: 15.995, lng: 107.9965 },
+            { kind: "spot", poiId: "bana-top", name: "山頂園區", note: "靈應寺・法國村", lat: 15.9985, lng: 108.0025 },
             { ...LODGE_DN, name: "峴港飯店（返回）", note: "晚餐後休息" },
           ],
         },
@@ -347,8 +531,8 @@
           color: "#f39c12",
           stops: [
             { ...LODGE_DN, name: "峴港飯店（出發）", note: "退房・行李" },
-            { kind: "spot", name: "韓江市集 Han Market", note: "伴手禮", lat: 16.0718, lng: 108.2235 },
-            { kind: "transport", name: "峴港國際機場 (DAD)", note: "長榮 BR392 · 13:00 起飛 · 16:50 抵 TPE", lat: 16.0439, lng: 108.1993 },
+            { kind: "spot", poiId: "hanmarket", name: "韓江市集 Han Market", note: "伴手禮", lat: 16.0718, lng: 108.2235 },
+            { kind: "transport", poiId: "dad", name: "峴港國際機場 (DAD)", note: "長榮 BR392 · 13:00 起飛 · 16:50 抵 TPE", lat: 16.0439, lng: 108.1993 },
           ],
         },
       ],
@@ -401,7 +585,7 @@
       return stops.map((s) => [s.lat, s.lng]);
     }
 
-    async function osrmLeg(stops) {
+    async function osrmRoute(stops) {
       if (stops.length < 2) return null;
       const key = stops.map((s) => `${s.lng},${s.lat}`).join(";");
       if (routeCache.has(key)) return routeCache.get(key);
@@ -411,31 +595,60 @@
       const res = await fetch(url);
       if (!res.ok) return null;
       const data = await res.json();
-      if (data.code !== "Ok" || !data.routes?.[0]?.geometry?.coordinates) return null;
-      const latlngs = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
-      routeCache.set(key, latlngs);
-      return latlngs;
+      const route = data.routes?.[0];
+      if (data.code !== "Ok" || !route?.geometry?.coordinates) return null;
+      const result = {
+        latlngs: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+        duration: route.duration,
+        distance: route.distance,
+      };
+      routeCache.set(key, result);
+      return result;
+    }
+
+    async function computeDayDriveMeta(stops) {
+      const legs = [];
+      let totalDuration = 0;
+      let totalDistance = 0;
+      for (let i = 0; i < stops.length - 1; i += 1) {
+        const seg = await osrmRoute([stops[i], stops[i + 1]]);
+        const duration = seg?.duration ?? 0;
+        const distance = seg?.distance ?? 0;
+        totalDuration += duration;
+        totalDistance += distance;
+        legs.push({ from: i + 1, to: i + 2, duration, distance });
+      }
+      return { totalDuration, totalDistance, legs, stopCount: stops.length };
     }
 
     async function roadRouteForStops(stops) {
       const waypoints = dedupeConsecutiveStops(stops);
-      if (waypoints.length < 2) return null;
+      if (waypoints.length < 2) return { latlngs: null, duration: 0, distance: 0 };
 
-      const multi = await osrmLeg(waypoints);
-      if (multi) return multi;
+      const multi = await osrmRoute(waypoints);
+      if (multi?.latlngs) return multi;
 
       const merged = [];
+      let duration = 0;
+      let distance = 0;
       for (let i = 0; i < waypoints.length - 1; i += 1) {
-        const leg = await osrmLeg([waypoints[i], waypoints[i + 1]]);
-        if (!leg) {
+        const seg = await osrmRoute([waypoints[i], waypoints[i + 1]]);
+        if (!seg?.latlngs) {
           if (!merged.length) merged.push([waypoints[i].lat, waypoints[i].lng]);
           merged.push([waypoints[i + 1].lat, waypoints[i + 1].lng]);
           continue;
         }
+        duration += seg.duration || 0;
+        distance += seg.distance || 0;
+        const leg = [...seg.latlngs];
         if (merged.length) leg.shift();
         merged.push(...leg);
       }
-      return merged.length ? merged : straightLineCoords(waypoints);
+      return {
+        latlngs: merged.length ? merged : straightLineCoords(waypoints),
+        duration,
+        distance,
+      };
     }
 
     function drawMarkersForDay(d, bounds) {
@@ -448,25 +661,45 @@
           iconSize: [26, 22],
           iconAnchor: [13, 11],
         });
+        const detail =
+          s.poiId && ENR.poi?.[s.poiId]
+            ? `<br/><a href="#" data-poi="${s.poiId}" class="poi-popup-link">詳情與購物建議</a>`
+            : "";
         const m = L.marker([s.lat, s.lng], { icon })
           .bindPopup(
-            `<strong>${seq}. ${s.name}</strong><br/><em>${kindTag(s.kind)}</em> · ${d.label}<br/>${d.date}<br/>${s.note || ""}`
+            `<strong>${seq}. ${s.name}</strong><br/><em>${kindTag(s.kind)}</em> · ${d.label}<br/>${d.date}<br/>${s.note || ""}${detail}`
           )
           .addTo(map);
+        m.on("popupopen", () => {
+          const link = document.querySelector(".poi-popup-link[data-poi]");
+          if (link) {
+            link.onclick = (ev) => {
+              ev.preventDefault();
+              openPoiLightbox(link.getAttribute("data-poi"));
+            };
+          }
+        });
         layers.markers.push(m);
         bounds.push([s.lat, s.lng]);
       });
     }
 
     async function drawRoadLineForDay(d, dayNum) {
-      const coords = await roadRouteForStops(d.stops);
+      dayDriveMeta[d.day] = await computeDayDriveMeta(d.stops);
+      const route = await roadRouteForStops(d.stops);
+      const coords = route?.latlngs;
       if (!coords || coords.length < 2) return;
+      const meta = dayDriveMeta[d.day];
+      const popup = meta
+        ? `🚐 車程 ${formatDuration(meta.totalDuration)} · ${formatKm(meta.totalDistance)}<br/><small>不含景點停留</small>`
+        : "";
       const line = L.polyline(coords, {
         color: d.color,
         weight: 5,
         opacity: 0.88,
         dashArray: dayNum === "all" ? "6 8" : null,
       }).addTo(map);
+      if (popup) line.bindPopup(popup);
       layers.lines.push(line);
     }
 
@@ -490,6 +723,7 @@
         if (bounds.length) {
           map.fitBounds(bounds, { padding: [40, 40], maxZoom: dayNum === 4 ? 12 : 13 });
         }
+        if (reqId === routeRequestId) renderSidebar(dayNum);
       } finally {
         if (reqId === routeRequestId) setRouteLoading(false);
       }
@@ -517,24 +751,49 @@
         tabs.appendChild(b);
       });
 
+      const daysToShow =
+        active === "all" ? TRIP.days : TRIP.days.filter((d) => d.day === active);
+
       const list = document.getElementById("dayList");
-      list.innerHTML = TRIP.days.map(
-        (d) => `
+      list.innerHTML = daysToShow
+        .map((d) => {
+          const meta = dayDriveMeta[d.day];
+          const metaLine = meta?.totalDuration
+            ? `<div class="day-route-meta">🚐 道路車程 ${formatDuration(meta.totalDuration)} · ${formatKm(meta.totalDistance)}（不含停留）</div>`
+            : "";
+          const legs = meta?.legs || [];
+          return `
         <article class="day-card">
           <h2>${d.label}</h2>
           <div class="date">${d.date}</div>
+          ${metaLine}
           <ol>${d.stops
-            .map(
-              (s, i) => `
+            .map((s, i) => {
+              const leg = legs.find((l) => l.from === i + 1);
+              const legLine =
+                leg?.duration
+                  ? `<span class="leg-time">→ 下一站 車程 ${formatDuration(leg.duration)}</span>`
+                  : "";
+              const btn =
+                s.poiId && ENR.poi?.[s.poiId]
+                  ? `<button type="button" class="info-btn" data-poi="${s.poiId}">詳情</button>`
+                  : "";
+              return `
             <li>
               <span class="seq">${i + 1}</span>
               <span class="kind kind-${s.kind}">${kindTag(s.kind)}</span>
-              <span>${s.name}${s.note ? " — " + s.note : ""}</span>
-            </li>`
-            )
+              <span class="stop-label">${s.name}${s.note ? " — " + s.note : ""}</span>
+              ${btn}
+            </li>${legLine}`;
+            })
             .join("")}</ol>
-        </article>`
-      ).join("");
+        </article>`;
+        })
+        .join("");
+
+      list.querySelectorAll(".info-btn[data-poi]").forEach((btn) => {
+        btn.onclick = () => openPoiLightbox(btn.getAttribute("data-poi"));
+      });
     }
 
     function parseHashDay() {
@@ -548,6 +807,8 @@
       renderSidebar(dayNum);
       showDay(dayNum).then(() => setTimeout(refreshMapSize, 50));
     }
+
+    window.openPoiLightbox = openPoiLightbox;
 
     applyDay(parseHashDay());
     window.addEventListener("hashchange", () => applyDay(parseHashDay()));
