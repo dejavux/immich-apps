@@ -88,8 +88,36 @@
     }
     .day-card h2 { margin: 0 0 0.35rem; font-size: 0.9rem; }
     .day-card .date { color: var(--accent); font-size: 0.78rem; margin-bottom: 0.5rem; }
-    .day-card ul { margin: 0; padding-left: 1.1rem; font-size: 0.82rem; color: var(--muted); }
-    .day-card li { margin-bottom: 0.25rem; }
+    .day-card ol {
+      margin: 0;
+      padding-left: 0;
+      list-style: none;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .day-card li {
+      margin-bottom: 0.35rem;
+      display: flex;
+      gap: 0.4rem;
+      align-items: flex-start;
+      line-height: 1.35;
+    }
+    .day-card .seq {
+      flex: 0 0 1.35rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 0.78rem;
+    }
+    .day-card .kind {
+      flex: 0 0 auto;
+      font-size: 0.72rem;
+      padding: 0.05rem 0.35rem;
+      border-radius: 4px;
+      margin-right: 0.15rem;
+    }
+    .kind-lodge { background: #3d3520; color: #e8c468; }
+    .kind-transport { background: #1e3348; color: #7eb6ff; }
+    .kind-spot { background: #243028; color: #8bcea0; }
     #map { width: 100%; height: 100%; min-height: 320px; background: #1e2633; }
     #mapError {
       display: none;
@@ -141,7 +169,7 @@
     <aside>
       <div class="day-tabs" id="dayTabs"></div>
       <div id="dayList"></div>
-      <p class="legend">工具：Leaflet + OpenStreetMap · 點選日期只看當日路線與地標</p>
+      <p class="legend">路線依序 1→2→3… · 🏨 Lodge／✈️ 交通／景點 · 跟團車線以領隊為準</p>
     </aside>
     <div class="map-wrap">
       <div id="mapError" role="alert"></div>
@@ -222,7 +250,24 @@
       }
     }
 
+    const KIND_LABEL = { lodge: "Lodge", transport: "交通", spot: "景點" };
+
     function initMapApp() {
+    const LODGE_DN = {
+      kind: "lodge",
+      name: "峴港海濱飯店",
+      note: "Paris Deli Beach／Cicilia／Canvas 等或同級 · 美溪灣區",
+      lat: 16.0682,
+      lng: 108.2455,
+    };
+    const LODGE_HOIAN = {
+      kind: "lodge",
+      name: "會安古鎮飯店",
+      note: "Emm Hotel／Ally Beach 等或同級",
+      lat: 15.8758,
+      lng: 108.3312,
+    };
+
     const TRIP = {
       title: "超值峴港・無購物五日",
       depart: "2027-01-25",
@@ -232,12 +277,14 @@
         {
           day: 1,
           date: "2027-01-25",
-          label: "D1 山茶半島・美溪",
+          label: "D1 抵達・山茶・美溪",
           color: "#e74c3c",
           stops: [
-            { name: "峴港國際機場 (DAD)", note: "長榮 09:45 抵達 11:40", lat: 16.0439, lng: 108.1993 },
-            { name: "山茶半島・靈應寺", note: "Son Tra 大觀音", lat: 16.1, lng: 108.2775 },
-            { name: "美溪沙灘", note: "My Khe", lat: 16.0678, lng: 108.2453 },
+            { kind: "transport", name: "峴港國際機場 (DAD)", note: "長榮 BR391 · 11:40 抵達", lat: 16.0439, lng: 108.1993 },
+            { kind: "spot", name: "山茶半島", note: "Son Tra", lat: 16.102, lng: 108.279 },
+            { kind: "spot", name: "靈應寺（山茶）", note: "Lin Ung · 觀音像", lat: 16.0995, lng: 108.2778 },
+            { kind: "spot", name: "美溪沙灘", note: "My Khe Beach", lat: 16.0678, lng: 108.2453 },
+            { ...LODGE_DN, note: "入住 · " + LODGE_DN.note },
           ],
         },
         {
@@ -246,20 +293,24 @@
           label: "D2 迦南島・會安",
           color: "#3498db",
           stops: [
-            { name: "迦南島（竹桶船／椰子林）", note: "Cam Kim", lat: 15.8842, lng: 108.3385 },
-            { name: "會安古鎮", note: "過夜", lat: 15.8801, lng: 108.3263 },
+            { ...LODGE_DN, name: "峴港飯店（出發）", note: "早餐後出發" },
+            { kind: "spot", name: "迦南島生態之旅", note: "竹桶船・椰子林", lat: 15.8842, lng: 108.3385 },
+            { kind: "spot", name: "會安古鎮", note: "燈籠古鎮・自由活動", lat: 15.8801, lng: 108.3263 },
+            { ...LODGE_HOIAN, note: "入住 · " + LODGE_HOIAN.note },
           ],
         },
         {
           day: 3,
           date: "2027-01-27",
-          label: "D3 五行山・市區",
+          label: "D3 五行山・峴港市區",
           color: "#2ecc71",
           stops: [
-            { name: "五行山", note: "Marble Mountains", lat: 16.0038, lng: 108.2631 },
-            { name: "峴港大教堂（粉紅教堂）", note: "Pink Church", lat: 16.068, lng: 108.2208 },
-            { name: "APEC 公園／海濱", note: "峴港灣區", lat: 16.061, lng: 108.2295 },
-            { name: "龍橋", note: "峴港地標", lat: 16.0614, lng: 108.2275 },
+            { ...LODGE_HOIAN, name: "會安飯店（出發）", note: "早餐後往峴港" },
+            { kind: "spot", name: "五行山", note: "Marble Mountains", lat: 16.0038, lng: 108.2631 },
+            { kind: "spot", name: "峴港大教堂", note: "粉紅教堂", lat: 16.068, lng: 108.2208 },
+            { kind: "spot", name: "APEC 公園", note: "海濱公園", lat: 16.061, lng: 108.2295 },
+            { kind: "spot", name: "龍橋", note: "峴港地標", lat: 16.0614, lng: 108.2275 },
+            { ...LODGE_DN, note: "入住 · 續住峴港 2 晚 · " + LODGE_DN.note },
           ],
         },
         {
@@ -268,9 +319,11 @@
           label: "D4 巴拿山・佛手橋",
           color: "#9b59b6",
           stops: [
-            { name: "巴拿山纜車站", note: "Ba Na Hills", lat: 15.9945, lng: 107.9892 },
-            { name: "黃金佛手橋", note: "Golden Bridge", lat: 15.995, lng: 107.9965 },
-            { name: "山頂靈應寺／法國村", note: "園區", lat: 15.9985, lng: 108.0025 },
+            { ...LODGE_DN, name: "峴港飯店（出發）", note: "全日巴拿山" },
+            { kind: "spot", name: "巴拿山纜車站", note: "Ba Na Hills 入口", lat: 15.9945, lng: 107.9892 },
+            { kind: "spot", name: "黃金佛手橋", note: "Golden Bridge", lat: 15.995, lng: 107.9965 },
+            { kind: "spot", name: "山頂園區", note: "靈應寺・法國村", lat: 15.9985, lng: 108.0025 },
+            { ...LODGE_DN, name: "峴港飯店（返回）", note: "晚餐後休息" },
           ],
         },
         {
@@ -279,12 +332,23 @@
           label: "D5 韓市・返程",
           color: "#f39c12",
           stops: [
-            { name: "韓江市集 Han Market", note: "峴港市區", lat: 16.0718, lng: 108.2235 },
-            { name: "峴港國際機場 (DAD)", note: "長榮 13:00 起飛 · 16:50 抵 TPE", lat: 16.0439, lng: 108.1993 },
+            { ...LODGE_DN, name: "峴港飯店（出發）", note: "退房・行李" },
+            { kind: "spot", name: "韓江市集 Han Market", note: "伴手禮", lat: 16.0718, lng: 108.2235 },
+            { kind: "transport", name: "峴港國際機場 (DAD)", note: "長榮 BR392 · 13:00 起飛 · 16:50 抵 TPE", lat: 16.0439, lng: 108.1993 },
           ],
         },
       ],
     };
+
+    function markerColor(stop, dayColor) {
+      if (stop.kind === "lodge") return "#c9a227";
+      if (stop.kind === "transport") return "#5b9bd5";
+      return dayColor;
+    }
+
+    function kindTag(kind) {
+      return KIND_LABEL[kind] || "景點";
+    }
 
     const map = L.map("map", { scrollWheelZoom: true }).setView([16.05, 108.22], 11);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -312,15 +376,17 @@
       days.forEach((d) => {
         const latlngs = [];
         d.stops.forEach((s, i) => {
+          const seq = i + 1;
+          const bg = markerColor(s, d.color);
           const icon = L.divIcon({
             className: "",
-            html: `<div style="background:${d.color};color:#fff;width:22px;height:22px;border-radius:50%;border:2px solid #fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.35)">${d.day}</div>`,
-            iconSize: [22, 22],
-            iconAnchor: [11, 11],
+            html: `<div style="background:${bg};color:#fff;min-width:22px;height:22px;padding:0 4px;border-radius:11px;border:2px solid #fff;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.35)">${seq}</div>`,
+            iconSize: [26, 22],
+            iconAnchor: [13, 11],
           });
           const m = L.marker([s.lat, s.lng], { icon })
             .bindPopup(
-              `<strong>${s.name}</strong><br/>${d.label}（${d.date}）<br/>${s.note || ""}`
+              `<strong>${seq}. ${s.name}</strong><br/><em>${kindTag(s.kind)}</em> · ${d.label}<br/>${d.date}<br/>${s.note || ""}`
             )
             .addTo(map);
           layers.markers.push(m);
@@ -371,7 +437,16 @@
         <article class="day-card">
           <h2>${d.label}</h2>
           <div class="date">${d.date}</div>
-          <ul>${d.stops.map((s) => `<li>${s.name}${s.note ? " — " + s.note : ""}</li>`).join("")}</ul>
+          <ol>${d.stops
+            .map(
+              (s, i) => `
+            <li>
+              <span class="seq">${i + 1}</span>
+              <span class="kind kind-${s.kind}">${kindTag(s.kind)}</span>
+              <span>${s.name}${s.note ? " — " + s.note : ""}</span>
+            </li>`
+            )
+            .join("")}</ol>
         </article>`
       ).join("");
     }
