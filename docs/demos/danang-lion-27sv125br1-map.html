@@ -318,12 +318,18 @@
     }
     .poi-videos { margin: 0.5rem 0 0.75rem; }
     .poi-videos[hidden] { display: none !important; }
-    .poi-video-item { margin-bottom: 0.75rem; }
-    .poi-video-item h5 {
-      margin: 0 0 0.35rem;
+    .poi-videos > h4 { margin: 0 0 0.35rem; font-size: 0.8rem; color: var(--text); }
+    .poi-video-carousel .poi-carousel-slide {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .poi-video-carousel .poi-video-title {
       font-size: 0.78rem;
       color: var(--text);
       font-weight: 600;
+      line-height: 1.35;
+      padding: 0 0.15rem;
     }
     .poi-video-embed {
       position: relative;
@@ -525,6 +531,8 @@
 
     let poiCarouselIndex = 0;
     let poiCarouselCount = 0;
+    let poiVideoCarouselIndex = 0;
+    let poiVideoCarouselCount = 0;
 
     const COMMONS_FILE_PATH = "https://commons.wikimedia.org/wiki/Special:FilePath/";
 
@@ -634,30 +642,114 @@
       }
     }
 
+    function youtubeEmbedSrc(v) {
+      if (!v?.youtubeId) return "";
+      const params = new URLSearchParams({ rel: "0" });
+      if (v.start != null && Number.isFinite(Number(v.start))) params.set("start", String(Math.max(0, Math.floor(Number(v.start)))));
+      return `https://www.youtube-nocookie.com/embed/${v.youtubeId}?${params}`;
+    }
+
+    function mountPoiVideoIframe(slideEl, video) {
+      if (!slideEl || !video) return;
+      const box = slideEl.querySelector(".poi-video-embed");
+      if (!box) return;
+      box.innerHTML = "";
+      const iframe = document.createElement("iframe");
+      iframe.src = youtubeEmbedSrc(video);
+      iframe.title = video.title || "YouTube";
+      iframe.loading = "lazy";
+      iframe.allow =
+        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      iframe.allowFullscreen = true;
+      box.appendChild(iframe);
+    }
+
+    function clearPoiVideoIframes() {
+      document.querySelectorAll("#poiLightboxVideoCarousel .poi-video-embed").forEach((box) => {
+        box.innerHTML = "";
+      });
+    }
+
+    function setPoiVideoCarouselSlide(index) {
+      const host = document.getElementById("poiLightboxVideoCarousel");
+      const track = host?.querySelector(".poi-carousel-track");
+      if (!track || !poiVideoCarouselCount) return;
+      poiVideoCarouselIndex = (index + poiVideoCarouselCount) % poiVideoCarouselCount;
+      clearPoiVideoIframes();
+      track.style.transform = `translateX(-${poiVideoCarouselIndex * 100}%)`;
+      const slides = track.querySelectorAll(".poi-carousel-slide");
+      const active = slides[poiVideoCarouselIndex];
+      if (active?._video) mountPoiVideoIframe(active, active._video);
+      host.querySelectorAll(".poi-carousel-dots button").forEach((btn, i) => {
+        btn.classList.toggle("active", i === poiVideoCarouselIndex);
+      });
+      const counter = document.getElementById("poiVideoCarouselCounter");
+      if (counter) counter.textContent = `${poiVideoCarouselIndex + 1} / ${poiVideoCarouselCount}`;
+    }
+
     function renderPoiVideos(videos) {
       const host = document.getElementById("poiLightboxVideos");
       const list = (videos || []).filter((v) => v?.youtubeId);
+      poiVideoCarouselCount = 0;
+      poiVideoCarouselIndex = 0;
       if (!list.length) {
         host.hidden = true;
         host.innerHTML = "";
         return;
       }
       host.hidden = false;
-      host.innerHTML =
-        `<h4>相關影片</h4>` +
-        list
-          .map((v) => {
-            const id = escapeHtml(v.youtubeId);
-            const title = escapeHtml(v.title || "YouTube");
-            const src = `https://www.youtube-nocookie.com/embed/${id}`;
-            return `<div class="poi-video-item">
-              <h5>${title}</h5>
-              <div class="poi-video-embed">
-                <iframe src="${src}" title="${title}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-              </div>
-            </div>`;
-          })
-          .join("");
+      poiVideoCarouselCount = list.length;
+      const slides = list
+        .map((v) => {
+          const title = escapeHtml(v.title || "YouTube");
+          return `<div class="poi-carousel-slide" data-video-id="${escapeHtml(v.youtubeId)}">
+            <div class="poi-video-title">${title}</div>
+            <div class="poi-video-embed" aria-label="影片播放器"></div>
+          </div>`;
+        })
+        .join("");
+      const dots = list
+        .map((_, i) => `<button type="button" aria-label="第 ${i + 1} 段影片" class="${i === 0 ? "active" : ""}"></button>`)
+        .join("");
+      host.innerHTML = `
+        <h4>相關影片（中文短片）</h4>
+        <div id="poiLightboxVideoCarousel" class="poi-carousel poi-video-carousel">
+          <div class="poi-carousel-viewport">
+            <div class="poi-carousel-track">${slides}</div>
+            ${list.length > 1 ? `<button type="button" class="poi-carousel-nav prev" aria-label="上一段">‹</button><button type="button" class="poi-carousel-nav next" aria-label="下一段">›</button>` : ""}
+          </div>
+          ${list.length > 1 ? `<div class="poi-carousel-dots">${dots}</div><div class="poi-carousel-counter" id="poiVideoCarouselCounter">1 / ${list.length}</div>` : ""}
+        </div>`;
+      const track = host.querySelector(".poi-carousel-track");
+      track.querySelectorAll(".poi-carousel-slide").forEach((el, i) => {
+        el._video = list[i];
+      });
+      setPoiVideoCarouselSlide(0);
+      const carousel = host.querySelector("#poiLightboxVideoCarousel");
+      if (list.length > 1) {
+        carousel.querySelector(".poi-carousel-nav.prev").onclick = () => setPoiVideoCarouselSlide(poiVideoCarouselIndex - 1);
+        carousel.querySelector(".poi-carousel-nav.next").onclick = () => setPoiVideoCarouselSlide(poiVideoCarouselIndex + 1);
+        carousel.querySelectorAll(".poi-carousel-dots button").forEach((btn, i) => {
+          btn.onclick = () => setPoiVideoCarouselSlide(i);
+        });
+        let touchStartX = 0;
+        const viewport = carousel.querySelector(".poi-carousel-viewport");
+        viewport.addEventListener(
+          "touchstart",
+          (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+          },
+          { passive: true }
+        );
+        viewport.addEventListener(
+          "touchend",
+          (e) => {
+            const dx = e.changedTouches[0].screenX - touchStartX;
+            if (Math.abs(dx) > 40) setPoiVideoCarouselSlide(poiVideoCarouselIndex + (dx < 0 ? 1 : -1));
+          },
+          { passive: true }
+        );
+      }
     }
 
     function renderPoiShop(shop) {
@@ -699,6 +791,7 @@
     }
 
     function closePoiLightbox() {
+      clearPoiVideoIframes();
       document.getElementById("poiLightbox").classList.remove("open");
     }
 
@@ -712,6 +805,12 @@
       if (e.key === "Escape") closePoiLightbox();
       if (poiCarouselCount > 1 && e.key === "ArrowLeft") setPoiCarouselSlide(poiCarouselIndex - 1);
       if (poiCarouselCount > 1 && e.key === "ArrowRight") setPoiCarouselSlide(poiCarouselIndex + 1);
+      if (poiCarouselCount <= 1 && poiVideoCarouselCount > 1 && e.key === "ArrowLeft") {
+        setPoiVideoCarouselSlide(poiVideoCarouselIndex - 1);
+      }
+      if (poiCarouselCount <= 1 && poiVideoCarouselCount > 1 && e.key === "ArrowRight") {
+        setPoiVideoCarouselSlide(poiVideoCarouselIndex + 1);
+      }
     });
 
     function renderFlightPanel() {
