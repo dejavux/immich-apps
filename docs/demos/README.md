@@ -3,7 +3,8 @@
 | 檔案 | 說明 |
 |------|------|
 | [danang-lion-baseline-map.html](./danang-lion-baseline-map.html) | 比價用示意（JX1／星宇） |
-| [danang-lion-27sv125br1-map.html](./danang-lion-27sv125br1-map.html) | **已確認參團** 27SV125BR1-T · 長榮 |
+| [danang-lion-27sv125br1-map.html](./danang-lion-27sv125br1-map.html) | **已確認參團** 27SV125BR1-T · 含航班／自費／POI 詳情 |
+| [danang-lion-27sv125br1-tour-data.js](./danang-lion-27sv125br1-tour-data.js) | 上列地圖的擴充資料（同目錄載入） |
 
 ## 公開網址（`main`）
 
