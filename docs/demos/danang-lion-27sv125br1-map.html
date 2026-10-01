@@ -181,7 +181,6 @@
     .flight-leg:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
     .flight-leg strong { color: var(--accent); }
     .flight-links a { color: #7eb6ff; margin-right: 0.35rem; display: inline-block; margin-top: 0.2rem; }
-    .flight-app-hint { font-size: 0.72rem; margin-top: 0.35rem; line-height: 1.35; }
     .optional-panel summary { cursor: pointer; list-style: none; }
     .optional-panel summary::-webkit-details-marker { display: none; }
     .optional-item { margin: 0.4rem 0; padding-left: 0.5rem; border-left: 2px solid #3a4a63; }
@@ -317,6 +316,56 @@
       color: #6a7d96;
       margin-top: 0.25rem;
     }
+    .poi-videos { margin: 0.5rem 0 0.75rem; }
+    .poi-videos[hidden] { display: none !important; }
+    .poi-video-item { margin-bottom: 0.75rem; }
+    .poi-video-item h5 {
+      margin: 0 0 0.35rem;
+      font-size: 0.78rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+    .poi-video-embed {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #0a0e14;
+      border: 1px solid #2a3548;
+    }
+    .poi-video-embed iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+    .poi-shop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+      gap: 0.5rem;
+      margin: 0.35rem 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .poi-shop-grid li {
+      border: 1px solid #2a3548;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #121a26;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.3;
+    }
+    .poi-shop-grid img {
+      width: 100%;
+      height: 72px;
+      object-fit: cover;
+      display: block;
+      background: #1e2633;
+    }
+    .poi-shop-grid span { display: block; padding: 0.35rem 0.4rem 0.45rem; }
   </style>
   <script src="danang-lion-27sv125br1-tour-data.js"></script>
 </head>
@@ -358,6 +407,7 @@
       <div class="poi-type" id="poiLightboxType"></div>
       <div id="poiLightboxCarousel" class="poi-carousel" hidden></div>
       <p id="poiLightboxIntro"></p>
+      <div id="poiLightboxVideos" class="poi-videos" hidden></div>
       <div id="poiLightboxEvents"></div>
       <div id="poiLightboxShop"></div>
     </div>
@@ -476,6 +526,46 @@
     let poiCarouselIndex = 0;
     let poiCarouselCount = 0;
 
+    const COMMONS_FILE_PATH = "https://commons.wikimedia.org/wiki/Special:FilePath/";
+
+    function commonsFileUrl(file, width = 800) {
+      if (!file) return "";
+      const w = Number(width) > 0 ? Number(width) : 800;
+      return `${COMMONS_FILE_PATH}${encodeURIComponent(file)}?width=${w}`;
+    }
+
+    function poiImageSrc(img) {
+      if (!img) return "";
+      if (img.src) return img.src;
+      if (img.file) return commonsFileUrl(img.file, 800);
+      return "";
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function normalizeShopItem(item) {
+      if (typeof item === "string") return { text: item, image: null };
+      if (item && typeof item === "object") {
+        return { text: item.text || "", image: item.image || null };
+      }
+      return { text: "", image: null };
+    }
+
+    function shopItemImageSrc(item) {
+      const img = item?.image;
+      if (!img) return "";
+      if (typeof img === "string") return commonsFileUrl(img, 320);
+      if (img.src) return img.src;
+      if (img.file) return commonsFileUrl(img.file, 320);
+      return "";
+    }
+
     function setPoiCarouselSlide(index) {
       const track = document.querySelector("#poiLightboxCarousel .poi-carousel-track");
       if (!track || !poiCarouselCount) return;
@@ -490,7 +580,9 @@
 
     function renderPoiCarousel(images) {
       const host = document.getElementById("poiLightboxCarousel");
-      const list = (images || []).filter((img) => img?.src);
+      const list = (images || [])
+        .map((img) => ({ ...img, _src: poiImageSrc(img) }))
+        .filter((img) => img._src);
       if (!list.length) {
         host.hidden = true;
         host.innerHTML = "";
@@ -504,8 +596,8 @@
         .map(
           (img) => `
         <div class="poi-carousel-slide">
-          <img src="${img.src}" alt="${img.caption || ""}" loading="lazy" decoding="async" onerror="this.style.opacity='0.35';this.alt='圖片暫時無法載入';" />
-          <div class="poi-carousel-caption">${img.caption || ""}</div>
+          <img src="${escapeHtml(img._src)}" alt="${escapeHtml(img.caption || "")}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.opacity='0.35';this.alt='圖片暫時無法載入';" />
+          <div class="poi-carousel-caption">${escapeHtml(img.caption || "")}</div>
         </div>`
         )
         .join("");
@@ -542,23 +634,67 @@
       }
     }
 
+    function renderPoiVideos(videos) {
+      const host = document.getElementById("poiLightboxVideos");
+      const list = (videos || []).filter((v) => v?.youtubeId);
+      if (!list.length) {
+        host.hidden = true;
+        host.innerHTML = "";
+        return;
+      }
+      host.hidden = false;
+      host.innerHTML =
+        `<h4>相關影片</h4>` +
+        list
+          .map((v) => {
+            const id = escapeHtml(v.youtubeId);
+            const title = escapeHtml(v.title || "YouTube");
+            const src = `https://www.youtube-nocookie.com/embed/${id}`;
+            return `<div class="poi-video-item">
+              <h5>${title}</h5>
+              <div class="poi-video-embed">
+                <iframe src="${src}" title="${title}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+              </div>
+            </div>`;
+          })
+          .join("");
+    }
+
+    function renderPoiShop(shop) {
+      const host = document.getElementById("poiLightboxShop");
+      const items = (shop || []).map(normalizeShopItem).filter((x) => x.text);
+      if (!items.length) {
+        host.innerHTML = "";
+        return;
+      }
+      host.innerHTML =
+        `<h4>值得買／伴手禮</h4><ul class="poi-shop-grid">` +
+        items
+          .map((item) => {
+            const src = shopItemImageSrc(item);
+            const imgHtml = src
+              ? `<img src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display='none';" />`
+              : "";
+            return `<li>${imgHtml}<span>${escapeHtml(item.text)}</span></li>`;
+          })
+          .join("") +
+        `</ul>`;
+    }
+
     function openPoiLightbox(poiId) {
       const p = ENR.poi?.[poiId];
       if (!p) return;
       document.getElementById("poiLightboxTitle").textContent = p.title;
       document.getElementById("poiLightboxType").textContent = p.type || "";
       renderPoiCarousel(p.images);
+      renderPoiVideos(p.videos);
       document.getElementById("poiLightboxIntro").textContent = p.intro || "";
       const ev = document.getElementById("poiLightboxEvents");
       ev.innerHTML =
         p.events?.length
-          ? `<h4>活動／表演</h4><ul>${p.events.map((x) => `<li>${x}</li>`).join("")}</ul>`
+          ? `<h4>活動／表演</h4><ul>${p.events.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`
           : "";
-      const sh = document.getElementById("poiLightboxShop");
-      sh.innerHTML =
-        p.shop?.length
-          ? `<h4>值得買／伴手禮</h4><ul>${p.shop.map((x) => `<li>${x}</li>`).join("")}</ul>`
-          : "";
+      renderPoiShop(p.shop);
       document.getElementById("poiLightbox").classList.add("open");
     }
 
@@ -596,7 +732,6 @@
               <strong>${f.flightNo}</strong> · ${f.airline}<br/>
               ${f.date} ${f.depart} ${f.from} → ${f.arrive} ${f.to}<br/>
               <span class="flight-links">${links}</span>
-              <div class="flight-app-hint">${f.appHint || ""}</div>
             </div>`;
           })
           .join("");
