@@ -4,6 +4,8 @@
 |------|------|
 | [index.html](./index.html) | **家庭行程首頁**（列出已確認／比價團） |
 | [family-tours.css](./family-tours.css) | 共用 header／footer／首頁版型 |
+| [family-tours-site.js](./family-tours-site.js) | 行程列表、封面圖、Immich 連結設定 |
+| [family-tours-ui.js](./family-tours-ui.js) | 首頁渲染、倒數、footer |
 | [danang-lion-27sv125br1-map.html](./danang-lion-27sv125br1-map.html) | **已確認參團** 27SV125BR1-T · 含航班／自費／POI 詳情 |
 | [danang-lion-27sv125br1-tour-data.js](./danang-lion-27sv125br1-tour-data.js) | 上列地圖的擴充資料（同目錄載入） |
 | [danang-lion-baseline-map.html](./danang-lion-baseline-map.html) | 比價用示意（JX1／星宇） |

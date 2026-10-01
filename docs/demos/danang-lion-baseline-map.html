@@ -3,12 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="雄獅峴港團比價基線地圖（JX1 示意）。" />
+  <meta name="theme-color" content="#0a0e14" />
   <title>峴港 5 日 · 雄獅基準團 Map</title>
+  <link rel="stylesheet" href="family-tours.css" />
   <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
     crossorigin=""
   />
+  <script src="family-tours-site.js"></script>
+  <script src="family-tours-ui.js"></script>
   <style>
     :root {
       --bg: #0f1419;
@@ -18,22 +23,11 @@
       --accent: #3d8bfd;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Segoe UI", system-ui, sans-serif;
+    body.ft-page--tour {
       background: var(--bg);
       color: var(--text);
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
+      font-family: "Segoe UI", system-ui, sans-serif;
     }
-    header {
-      padding: 0.75rem 1rem;
-      background: var(--panel);
-      border-bottom: 1px solid #2a3548;
-    }
-    header h1 { font-size: 1.05rem; margin: 0 0 0.25rem; font-weight: 600; }
-    header p { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
     .layout {
       flex: 1;
       display: grid;
@@ -116,15 +110,34 @@
     }
   </style>
 </head>
-<body>
-  <header>
-    <h1>雄獅基準團 · 超值峴港 5 日（Map view）</h1>
-    <p>
-      2027/1/25–1/29 · TPE 星宇 · 跟團動線依領隊為準；地圖為景點代表座標。
-      <a href="https://travel.liontravel.com/detail?NormGroupID=5e6aa0bb-ef01-4b7b-88b9-945e81dd3a04&GroupID=27SV125JX1-T" style="color:#7eb6ff">官網商品</a>
-    </p>
+<body class="ft-page ft-page--tour">
+  <header class="ft-site-header">
+    <a class="ft-brand" href="index.html">
+      <span class="ft-brand-mark" aria-hidden="true">旅</span>
+      <span>家庭行程</span>
+    </a>
+    <nav class="ft-nav" aria-label="主要">
+      <a href="index.html">所有行程</a>
+      <a href="danang-lion-baseline-map.html" aria-current="page">比價基線</a>
+    </nav>
   </header>
-  <div class="layout">
+  <nav class="ft-breadcrumb" aria-label="麵包屑">
+    <a href="index.html">首頁</a> / 峴港比價基線地圖
+  </nav>
+  <div class="ft-trip-hero">
+    <div class="ft-trip-hero-inner">
+      <h1>🗺️ 雄獅基準團 · 超值峴港 5 日（示意）</h1>
+      <p class="ft-lead">JX1 比價用動線；非已確認參團。座標為景點代表點。</p>
+      <div class="ft-chips">
+        <span class="ft-chip">27SV125JX1-T</span>
+        <span class="ft-chip">2027/1/25–1/29</span>
+        <span class="ft-chip">星宇 · 比價參考</span>
+        <a class="ft-chip ft-chip--accent" href="https://travel.liontravel.com/detail?NormGroupID=5e6aa0bb-ef01-4b7b-88b9-945e81dd3a04&GroupID=27SV125JX1-T" target="_blank" rel="noopener">雄獅官網</a>
+        <a class="ft-chip ft-chip--warm" href="danang-lion-27sv125br1-map.html">→ 已確認團地圖</a>
+      </div>
+    </div>
+  </div>
+  <div class="ft-main-grow layout">
     <aside>
       <div class="day-tabs" id="dayTabs"></div>
       <div id="dayList"></div>
@@ -135,6 +148,8 @@
       <div id="map"></div>
     </div>
   </div>
+
+  <footer class="ft-site-footer" id="ft-shared-footer"></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script>
@@ -312,6 +327,7 @@
     }
     setTimeout(refreshMapSize, 400);
     }
+    if (window.FamilyToursUI) FamilyToursUI.mountFooter();
   </script>
 </body>
 </html>
