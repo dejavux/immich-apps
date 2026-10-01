@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="已確認雄獅峴港 5 日：日期動線、地圖、航班、景點詳情（家庭用）。" />
+  <meta name="theme-color" content="#0a0e14" />
   <title>峴港 5 日 · 已確認 27SV125BR1-T</title>
+  <link rel="stylesheet" href="family-tours.css" />
   <style>
     :root {
       --bg: #0f1419;
@@ -13,22 +16,10 @@
       --accent: #3d8bfd;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Segoe UI", system-ui, sans-serif;
+    body.ft-page--tour {
       background: var(--bg);
       color: var(--text);
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
     }
-    header {
-      padding: 0.75rem 1rem;
-      background: var(--panel);
-      border-bottom: 1px solid #2a3548;
-    }
-    header h1 { font-size: 1.05rem; margin: 0 0 0.25rem; font-weight: 600; }
-    header p { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
     .layout {
       flex: 1;
       display: grid;
@@ -375,21 +366,44 @@
   </style>
   <script src="danang-lion-27sv125br1-tour-data.js"></script>
 </head>
-<body>
-  <header>
-    <h1>已確認參團 · 超值峴港 5 日（Date + Map）</h1>
-    <p>
-      2027/1/25–1/29 · TPE 長榮 · 團號 27SV125BR1-T · 跟團動線依領隊為準。
-      <a href="https://travel.liontravel.com/detail?NormGroupID=5e6aa0bb-ef01-4b7b-88b9-945e81dd3a04&GroupID=27SV125BR1-T" style="color:#7eb6ff">官網</a>
-      · 分享 <code>#d1</code>～<code>#d5</code> 或 <code>#all</code>
-      · <a id="directMapLink" href="https://cdn.jsdelivr.net/gh/dejavux/immich-apps@main/docs/demos/danang-lion-27sv125br1-map.html" style="color:#7eb6ff">地圖直連（請用此連結，勿用 htmlpreview）</a>
-    </p>
-    <p class="preview-banner" id="previewBanner" role="status">
-      你正在透過 htmlpreview 預覽，此模式常無法載入 Leaflet。
-      請改用 <a id="previewBannerLink" href="#">地圖直連連結</a>（Safari／Chrome 直接開啟）。
-    </p>
+<body class="ft-page ft-page--tour">
+  <header class="ft-site-header">
+    <a class="ft-brand" href="index.html">
+      <span class="ft-brand-mark" aria-hidden="true">旅</span>
+      <span>家庭行程</span>
+    </a>
+    <nav class="ft-nav" aria-label="主要">
+      <a href="index.html">所有行程</a>
+      <a href="danang-lion-27sv125br1-map.html" aria-current="page">峴港 5 日</a>
+    </nav>
   </header>
-  <div class="layout">
+
+  <nav class="ft-breadcrumb" aria-label="麵包屑">
+    <a href="index.html">首頁</a> / 超值峴港 5 日
+  </nav>
+
+  <div class="ft-trip-hero">
+    <div class="ft-trip-hero-inner">
+      <h1>已確認參團 · 超值峴港 5 日</h1>
+      <p class="ft-lead">
+        Date + Map 動線備忘；車線為道路估算，實際跟領隊與行程表為準。
+      </p>
+      <div class="ft-chips">
+        <span class="ft-chip ft-chip--warm">27SV125BR1-T</span>
+        <span class="ft-chip">2027/1/25–1/29</span>
+        <span class="ft-chip">長榮 BR391 / BR392</span>
+        <span class="ft-chip">分享 <code style="font-size:0.85em">#d1</code>–<code style="font-size:0.85em">#d5</code> · <code style="font-size:0.85em">#all</code></span>
+        <a class="ft-chip ft-chip--accent" href="https://travel.liontravel.com/detail?NormGroupID=5e6aa0bb-ef01-4b7b-88b9-945e81dd3a04&GroupID=27SV125BR1-T" target="_blank" rel="noopener">雄獅官網</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="ft-preview-banner preview-banner" id="previewBanner" role="status">
+    你正在透過 htmlpreview 預覽，此模式常無法載入 Leaflet。
+    請改用 <a id="previewBannerLink" href="#">地圖直連連結</a>（Safari／Chrome 直接開啟）。
+  </p>
+
+  <div class="ft-main-grow layout">
     <aside>
       <section class="flight-panel" id="flightPanel" aria-label="航班資訊"></section>
       <details class="optional-panel" open>
@@ -406,6 +420,26 @@
       <div id="map"></div>
     </div>
   </div>
+
+  <footer class="ft-site-footer">
+    <div class="ft-footer-inner">
+      <div>
+        <strong>本頁</strong>
+        <div class="ft-footer-links" style="margin-top:0.35rem;">
+          <a id="directMapLink" href="danang-lion-27sv125br1-map.html">複製用直連</a>
+          <a href="index.html">返回行程列表</a>
+          <a href="https://github.com/dejavux/immich-apps/blob/main/docs/demos/HOSTING.md" target="_blank" rel="noopener">部署說明</a>
+        </div>
+      </div>
+      <div>
+        <strong>提醒</strong>
+        <p class="ft-footer-note" style="margin:0.35rem 0 0;">
+          自費與 POI 為家庭整理，非雄獅官方文案。圖片來自 Wikimedia Commons；影片為 YouTube 第三方內容。
+        </p>
+      </div>
+    </div>
+  </footer>
+
   <div class="lightbox" id="poiLightbox" role="dialog" aria-modal="true" aria-labelledby="poiLightboxTitle">
     <div class="lightbox-panel">
       <button type="button" class="lightbox-close" id="poiLightboxClose" aria-label="關閉">×</button>
@@ -420,8 +454,24 @@
   </div>
 
   <script>
-    const DIRECT_MAP_URL =
+    const JSDELIVR_MAP_URL =
       "https://cdn.jsdelivr.net/gh/dejavux/immich-apps@main/docs/demos/danang-lion-27sv125br1-map.html";
+
+    function resolveDirectMapUrl() {
+      const file = "danang-lion-27sv125br1-map.html";
+      if (/cdn\.jsdelivr\.net/i.test(location.host)) return JSDELIVR_MAP_URL;
+      if (/dejavux\.github\.io/i.test(location.host)) {
+        const base = location.pathname.replace(/[^/]+$/, "");
+        return `${location.origin}${base}${file}`;
+      }
+      try {
+        return new URL(file, location.href).href;
+      } catch {
+        return JSDELIVR_MAP_URL;
+      }
+    }
+
+    const DIRECT_MAP_URL = resolveDirectMapUrl();
     const LEAFLET_VERSION = "1.9.4";
     const LEAFLET_CDNS = [
       {
@@ -490,6 +540,8 @@
         const banner = document.getElementById("previewBanner");
         if (banner) banner.style.display = "block";
       }
+      const mapLink = document.getElementById("directMapLink");
+      if (mapLink) mapLink.href = direct;
     }
 
     const KIND_LABEL = { lodge: "Lodge", transport: "交通", spot: "景點" };
