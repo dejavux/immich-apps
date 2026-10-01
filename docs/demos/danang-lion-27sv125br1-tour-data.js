@@ -1,4 +1,4 @@
-/** 27SV125BR1-T 行程擴充資料（家庭用；非雄獅官方）· 圖片多為 Wikimedia Commons */
+/** 27SV125BR1-T 行程擴充（家庭用）· 圖片用 Commons 檔名，由地圖頁 commonsFileUrl() 轉址 */
 window.TOUR_ENRICHMENT = {
   flights: {
     outbound: {
@@ -9,14 +9,10 @@ window.TOUR_ENRICHMENT = {
       to: "DAD 峴港",
       depart: "09:45",
       arrive: "11:40",
-      terminal: "以當日航廈公告為準",
       trackLinks: [
-        { label: "飛常準（飛得準同類）查 BR391", url: "https://www.variflight.com/cn/home" },
         { label: "Flightradar24 · BR391", url: "https://www.flightradar24.com/data/flights/br391" },
-        { label: "民航局 · 桃園出發", url: "https://www.caa.gov.tw/ImmediateFlight.aspx?a=270&lang=1" },
+        { label: "民航局 · 桃園航班", url: "https://www.caa.gov.tw/ImmediateFlight.aspx?a=270&lang=1" },
       ],
-      appHint:
-        "飛常準／飛得準等 App 無公開網頁深連結；請在 App 內新增行程：長榮 BR391 · 2027/01/25 · TPE→峴港。",
     },
     inbound: {
       flightNo: "BR392",
@@ -26,13 +22,13 @@ window.TOUR_ENRICHMENT = {
       to: "TPE 桃園",
       depart: "13:00",
       arrive: "16:50",
-      terminal: "以當日航廈公告為準",
       trackLinks: [
-        { label: "飛常準查 BR392", url: "https://www.variflight.com/cn/home" },
         { label: "Flightradar24 · BR392", url: "https://www.flightradar24.com/data/flights/br392" },
-        { label: "民航局 · 桃園抵達", url: "https://www.caa.gov.tw/ImmediateFlight.aspx?a=270&lang=1&sad=A&sap=TPE&sl=2" },
+        {
+          label: "民航局 · 桃園抵達",
+          url: "https://www.caa.gov.tw/ImmediateFlight.aspx?a=270&lang=1&sad=A&sap=TPE&sl=2",
+        },
       ],
-      appHint: "App 內新增：長榮 BR392 · 2027/01/29 · 峴港→TPE。",
     },
   },
   optionalTours: [
@@ -73,257 +69,227 @@ window.TOUR_ENRICHMENT = {
     dad: {
       title: "峴港國際機場 (DAD)",
       type: "交通",
-      intro:
-        "峴港國際機場為中部門戶，距美溪海灘約 15–20 分鐘車程。跟團通常有領隊與導遊接機。",
-      images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Da_Nang_International_Airport%2C_Vietnam.jpg/960px-Da_Nang_International_Airport%2C_Vietnam.jpg",
-          caption: "峴港國際機場（Wikimedia）",
-        },
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Eva_Air_Boeing_787-9_B-17803_at_Taoyuan_International_Airport.jpg/960px-Eva_Air_Boeing_787-9_B-17803_at_Taoyuan_International_Airport.jpg",
-          caption: "長榮航空於桃園（示意）",
-        },
-      ],
+      intro: "峴港國際機場為中部門戶，距美溪海灘約 15–20 分鐘車程。跟團通常有領隊與導遊接機。",
+      images: [{ file: "Da Nang Airport 1.jpg", caption: "峴港機場航廈" }],
+      videos: [],
       events: [],
-      shop: ["越南腰果、咖啡粉（機場免稅或市區超市價更彈性）", "當地品牌防曬、草帽", "越式滴漏咖啡組"],
+      shop: [
+        {
+          text: "越南腰果、咖啡粉",
+          image: { file: "Roasted Cashew Nuts (52746470588).jpg" },
+        },
+        { text: "防曬、草帽", image: { file: "Beach chair.jpg" } },
+        { text: "越式滴漏咖啡組", image: { file: "Vietnamese coffee ベトナムコーヒー DSCF1830.jpg" } },
+      ],
     },
     "lodge-dn": {
       title: "峴港海濱飯店區",
       type: "Lodge",
       intro:
-        "多為美溪海灘或峴港灣區 4 星級或同級，實際飯店以雄獅出團通知為準（Paris Deli Beach、Cicilia、Canvas 等）。",
+        "多為美溪海濱 4 星或同級，實際飯店以雄獅出團通知為準（Paris Deli Beach、Cicilia、Canvas 等）。",
       images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/My_Khe_beach%2C_Da_Nang%2C_Vietnam.jpg/960px-My_Khe_beach%2C_Da_Nang%2C_Vietnam.jpg",
-          caption: "美溪海灘一帶海景（Wikimedia）",
-        },
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Danang_at_night.jpg/960px-Danang_at_night.jpg",
-          caption: "峴港海濱夜景",
-        },
+        { file: "My Khe Beach, Da Nang, Vietnam.jpg", caption: "美溪海灘" },
+        { file: "Da Nang.jpg", caption: "峴港海濱天際線" },
       ],
-      events: ["部分飯店週末海濱活動或現場音樂（依飯店）"],
-      shop: ["飯店旁便利店：飲料、防蚊", "海灘攤位：椰子、小吃"],
+      videos: [],
+      events: ["部分飯店週末海濱活動（依飯店）"],
+      shop: [
+        { text: "便利店飲料、防蚊", image: { file: "Convenience store.jpg" } },
+        { text: "海灘椰子、小吃", image: { file: "Coconut drink.jpg" } },
+      ],
     },
     "lodge-hoian": {
       title: "會安古鎮住宿區",
       type: "Lodge",
-      intro: "古鎮外圍或河畔飯店，方便夜遊燈籠街。常見 Emm、Ally Beach 等同級。",
+      intro: "古鎮外圍或河畔飯店，方便夜遊燈籠街。",
       images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Hoi_An_ancient_town%2C_Vietnam.jpg/960px-Hoi_An_ancient_town%2C_Vietnam.jpg",
-          caption: "會安古鎮黃牆與燈籠",
-        },
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Hoi_An_at_night.jpg/960px-Hoi_An_at_night.jpg",
-          caption: "會安夜間燈籠街",
-        },
+        { file: "Hội An, Ancient Town, 2020-01 CN-10.jpg", caption: "會安古鎮街道" },
+        { file: "Hội An, Ancient Town, 2020-01 CN-06.jpg", caption: "燈籠街景" },
       ],
-      events: ["會安燈籠節期間街區表演（若日期重合）", "河畔放燈（部分為自費活動）"],
-      shop: ["燈籠、手工皮革", "奧黛布料（可量身）"],
+      videos: [{ youtubeId: "lzOu1ai_DpU", title: "會安古鎮通行證與景點（YouTube）" }],
+      events: ["會安燈籠節（若日期重合）", "河畔放燈（部分自費）"],
+      shop: [
+        { text: "手工燈籠", image: { file: "Hoi An lanterns.jpg" } },
+        { text: "皮革、奧黛布料", image: { file: "Ao dai.jpg" } },
+      ],
     },
     sontra: {
       title: "山茶半島",
       type: "景點",
-      intro: "峴港東北側山海公路，可遠眺峴港灣；跟團車行上山路。",
+      intro: "峴港東北側山海公路，可遠眺峴港灣。",
       images: [
         {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Son_Tra_Peninsula%2C_Da_Nang.jpg/960px-Son_Tra_Peninsula%2C_Da_Nang.jpg",
-          caption: "山茶半島海岸公路",
+          file: "Son-Tra-Peninsula Da-Nang Vietnam Statue-of-the-Bodhisattva-of-Mercy-01.jpg",
+          caption: "山茶半島海岸",
         },
       ],
+      videos: [],
       events: [],
-      shop: ["路邊攤：椰子、芒果"],
+      shop: [{ text: "路邊水果", image: { file: "Mango fruit.jpg" } }],
     },
     "sontra-pagoda": {
       title: "靈應寺（山茶）",
       type: "景點",
-      intro: "巨大觀音像為地标，需走步道或車程接駁；尊重寺廟禮儀。",
+      intro: "巨大觀音像為地标；尊重寺廟禮儀。",
       images: [
         {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Linh_Ung_Pagoda%2C_Son_Tra_Peninsula%2C_Danang%2C_Vietnam.jpg/960px-Linh_Ung_Pagoda%2C_Son_Tra_Peninsula%2C_Danang%2C_Vietnam.jpg",
-          caption: "山茶半島靈應寺觀音像",
+          file: "Son-Tra-Peninsula Da-Nang Vietnam Statue-of-the-Bodhisattva-of-Mercy-01.jpg",
+          caption: "山茶靈應寺觀音像",
         },
       ],
+      videos: [],
       events: [],
-      shop: ["寺區香火或紀念品攤（可選）"],
+      shop: [{ text: "香火、紀念品", image: { file: "Incense sticks.jpg" } }],
     },
     mykhe: {
       title: "美溪沙灘",
       type: "景點",
-      intro: " Forbes 常列名海灘，沙質細軟；注意旗幟與浪況，跟團停留時間有限。",
+      intro: "沙質細軟的名海灘；注意浪況與旗幟。",
       images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/My_Khe_beach%2C_Da_Nang%2C_Vietnam.jpg/960px-My_Khe_beach%2C_Da_Nang%2C_Vietnam.jpg",
-          caption: "美溪沙灘",
-        },
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/My_Khe_Beach_in_Da_Nang%2C_Vietnam.jpg/960px-My_Khe_Beach_in_Da_Nang%2C_Vietnam.jpg",
-          caption: "海灘與市區天際線",
-        },
+        { file: "My Khe Beach, Da Nang, Vietnam.jpg", caption: "美溪沙灘" },
+        { file: "My Khe Beach Da Nang.jpg", caption: "海灘活動" },
       ],
+      videos: [],
       events: [],
-      shop: ["沙灘椅出租（可能自費）", "泳衣、浮潛裝備（便利店）"],
+      shop: [
+        { text: "泳衣、浮潛裝備", image: { file: "Beach chair.jpg" } },
+        { text: "沙灘椅（可能自費）", image: { file: "Beach chair.jpg" } },
+      ],
     },
     camnam: {
       title: "迦南島生態之旅",
       type: "景點",
-      intro:
-        "Cam Kim 一帶：竹桶船穿行椰子林為招牌體驗。**實際為水路＋船段**，地圖道路線僅示意陸路接駁。",
+      intro: "竹桶船穿行椰子林；**實際為水路**，地圖車線為陸路接駁示意。",
       images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Basket_boat_in_Hoi_An.jpg/960px-Basket_boat_in_Hoi_An.jpg",
-          caption: "竹桶船（會安／迦南一帶常見）",
-        },
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Coconut_forest_Vietnam.jpg/960px-Coconut_forest_Vietnam.jpg",
-          caption: "椰子林水道（示意）",
-        },
+        { file: "Hội An, Ancient Town, 2020-01 CN-06.jpg", caption: "會安水鄉（示意）" },
+        { file: "Coconut drink.jpg", caption: "椰子林／椰子飲" },
       ],
-      events: ["竹桶船體驗（通常含在團費，以行程表為準）"],
-      shop: ["椰子糖、手工斗笠", "河邊小攤水果"],
+      videos: [{ youtubeId: "84y0BAx76Rs", title: "會安／峴港 3 日 vlog（含水上活動參考）" }],
+      events: ["竹桶船（通常含在團費，以行程表為準）"],
+      shop: [
+        { text: "椰子糖", image: { file: "Coconut drink.jpg" } },
+        { text: "斗笠", image: { file: "Aodai-nonla-crop.jpg" } },
+      ],
     },
     hoian: {
       title: "會安古鎮",
       type: "景點",
-      intro: "世界文化遺產古城，黃牆燈籠、日本橋；傍晚至夜間氣氛最佳。",
+      intro: "世界文化遺產古城，黃牆燈籠、日本橋；傍晚至夜間最佳。",
       images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Hoi_An_ancient_town%2C_Vietnam.jpg/960px-Hoi_An_ancient_town%2C_Vietnam.jpg",
-          caption: "古鎮街道",
-        },
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Japanese_Covered_Bridge_Hoi_An.jpg/960px-Japanese_Covered_Bridge_Hoi_An.jpg",
-          caption: "日本橋",
-        },
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Hoi_An_at_night.jpg/960px-Hoi_An_at_night.jpg",
-          caption: "夜間燈籠",
-        },
+        { file: "Hội An, Ancient Town, 2020-01 CN-10.jpg", caption: "古鎮街道" },
+        { file: "Hội An, Chùa Cầu, 2020-01 CN-01.jpg", caption: "日本橋（來遠橋）" },
+        { file: "Hội An, Ancient Town, 2020-01 CN-11.jpg", caption: "夜間燈籠" },
       ],
-      events: ["街頭民樂或燈籠光節（季節性）", "印象會安秀（若自費加購）"],
-      shop: ["燈籠、木雕", "訂製鞋店", "越南咖啡、蠶絲店（比價後再買）"],
+      videos: [
+        { youtubeId: "lzOu1ai_DpU", title: "會安古鎮導覽（YouTube）" },
+        { youtubeId: "84y0BAx76Rs", title: "會安 3 日行程 vlog" },
+      ],
+      events: ["街頭表演（季節性）", "印象會安秀（若自費）"],
+      shop: [
+        { text: "燈籠、木雕", image: { file: "Hoi An lanterns.jpg" } },
+        { text: "訂製鞋", image: { file: "Leather shoes.jpg" } },
+        { text: "越南咖啡", image: { file: "Vietnamese coffee.jpg" } },
+      ],
     },
     marble: {
       title: "五行山",
       type: "景點",
-      intro: "五座石灰岩山，佛教洞窟與天梯；穿方便走路的鞋。",
+      intro: "石灰岩洞窟與天梯；穿走路方便的鞋。",
       images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Marble_Mountains_Vietnam.jpg/960px-Marble_Mountains_Vietnam.jpg",
-          caption: "五行山全景",
-        },
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Marble_Mountains_cave.jpg/960px-Marble_Mountains_cave.jpg",
-          caption: "洞窟與佛像",
-        },
+        { file: "Marble Mountains View 3.JPG", caption: "五行山" },
+        { file: "Marble Mountains View 3.JPG", caption: "山景與洞窟" },
       ],
+      videos: [{ youtubeId: "dvvffc9E2Pc", title: "峴港周邊景點參考（Ba Na 完整導覽）" }],
       events: [],
-      shop: ["大理石雕刻、小佛像", "電梯票若自費請領隊確認"],
+      shop: [
+        { text: "大理石雕刻", image: { file: "Marble sculpture.jpg" } },
+        { text: "小佛像紀念品", image: { file: "Marble sculpture.jpg" } },
+      ],
     },
     pinkchurch: {
       title: "峴港大教堂（粉紅教堂）",
       type: "景點",
-      intro: "哥德式粉紅外觀，市區打卡點；注意彌撒時間勿大聲喧嘩。",
-      images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Danang_Cathedral.jpg/960px-Danang_Cathedral.jpg",
-          caption: "粉紅教堂外觀",
-        },
-      ],
+      intro: "粉紅哥德式外觀；彌撒時間請保持安靜。",
+      images: [{ file: "Da Nang Cathedral.jpg", caption: "粉紅教堂" }],
+      videos: [],
       events: ["週日彌撒（若開放參觀）"],
-      shop: ["教堂周邊咖啡店"],
+      shop: [{ text: "周邊咖啡店", image: { file: "Ca Phe Sua Da.jpg" } }],
     },
     apec: {
       title: "APEC 公園",
       type: "景點",
-      intro: "海濱步道與會展地標，適合團體拍照與短暫散步。",
-      images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Danang_at_night.jpg/960px-Danang_at_night.jpg",
-          caption: "峴港海濱／APEC 一帶夜景",
-        },
-      ],
+      intro: "海濱步道與會展地標，適合團體拍照。",
+      images: [{ file: "Da Nang.jpg", caption: "峴港海濱（APEC 公園一帶示意）" }],
+      videos: [],
       events: [],
-      shop: ["紀念品小攤（視當日）"],
+      shop: [{ text: "紀念品小攤", image: { file: "Souvenir shop.jpg" } }],
     },
     dragon: {
       title: "龍橋",
       type: "景點",
-      intro: "橫跨韓江的峴港象徵；**週六日晚間**常噴火／喷水（行程若未停留可遠眺）。",
+      intro: "橫跨韓江；**週六日晚間**常噴火／喷水。",
       images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Dragon_Bridge_in_Da_Nang.jpg/960px-Dragon_Bridge_in_Da_Nang.jpg",
-          caption: "龍橋日間",
-        },
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Dragon_bridge_Danang_fire.jpg/960px-Dragon_bridge_Danang_fire.jpg",
-          caption: "週末噴火秀（示意）",
-        },
+        { file: "Da Nang.jpg", caption: "韓江與峴港市景（龍橋一帶）" },
+        { file: "Da Nang.jpg", caption: "週末夜間活動（以當局公告為準）" },
       ],
-      events: ["週末夜間噴火秀（約 21:00 前後，以當局公告為準）"],
-      shop: ["橋畔夜市小吃"],
+      videos: [],
+      events: ["週末夜間噴火秀（以當局公告為準）"],
+      shop: [{ text: "橋畔夜市小吃", image: { file: "Street food in Vietnam.jpg" } }],
     },
     "bana-gate": {
       title: "巴拿山纜車站",
       type: "景點",
-      intro: "上山纜車世界紀錄級長度之一；山上溫度較低，可帶薄外套。",
-      images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Ba_Na_Hills_Cable_Car.jpg/960px-Ba_Na_Hills_Cable_Car.jpg",
-          caption: "巴拿山纜車",
-        },
-      ],
+      intro: "上山纜車；山上較涼，建議薄外套。",
+      images: [{ file: "Ba Na Hills French Village.jpg", caption: "巴拿山園區（纜車上山）" }],
+      videos: [{ youtubeId: "KMPwffwzXWg", title: "巴拿山纜車與園區（YouTube）" }],
       events: [],
-      shop: ["纜車站紀念品", "雨披（突雨）"],
+      shop: [{ text: "雨披、紀念品", image: { file: "Raincoat.jpg" } }],
     },
     "golden-bridge": {
       title: "黃金佛手橋",
       type: "景點",
-      intro: "Ba Na 山頂金色步道，由巨大石手托起；晨霧時最上鏡。",
+      intro: "Ba Na 金色步道由石手托起；晨霧時最上鏡。",
       images: [
+        { file: "Golden Bridge at Ba Na Hills 20250718.jpg", caption: "黃金佛手橋" },
         {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Golden_Bridge_in_Ba_Na_Hills.jpg/960px-Golden_Bridge_in_Ba_Na_Hills.jpg",
-          caption: "黃金佛手橋",
-        },
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Golden_Bridge%2C_Ba_Na_Hills%2C_Danang%2C_Vietnam.jpg/960px-Golden_Bridge%2C_Ba_Na_Hills%2C_Danang%2C_Vietnam.jpg",
-          caption: "雲霧中的步道",
+          file: "Aerial view of the Golden Bridge, Ba Na Hills, Da Nang, Vietnam.jpg",
+          caption: "航拍",
         },
       ],
+      videos: [
+        { youtubeId: "QnY74vH-iNE", title: "Golden Bridge 短片（YouTube）" },
+        { youtubeId: "xkNivkpnxdk", title: "巴拿山與佛手橋導覽（YouTube）" },
+      ],
       events: [],
-      shop: ["山頂法國村商店：葡萄酒、點心"],
+      shop: [{ text: "山頂葡萄酒、點心", image: { file: "Wine bottle.jpg" } }],
     },
     "bana-top": {
       title: "巴拿山山頂園區",
       type: "景點",
-      intro: "法國村、靈應寺、遊樂設施與觀景台；停留時間緊湊時優先跟領隊動線。",
+      intro: "法國村、靈應寺、遊樂設施；優先跟領隊動線。",
       images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Ba_Na_Hills_French_Village.jpg/960px-Ba_Na_Hills_French_Village.jpg",
-          caption: "法國村",
-        },
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Ba_Na_Hills_Cable_Car.jpg/960px-Ba_Na_Hills_Cable_Car.jpg",
-          caption: "園區纜車",
-        },
+        { file: "Ba Na Hills French Village.jpg", caption: "法國村" },
+        { file: "Golden Bridge at Ba Na Hills 20250718.jpg", caption: "山頂園區" },
       ],
-      events: ["園區定時表演（以當日公告為準）", "部分遊樂設施另費"],
-      shop: ["葡萄酒、乳酪", "主題樂園紀念品"],
+      videos: [{ youtubeId: "dvvffc9E2Pc", title: "2026 Ba Na Hills 完整導覽（YouTube）" }],
+      events: ["園區定時表演", "部分遊樂設施另費"],
+      shop: [
+        { text: "葡萄酒、乳酪", image: { file: "Wine bottle.jpg" } },
+        { text: "主題樂園紀念品", image: { file: "Souvenir shop.jpg" } },
+      ],
     },
     hanmarket: {
       title: "韓江市集 Han Market",
       type: "景點",
-      intro: "峴港市區傳統市場，最後採買伴手禮常用；可試越南咖啡粉、果乾。",
-      images: [
-        {
-          src: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Han_Market%2C_Da_Nang.jpg/960px-Han_Market%2C_Da_Nang.jpg",
-          caption: "韓江市集",
-        },
-      ],
+      intro: "市區傳統市場，適合最後採買伴手禮。",
+      images: [{ file: "Vietnamese coffee.jpg", caption: "市集採買（示意）" }],
+      videos: [],
       events: [],
-      shop: ["咖啡粉、果乾、腰果", "奧黛、絲綢（比價）", "越南滴漏杯"],
+      shop: [
+        { text: "咖啡粉、果乾", image: { file: "Coffee beans.jpg" } },
+        { text: "腰果", image: { file: "Roasted Cashew Nuts (52746470588).jpg" } },
+        { text: "滴漏杯", image: { file: "Vietnamese coffee ベトナムコーヒー DSCF1830.jpg" } },
+      ],
     },
   },
 };
